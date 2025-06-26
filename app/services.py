@@ -1,7 +1,7 @@
 from typing import Union
 from .models import User, Market, Prediction, LiquidityProvider, Badge, user_badges
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy import func
 from app.extensions import db
 
@@ -131,6 +131,46 @@ class PointsService:
         else:
             user.reliability_index = max(0.0, user.reliability_index - adjustment)
 
+        db.session.commit()
+
+    def award_xp(self, user: User, xp_amount: int) -> None:
+        """Award XP to a user with streak bonus multiplier
+        
+        Args:
+            user: The User object to award XP to
+            xp_amount: Base amount of XP to award
+        """
+        # Get today's date at midnight
+        today = datetime.combine(datetime.utcnow().date(), datetime.min.time())
+        
+        # Check last check-in date
+        if user.last_check_in_date and user.last_check_in_date.date() == today.date():
+            # Already checked in today, do nothing
+            return
+        
+        # Calculate streak
+        if user.last_check_in_date and user.last_check_in_date.date() == (today - timedelta(days=1)).date():
+            # Check-in yesterday, increment streak
+            user.current_streak += 1
+        else:
+            # Missed day or first check-in, reset streak
+            user.current_streak = 1
+        
+        # Update last check-in date
+        user.last_check_in_date = today
+        
+        # Update longest streak if needed
+        if user.current_streak > user.longest_streak:
+            user.longest_streak = user.current_streak
+        
+        # Calculate streak bonus multiplier
+        multiplier = min(1.0 + 0.1 * user.current_streak, 2.0)
+        final_award = int(xp_amount * multiplier)
+        
+        # Award XP
+        user.xp += final_award
+        
+        # Commit changes
         db.session.commit()
 
     @staticmethod
