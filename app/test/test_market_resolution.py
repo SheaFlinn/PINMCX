@@ -62,40 +62,53 @@ class TestMarketResolution(unittest.TestCase):
 
     def test_correct_prediction_awards_xp(self):
         """Test that correct predictions award XP"""
-        # Update prediction to be correct
+        # Make a correct prediction
         self.prediction.prediction = "YES"
         db.session.commit()
-        
-        # Resolve market with correct outcome
+
+        # Resolve market to YES
         self.market.resolve("YES")
-        db.session.commit()
-        
-        # Award XP for predictions
         self.market.award_xp_for_predictions()
-        db.session.commit()
-        
-        # Verify user received XP
+
         user = User.query.get(self.user1.id)
+        # Verify XP was awarded (should be 10 * shares)
         self.assertGreater(user.xp, 0)
-        
+        self.assertTrue(self.prediction.xp_awarded)
+
     def test_incorrect_prediction_awards_no_xp(self):
-        """Test that incorrect predictions award 0 XP"""
-        # Update prediction to be incorrect
+        """Test that incorrect predictions do not award XP"""
+        # Make an incorrect prediction
         self.prediction.prediction = "NO"
         db.session.commit()
-        
-        # Resolve market with opposite outcome
+
+        # Resolve market to YES
         self.market.resolve("YES")
-        db.session.commit()
-        
-        # Award XP for predictions
         self.market.award_xp_for_predictions()
-        db.session.commit()
-        
-        # Verify user received no XP
+
         user = User.query.get(self.user1.id)
+        # Verify no XP was awarded
         self.assertEqual(user.xp, 0)
+        self.assertTrue(self.prediction.xp_awarded)
+
+    def test_xp_not_awarded_twice(self):
+        """Test that XP is not awarded twice for the same prediction"""
+        # Make a correct prediction
+        self.prediction.prediction = "YES"
+        db.session.commit()
+
+        # Resolve market to YES
+        self.market.resolve("YES")
+        self.market.award_xp_for_predictions()
         
+        # Save XP before second award attempt
+        initial_xp = self.user1.xp
+        
+        # Try to award XP again
+        self.market.award_xp_for_predictions()
+        
+        # Verify XP did not change (since prediction was already marked as awarded)
+        self.assertEqual(self.user1.xp, initial_xp)
+
     def test_multiple_predictions_with_mixed_outcomes(self):
         """Test XP awarding with multiple predictions with mixed outcomes"""
         # Create second prediction for same user
@@ -111,11 +124,7 @@ class TestMarketResolution(unittest.TestCase):
         
         # Resolve market with YES outcome
         self.market.resolve("YES")
-        db.session.commit()
-        
-        # Award XP for predictions
         self.market.award_xp_for_predictions()
-        db.session.commit()
         
         # Verify XP is awarded only for correct prediction
         user = User.query.get(self.user1.id)
@@ -141,11 +150,7 @@ class TestMarketResolution(unittest.TestCase):
         
         # Resolve market
         market.resolve("YES")
-        db.session.commit()
-        
-        # Award XP for predictions
         market.award_xp_for_predictions()
-        db.session.commit()
         
         # Verify user XP remains unchanged
         user = User.query.get(self.user1.id)

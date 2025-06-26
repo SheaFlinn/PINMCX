@@ -350,7 +350,7 @@ class Market(db.Model):
         
         for prediction in predictions:
             # Skip if XP already awarded
-            if getattr(prediction, "xp_awarded", False):
+            if prediction.xp_awarded:
                 continue
 
             # Only award XP for correct predictions
@@ -373,6 +373,7 @@ class Prediction(db.Model):
     average_price = db.Column(db.Float, default=0.0)
     payout = db.Column(db.Float, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    xp_awarded = db.Column(db.Boolean, default=False)  # Add xp_awarded field
     market = db.relationship('Market', back_populates='predictions', lazy=True)
     user = db.relationship('User', back_populates='predictions', lazy=True)
 
