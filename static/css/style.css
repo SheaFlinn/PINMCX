@@ -1,0 +1,353 @@
+/* Base Styles */
+:root {
+    --primary-color: #28a745;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+}
+
+/* Market Lineage */
+.market-lineage {
+    margin: 2rem 0;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.lineage-chain {
+    font-size: 1.1rem;
+    color: #333;
+    white-space: pre-wrap;
+}
+
+.no-lineage {
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Lineage Info */
+.lineage-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.parent-market {
+    color: #28a745;
+    font-weight: 500;
+}
+
+.no-parent {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.manage-lineage {
+    padding: 0.25rem 0.5rem;
+}
+
+/* Market Transcript */
+.market-transcript {
+    margin: 2rem 0;
+}
+
+.event-timeline {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.event-item {
+    border-bottom: 1px solid #dee2e6;
+    padding: 1rem 0;
+}
+
+.event-type {
+    background-color: #f8f9fa;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    display: inline-block;
+}
+
+.event-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+}
+
+.event-description {
+    font-weight: 500;
+    color: #333;
+}
+
+.event-time {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.event-user {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.event-details pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    margin: 0;
+}
+
+/* Reliability Index */
+.reliability-index {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.reliability-index .score {
+    font-weight: bold;
+    color: #28a745;
+}
+
+.reliability-index .progress {
+    flex: 1;
+    height: 8px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.reliability-index .progress-bar {
+    height: 100%;
+    background-color: #28a745;
+    transition: width 0.3s ease;
+}
+
+/* Predictions Table */
+.predictions-table {
+    margin-top: 2rem;
+}
+
+.predictions-table th {
+    text-align: left;
+    padding: 0.75rem;
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.predictions-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.predictions-table td:last-child {
+    text-align: right;
+}
+
+.predictions-table th:nth-child(4) {
+    width: 150px;
+}
+
+.predictions-table td:nth-child(4) {
+    text-align: center;
+    font-weight: 500;
+    color: #28a745;
+}
+
+.predictions-table td:nth-child(4)::before {
+    content: "⭐ ";
+    color: #ffd700;
+}
+
+/* Timeline */
+.timeline {
+    position: relative;
+    padding: 20px 0;
+    margin: 20px 0;
+}
+
+.timeline:before {
+    content: '';
+    position: absolute;
+    width: 2px;
+    background-color: #dee2e6;
+    top: 0;
+    bottom: 0;
+    left: 20px;
+}
+
+.timeline-items {
+    position: relative;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+    padding-left: 40px;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: 15px;
+    top: 10px;
+    width: 10px;
+    height: 10px;
+    background-color: #28a745;
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px #f8f9fa;
+}
+
+.timeline-content {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.timeline-content h4 {
+    margin: 0 0 10px 0;
+    color: #28a745;
+    font-size: 1.1rem;
+}
+
+.timeline-content p {
+    margin: 5px 0;
+    color: #333;
+}
+
+/* Lineage History */
+.lineage-history {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.lineage-history h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+/* Market Exports */
+.market-exports {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    margin-top: 1rem;
+}
+
+.market-exports .btn {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.market-exports .btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.market-exports .btn-secondary:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+}
+
+.market-exports .btn-outline-secondary {
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+.market-exports .btn-outline-secondary:hover {
+    background-color: #e9ecef;
+    border-color: #6c757d;
+}
+
+/* Transcript Download Button */
+.market-transcript .btn {
+    margin-bottom: 1rem;
+}
+
+.market-transcript .btn-outline-secondary {
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+.market-transcript .btn-outline-secondary:hover {
+    background-color: #e9ecef;
+    border-color: #6c757d;
+}
+
+.market-transcript .btn-outline-secondary i {
+    margin-right: 0.5rem;
+}
+
+/* Lineage Modal */
+#lineageModal .modal-content {
+    border-radius: 8px;
+}
+
+#lineageModal .modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+#lineageModal .modal-title {
+    font-weight: 600;
+}
+
+#lineageModal .form-select {
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+}
+
+#lineageModal .form-select:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+#lineageModal .btn-primary {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+#lineageModal .btn-primary:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+/* Mobile-first responsive design */
+@media (max-width: 768px) {
+    .timeline:before {
+        left: 10px;
+    }
+    
+    .timeline-item {
+        padding-left: 30px;
+    }
+    
+    .timeline-dot {
+        left: 5px;
+    }
+    
+    .market-exports {
+        flex-direction: column;
+    }
+    
+    .market-exports .btn {
+        width: 100%;
+    }
+}

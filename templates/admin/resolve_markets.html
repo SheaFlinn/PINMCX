@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Resolve Markets - Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Market Resolution</h2>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Unresolved Markets</h5>
+            {% if markets %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Created</th>
+                            <th>Resolve</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for market in markets %}
+                        <tr>
+                            <td>{{ market.title }}</td>
+                            <td>{{ market.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <button type="button" class="btn btn-primary btn-sm" 
+                                        data-toggle="modal" 
+                                        data-target="#resolveModal{{ market.id }}">
+                                    Resolve
+                                </button>
+                                
+                                <!-- Modal -->
+                                <div class="modal fade" id="resolveModal{{ market.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Resolve Market</h5>
+                                                <button type="button" class="close" data-dismiss="modal">
+                                                    <span>&times;</span>
+                                                </button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Market: {{ market.title }}</p>
+                                                <form action="{{ url_for('admin.resolve_market', market_id=market.id) }}" method="POST">
+                                                    <div class="form-group">
+                                                        <label for="outcome{{ market.id }}">Outcome:</label>
+                                                        <select class="form-control" id="outcome{{ market.id }}" name="outcome" required>
+                                                            <option value="">Select outcome...</option>
+                                                            <option value="yes">Yes</option>
+                                                            <option value="no">No</option>
+                                                            <option value="invalid">Invalid</option>
+                                                        </select>
+                                                    </div>
+                                                    <button type="submit" class="btn btn-success">Confirm Resolution</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No unresolved markets found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

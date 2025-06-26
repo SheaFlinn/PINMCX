@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}News Headlines{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">News Headlines</h1>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title">Scrape News Headlines</h5>
+        </div>
+        <div class="card-body">
+            <p>Click the button below to scrape news headlines from configured sources:</p>
+            <button class="btn btn-primary" onclick="scrape()">Scrape News Headlines</button>
+        </div>
+    </div>
+
+    <div id="loading" class="d-none">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p>Scraping news headlines...</p>
+    </div>
+
+    <div id="results" class="d-none">
+        <h3>Scraped Headlines</h3>
+        <div id="headlines"></div>
+    </div>
+</div>
+
+<script>
+function scrape() {
+    const loading = document.getElementById('loading');
+    const results = document.getElementById('results');
+    const headlines = document.getElementById('headlines');
+    
+    loading.classList.remove('d-none');
+    results.classList.add('d-none');
+    headlines.innerHTML = '';
+    
+    fetch('/scrape')
+        .then(response => response.json())
+        .then(data => {
+            loading.classList.add('d-none');
+            results.classList.remove('d-none');
+            
+            if (data.error) {
+                headlines.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+            } else {
+                const headlineList = document.createElement('ul');
+                data.headlines.forEach(headline => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <strong>${headline.title}</strong><br>
+                        <small>${headline.source} - ${headline.date}</small>
+                    `;
+                    headlineList.appendChild(li);
+                });
+                headlines.appendChild(headlineList);
+            }
+        })
+        .catch(error => {
+            loading.classList.add('d-none');
+            results.classList.remove('d-none');
+            headlines.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+        });
+}
+</script>
+{% endblock %}
