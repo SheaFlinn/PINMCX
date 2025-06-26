@@ -335,50 +335,34 @@ class Market(db.Model):
         
         db.session.commit()
 
-    def award_xp_for_predictions(self):
-        """Award XP to users who made correct predictions on this market"""
-        if not self.resolved:
-            raise ValueError('Market must be resolved to award XP')
-            
-        for prediction in self.predictions:
-            user = prediction.user
-            
-            # Calculate XP gain
-            xp_gain = 0
-            if (self.resolved_outcome == 'YES' and prediction.prediction == 'YES') or \
-               (self.resolved_outcome == 'NO' and prediction.prediction == 'NO'):
-                xp_gain = 10
-                user.accuracy = (user.accuracy * user.predictions_count + 1) / (user.predictions_count + 1)
-                user.reliability_index = min(100.0, user.reliability_index + 1)
-            else:
-                user.accuracy = (user.accuracy * user.predictions_count) / (user.predictions_count + 1)
-                user.reliability_index = max(0.0, user.reliability_index - 0.5)
-            
-            # Update points
-            if (self.resolved_outcome == 'YES' and prediction.prediction == 'YES') or \
-               (self.resolved_outcome == 'NO' and prediction.prediction == 'NO'):
-                user.points += 10
-            else:
-                user.points -= 5
-            
-            # Update XP and reliability
-            user.xp += xp_gain
-            user.predictions_count += 1
-            
-            # Log the XP award
-            event = MarketEvent(
-                market=self,
-                event_type='xp_awarded',
-                user=user,
-                description=f'XP awarded for correct prediction on market "{self.title}"',
-                event_data={
-                    'xp_gain': xp_gain,
-                    'points_gain': 10 if xp_gain > 0 else -5,
-                    'accuracy': user.accuracy,
-                    'reliability': user.reliability_index
-                }
-            )
-            db.session.add(event)
+    def award_xp_for_predictions(self, base_xp_per_share: int = 10):
+        """Award XP to users with correct predictions on this market
+        
+        Args:
+            base_xp_per_share: Base XP amount per share (default 10)
+        """
+        from app.services.points_service import PointsService  # Import moved here
+        if not self.resolved or self.resolved_outcome is None:
+            return  # Can't award XP if market not resolved
+
+        # Get all predictions for this market
+        predictions = Prediction.query.filter_by(market_id=self.id).all()
+        
+        for prediction in predictions:
+            # Skip if XP already awarded
+            if getattr(prediction, "xp_awarded", False):
+                continue
+
+            # Only award XP for correct predictions
+            if prediction.prediction.upper() == self.resolved_outcome.upper():
+                xp_amount = base_xp_per_share * prediction.shares
+                PointsService.award_xp(prediction.user, xp_amount)
+                
+            # Mark prediction as XP awarded (whether correct or not)
+            prediction.xp_awarded = True
+            db.session.add(prediction)
+
+        db.session.commit()
 
 class Prediction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
