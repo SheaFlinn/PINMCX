@@ -335,43 +335,14 @@ def resolve_market(market_id):
         flash('Invalid outcome selected', 'error')
         return redirect(url_for('admin.resolve_markets'))
     
-    # Process resolution
     market.resolved = True
     market.resolved_outcome = outcome
+    market.resolved_at = datetime.utcnow()
     
-    # Update user points, accuracy, XP, and reliability
-    predictions = Prediction.query.filter_by(market_id=market_id).all()
-    for prediction in predictions:
-        user = User.query.get(prediction.user_id)
-        
-        # Calculate XP gain
-        xp_gain = 0
-        if outcome == 'yes' and prediction.outcome == 'yes':
-            xp_gain = 10  # Base XP for correct prediction
-            user.accuracy = (user.accuracy * user.predictions_count + 1) / (user.predictions_count + 1)
-            user.reliability_index = min(100.0, user.reliability_index + 1)  # Max 100
-        elif outcome == 'no' and prediction.outcome == 'no':
-            xp_gain = 10
-            user.accuracy = (user.accuracy * user.predictions_count + 1) / (user.predictions_count + 1)
-            user.reliability_index = min(100.0, user.reliability_index + 1)
-        else:
-            user.accuracy = (user.accuracy * user.predictions_count) / (user.predictions_count + 1)
-            user.reliability_index = max(0.0, user.reliability_index - 0.5)  # Min 0
-            
-        # Update points
-        if outcome == 'yes' and prediction.outcome == 'yes':
-            user.points += 10
-        elif outcome == 'no' and prediction.outcome == 'no':
-            user.points += 10
-        else:
-            user.points -= 5
-            
-        # Update XP and reliability
-        user.xp += xp_gain
-        user.predictions_count += 1
-        
+    # Award XP for predictions
+    market.award_xp_for_predictions()
+    
     db.session.commit()
-    
     flash('Market resolved successfully', 'success')
     return redirect(url_for('admin.resolve_markets'))
 

@@ -40,6 +40,8 @@ class User(UserMixin, db.Model):
     current_streak = db.Column(db.Integer, default=0)
     longest_streak = db.Column(db.Integer, default=0)
     last_check_in_date = db.Column(db.DateTime)
+    accuracy = db.Column(db.Float, default=0.0)
+    predictions_count = db.Column(db.Integer, default=0)
     
     # Relationships
     predictions = db.relationship('Prediction', back_populates='user', lazy=True)
@@ -332,6 +334,51 @@ class Market(db.Model):
                 prediction.user.points += prediction.payout
         
         db.session.commit()
+
+    def award_xp_for_predictions(self):
+        """Award XP to users who made correct predictions on this market"""
+        if not self.resolved:
+            raise ValueError('Market must be resolved to award XP')
+            
+        for prediction in self.predictions:
+            user = prediction.user
+            
+            # Calculate XP gain
+            xp_gain = 0
+            if (self.resolved_outcome == 'YES' and prediction.prediction == 'YES') or \
+               (self.resolved_outcome == 'NO' and prediction.prediction == 'NO'):
+                xp_gain = 10
+                user.accuracy = (user.accuracy * user.predictions_count + 1) / (user.predictions_count + 1)
+                user.reliability_index = min(100.0, user.reliability_index + 1)
+            else:
+                user.accuracy = (user.accuracy * user.predictions_count) / (user.predictions_count + 1)
+                user.reliability_index = max(0.0, user.reliability_index - 0.5)
+            
+            # Update points
+            if (self.resolved_outcome == 'YES' and prediction.prediction == 'YES') or \
+               (self.resolved_outcome == 'NO' and prediction.prediction == 'NO'):
+                user.points += 10
+            else:
+                user.points -= 5
+            
+            # Update XP and reliability
+            user.xp += xp_gain
+            user.predictions_count += 1
+            
+            # Log the XP award
+            event = MarketEvent(
+                market=self,
+                event_type='xp_awarded',
+                user=user,
+                description=f'XP awarded for correct prediction on market "{self.title}"',
+                event_data={
+                    'xp_gain': xp_gain,
+                    'points_gain': 10 if xp_gain > 0 else -5,
+                    'accuracy': user.accuracy,
+                    'reliability': user.reliability_index
+                }
+            )
+            db.session.add(event)
 
 class Prediction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
