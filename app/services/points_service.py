@@ -1,22 +1,45 @@
-from app.models import Market, Prediction, User, db
+from datetime import datetime, timedelta
+from app.models import User
+from app.extensions import db
 
-def award_xp_for_resolved_market(market_id):
-    # Get the market
-    market = Market.query.get(market_id)
-    if not market or not market.resolved or not market.correct_outcome:
-        return
-
-    # Get all correct predictions
-    correct_predictions = Prediction.query.filter_by(
-        market_id=market_id,
-        prediction=market.correct_outcome
-    ).all()
-
-    # Award XP to each correct user
-    for prediction in correct_predictions:
-        user = User.query.get(prediction.user_id)
-        if user:
-            user.xp = (user.xp or 0) + 10
-
-    db.session.commit()
-
+class PointsService:
+    @staticmethod
+    def award_xp(user: User, xp_amount: int) -> None:
+        """Award XP to a user with streak bonus multiplier
+        
+        Args:
+            user: The User object to award XP to
+            xp_amount: Base amount of XP to award
+        """
+        # Get today's UTC date
+        today = datetime.utcnow().date()
+        
+        # Check if already checked in today
+        if user.last_check_in_date and user.last_check_in_date.date() == today:
+            return
+        
+        # Initialize streak if first check-in
+        if not user.last_check_in_date:
+            user.current_streak = 1
+            user.last_check_in_date = datetime.combine(today, datetime.min.time())
+        else:
+            # Check if streak continues
+            if user.last_check_in_date.date() == (today - timedelta(days=1)):
+                user.current_streak += 1
+            else:
+                # Missed day, reset streak
+                user.current_streak = 1
+                user.last_check_in_date = datetime.combine(today, datetime.min.time())
+        
+        # Update longest streak if needed
+        if user.current_streak > user.longest_streak:
+            user.longest_streak = user.current_streak
+        
+        # Calculate streak bonus multiplier (max 2.0)
+        multiplier = min(2.0, 1.0 + 0.1 * (user.current_streak - 1))
+        
+        # Update XP
+        user.xp += int(xp_amount * multiplier)
+        
+        # Commit changes
+        db.session.commit()
