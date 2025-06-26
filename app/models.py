@@ -7,7 +7,7 @@ import hashlib
 from config import Config
 import logging
 
-<<<<<<< HEAD
+
 def generate_contract_hash(contract_name):
     """Generate a SHA-256 hash for market integrity verification"""
     import hashlib
@@ -22,7 +22,7 @@ class UserBadge(db.Model):
     
     user = db.relationship('User', back_populates='user_badges')
     badge = db.relationship('Badge', back_populates='user_badges')
-=======
+
 def generate_contract_hash(market):
     """Generate a SHA-256 hash for market integrity verification"""
     # Create a consistent string representation of the market
@@ -36,7 +36,6 @@ user_badges = db.Table('user_badges',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('badge_id', db.Integer, db.ForeignKey('badge.id'), primary_key=True)
 )
->>>>>>> d745d5f (Fix badge image rendering and static path config)
 
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
@@ -57,7 +56,7 @@ class User(UserMixin, db.Model):
     current_streak = db.Column(db.Integer, default=0)
     longest_streak = db.Column(db.Integer, default=0)
     last_check_in_date = db.Column(db.DateTime)
-<<<<<<< HEAD
+    
     accuracy = db.Column(db.Float, default=0.0)
     predictions_count = db.Column(db.Integer, default=0)
     liquidity_buffer_deposit = db.Column(db.Float, default=0.0)
@@ -65,17 +64,12 @@ class User(UserMixin, db.Model):
     # Relationships
     predictions = db.relationship('Prediction', back_populates='user', lazy=True)
     user_badges = db.relationship('UserBadge', back_populates='user', lazy='dynamic')
-=======
-    
-    # Relationships
-    predictions = db.relationship('Prediction', back_populates='user', lazy=True)
     badges = db.relationship('Badge', secondary='user_badges', back_populates='users')
->>>>>>> d745d5f (Fix badge image rendering and static path config)
     refined_markets = db.relationship('Market', back_populates='refiner', lazy=True)
     events = db.relationship('MarketEvent', back_populates='user', lazy=True)
     liquidity_providers = db.relationship('LiquidityProvider', back_populates='user')
     league_members = db.relationship('LeagueMember', back_populates='user')
-<<<<<<< HEAD
+
     market_events = db.relationship('MarketEvent', back_populates='user', lazy=True)
     
     @property
@@ -97,9 +91,6 @@ class User(UserMixin, db.Model):
             return user_badge
         return None
 
-=======
-    
->>>>>>> d745d5f (Fix badge image rendering and static path config)
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         self.last_active = datetime.utcnow()
@@ -187,11 +178,8 @@ class Badge(db.Model):
     icon = db.Column(db.String(100))  # CSS class or image path
     
     # Relationship
-<<<<<<< HEAD
     user_badges = db.relationship('UserBadge', back_populates='badge')
-=======
     users = db.relationship('User', secondary='user_badges', back_populates='badges')
->>>>>>> d745d5f (Fix badge image rendering and static path config)
     
     def to_dict(self):
         return {
@@ -201,16 +189,13 @@ class Badge(db.Model):
             'description': self.description,
             'icon': self.icon
         }
-<<<<<<< HEAD
-    
+
     def assign_to_user(self, user):
         """Assign this badge to a user"""
         user_badge = UserBadge(user=user, badge=self)
         db.session.add(user_badge)
         db.session.commit()
         return user_badge
-=======
->>>>>>> d745d5f (Fix badge image rendering and static path config)
 
 class Market(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -238,12 +223,10 @@ class Market(db.Model):
     liquidity_pool = db.Column(db.Float, default=2000.0)
     liquidity_provider_shares = db.Column(db.Float, default=1.0)
     liquidity_fee = db.Column(db.Float, default=0.003)
-<<<<<<< HEAD
+
     prediction_deadline = db.Column(db.DateTime, nullable=True, default=lambda: datetime.utcnow())
     resolution_deadline = db.Column(db.DateTime, nullable=True, default=lambda: datetime.utcnow())
-=======
->>>>>>> d745d5f (Fix badge image rendering and static path config)
-    
+
     # Relationships
     parent_market = db.relationship('Market', remote_side=[id], back_populates='child_markets')
     child_markets = db.relationship('Market', back_populates='parent_market')
@@ -265,12 +248,8 @@ class Market(db.Model):
     @property
     def lineage_chain(self):
         """Return a formatted string of the market lineage"""
-<<<<<<< HEAD
         return ' → '.join([m.title for m in list(reversed(self.lineage)) + [self]])
-=======
-        return ' → '.join([m.title for m in reversed(self.lineage) + [self]])
->>>>>>> d745d5f (Fix badge image rendering and static path config)
-    
+
     def __repr__(self):
         return f'<Market {self.id}: {self.title}>'
     
@@ -293,7 +272,6 @@ class Market(db.Model):
     
     def trade(self, user, amount, outcome):
         """
-<<<<<<< HEAD
         Execute a trade on this market.
         
         Args:
@@ -326,7 +304,7 @@ class Market(db.Model):
                 'price': trade_result['price'],
                 'shares': trade_result['shares'],
                 'outcome': trade_result['outcome']
-=======
+
         Execute a trade on the market.
         
         Args:
@@ -374,12 +352,11 @@ class Market(db.Model):
                 'price': price,
                 'shares': shares,
                 'total_pool': total_pool + amount
->>>>>>> d745d5f (Fix badge image rendering and static path config)
             }
         )
         db.session.add(event)
         
-<<<<<<< HEAD
+
         return trade_result
 
     def resolve(self, outcome: bool):
@@ -419,14 +396,13 @@ class Market(db.Model):
         
         return True
 
-=======
+
         return {
             'price': price,
             'shares': shares,
             'total_pool': total_pool + amount
         }
     
->>>>>>> d745d5f (Fix badge image rendering and static path config)
     def update_prices(self):
         # Update prices
         pass
@@ -442,7 +418,7 @@ class Market(db.Model):
         
         for lp in self.liquidity_providers:
             reward = (fee * lp.shares) / total_shares
-<<<<<<< HEAD
+
             
             # Use payout engine to handle points
             from app.services.points_payout_engine import PointsPayoutEngine
@@ -452,9 +428,8 @@ class Market(db.Model):
                 market_id=self.id,
                 outcome='LIQUIDITY'  # Special outcome type for liquidity rewards
             )
-=======
+
             lp.user.points += reward
->>>>>>> d745d5f (Fix badge image rendering and static path config)
             
             # Log the reward
             event = MarketEvent(
@@ -470,7 +445,7 @@ class Market(db.Model):
             )
             db.session.add(event)
 
-<<<<<<< HEAD
+
     def award_xp_for_predictions(self, base_xp_per_share: int = 10):
         """
         Award XP to users with correct predictions on this market.
@@ -593,7 +568,7 @@ class Prediction(db.Model):
 
     def __repr__(self):
         return f'<Prediction {self.id}: {self.shares} shares on Market {self.market_id}>'
-=======
+
     def resolve(self, outcome):
         """Resolve the market with a given outcome"""
         if self.resolved:
@@ -620,6 +595,51 @@ class Prediction(db.Model):
         
         db.session.commit()
 
+    def award_xp_for_predictions(self):
+        """Award XP to users who made correct predictions on this market"""
+        if not self.resolved:
+            raise ValueError('Market must be resolved to award XP')
+            
+        for prediction in self.predictions:
+            user = prediction.user
+            
+            # Calculate XP gain
+            xp_gain = 0
+            if (self.resolved_outcome == 'YES' and prediction.prediction == 'YES') or \
+               (self.resolved_outcome == 'NO' and prediction.prediction == 'NO'):
+                xp_gain = 10
+                user.accuracy = (user.accuracy * user.predictions_count + 1) / (user.predictions_count + 1)
+                user.reliability_index = min(100.0, user.reliability_index + 1)
+            else:
+                user.accuracy = (user.accuracy * user.predictions_count) / (user.predictions_count + 1)
+                user.reliability_index = max(0.0, user.reliability_index - 0.5)
+            
+            # Update points
+            if (self.resolved_outcome == 'YES' and prediction.prediction == 'YES') or \
+               (self.resolved_outcome == 'NO' and prediction.prediction == 'NO'):
+                user.points += 10
+            else:
+                user.points -= 5
+            
+            # Update XP and reliability
+            user.xp += xp_gain
+            user.predictions_count += 1
+            
+            # Log the XP award
+            event = MarketEvent(
+                market=self,
+                event_type='xp_awarded',
+                user=user,
+                description=f'XP awarded for correct prediction on market "{self.title}"',
+                event_data={
+                    'xp_gain': xp_gain,
+                    'points_gain': 10 if xp_gain > 0 else -5,
+                    'accuracy': user.accuracy,
+                    'reliability': user.reliability_index
+                }
+            )
+            db.session.add(event)
+
 class Prediction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     market_id = db.Column(db.Integer, db.ForeignKey('market.id'), nullable=False)
@@ -631,13 +651,12 @@ class Prediction(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     market = db.relationship('Market', back_populates='predictions', lazy=True)
     user = db.relationship('User', back_populates='predictions', lazy=True)
->>>>>>> d745d5f (Fix badge image rendering and static path config)
 
 class MarketEvent(db.Model):
     """Model to track important events in a market's lifecycle"""
     id = db.Column(db.Integer, primary_key=True)
     market_id = db.Column(db.Integer, db.ForeignKey('market.id'), nullable=False)
-<<<<<<< HEAD
+
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     event_type = db.Column(db.String, nullable=False)  # Add required event_type field
     description = db.Column(db.String(200), nullable=False)
@@ -682,37 +701,23 @@ class MarketEvent(db.Model):
         
         return event
 
-=======
-    event_type = db.Column(db.String(20), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    description = db.Column(db.Text)
-    event_data = db.Column(db.JSON)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # Relationships
-    market = db.relationship('Market', back_populates='events', lazy=True)
-    user = db.relationship('User', back_populates='events', lazy=True)
-    
->>>>>>> d745d5f (Fix badge image rendering and static path config)
     @classmethod
     def log_market_creation(cls, market, user_id):
         """Log the creation of a new market"""
         return cls(
             market_id=market.id,
-<<<<<<< HEAD
+
             event_type='market_created',  # Add event_type
-=======
-            event_type='market_created',
->>>>>>> d745d5f (Fix badge image rendering and static path config)
+
             user_id=user_id,
             description=f'Market "{market.title}" created',
             event_data={
                 'title': market.title,
-<<<<<<< HEAD
+
                 'description': market.description,
                 'resolution_date': market.resolution_date.isoformat(),
                 'resolution_method': market.resolution_method,
-=======
+
                 'domain': market.domain,
                 'resolution_date': market.resolution_date.isoformat(),
                 'resolution_method': market.resolution_method,
@@ -730,7 +735,6 @@ class MarketEvent(db.Model):
             description=f'Market "{market.title}" updated',
             event_data={
                 'changes': changes,
->>>>>>> d745d5f (Fix badge image rendering and static path config)
                 'domain': market.domain,
                 'lineage': market.lineage_chain
             }
@@ -738,24 +742,19 @@ class MarketEvent(db.Model):
     
     @classmethod
     def log_market_resolution(cls, market, user_id):
-<<<<<<< HEAD
+
         """Log market resolution"""
         return cls(
             market_id=market.id,
             event_type='market_resolved',  # Add event_type
-=======
-        """Log the resolution of a market"""
-        return cls(
-            market_id=market.id,
-            event_type='market_resolved',
->>>>>>> d745d5f (Fix badge image rendering and static path config)
+
             user_id=user_id,
             description=f'Market "{market.title}" resolved',
             event_data={
                 'outcome': market.resolved_outcome,
-<<<<<<< HEAD
+
                 'resolved_at': datetime.utcnow().isoformat(),
-=======
+
                 'domain': market.domain,
                 'resolution_date': market.resolved_at.isoformat(),
                 'lineage': market.lineage_chain
@@ -789,7 +788,6 @@ class MarketEvent(db.Model):
                 'old_parent': market.parent_market_id,
                 'new_parent': parent_market_id,
                 'domain': market.domain,
->>>>>>> d745d5f (Fix badge image rendering and static path config)
                 'lineage': market.lineage_chain
             }
         )
@@ -797,7 +795,6 @@ class MarketEvent(db.Model):
     def __repr__(self):
         return f'<MarketEvent {self.id}: {self.event_type} for Market {self.market_id}>'
 
-<<<<<<< HEAD
 class LiquidityPool(db.Model):
     __tablename__ = 'liquidity_pools'
 
@@ -836,8 +833,6 @@ class Contract(db.Model):
     liquidity_pool = db.relationship('LiquidityPool', uselist=False, back_populates='contract')
     amm_market = db.relationship('AMMMarket', uselist=False, back_populates='contract', lazy='joined')
 
-=======
->>>>>>> d745d5f (Fix badge image rendering and static path config)
 class AnchoredHash(db.Model):
     """Placeholder table for future blockchain anchoring"""
     id = db.Column(db.Integer, primary_key=True)
@@ -946,7 +941,6 @@ class LeagueMember(db.Model):
 
     def __repr__(self):
         return f'<LeagueMember {self.user.username} in {self.league.name}>'
-<<<<<<< HEAD
 
 class PlatformWallet(db.Model):
     """Platform wallet to track cumulative platform fees."""
@@ -975,5 +969,3 @@ class PlatformWallet(db.Model):
 
     def __repr__(self):
         return f'<PlatformWallet id={self.id} balance={self.balance:.2f}>'
-=======
->>>>>>> d745d5f (Fix badge image rendering and static path config)
