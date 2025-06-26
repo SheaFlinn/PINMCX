@@ -1,7 +1,11 @@
 from typing import Union
 from .models import User, Market, Prediction, LiquidityProvider, Badge, user_badges
 from sqlalchemy.orm import Session
+<<<<<<< HEAD
 from datetime import datetime, timedelta
+=======
+from datetime import datetime
+>>>>>>> d745d5f (Fix badge image rendering and static path config)
 from sqlalchemy import func
 from app.extensions import db
 
@@ -133,6 +137,7 @@ class PointsService:
 
         db.session.commit()
 
+<<<<<<< HEAD
     def award_xp(self, user: User, xp_amount: int) -> None:
         """Award XP to a user with streak bonus multiplier
         
@@ -173,6 +178,8 @@ class PointsService:
         # Commit changes
         db.session.commit()
 
+=======
+>>>>>>> d745d5f (Fix badge image rendering and static path config)
     @staticmethod
     def update_streak(user):
         today = datetime.utcnow().date()

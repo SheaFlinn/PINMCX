@@ -7,6 +7,7 @@ import hashlib
 from config import Config
 import logging
 
+<<<<<<< HEAD
 def generate_contract_hash(contract_name):
     """Generate a SHA-256 hash for market integrity verification"""
     import hashlib
@@ -21,6 +22,21 @@ class UserBadge(db.Model):
     
     user = db.relationship('User', back_populates='user_badges')
     badge = db.relationship('Badge', back_populates='user_badges')
+=======
+def generate_contract_hash(market):
+    """Generate a SHA-256 hash for market integrity verification"""
+    # Create a consistent string representation of the market
+    hash_data = f"{market.title}|{market.original_source or ''}|{market.source_url or ''}|{market.resolved_outcome or ''}|{market.resolved_at.strftime('%Y-%m-%d %H:%M:%S') if market.resolved_at else ''}"
+    
+    # Generate SHA-256 hash
+    return hashlib.sha256(hash_data.encode()).hexdigest()
+
+# Association table for User-Badge relationship
+user_badges = db.Table('user_badges',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('badge_id', db.Integer, db.ForeignKey('badge.id'), primary_key=True)
+)
+>>>>>>> d745d5f (Fix badge image rendering and static path config)
 
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
@@ -41,6 +57,7 @@ class User(UserMixin, db.Model):
     current_streak = db.Column(db.Integer, default=0)
     longest_streak = db.Column(db.Integer, default=0)
     last_check_in_date = db.Column(db.DateTime)
+<<<<<<< HEAD
     accuracy = db.Column(db.Float, default=0.0)
     predictions_count = db.Column(db.Integer, default=0)
     liquidity_buffer_deposit = db.Column(db.Float, default=0.0)
@@ -48,10 +65,17 @@ class User(UserMixin, db.Model):
     # Relationships
     predictions = db.relationship('Prediction', back_populates='user', lazy=True)
     user_badges = db.relationship('UserBadge', back_populates='user', lazy='dynamic')
+=======
+    
+    # Relationships
+    predictions = db.relationship('Prediction', back_populates='user', lazy=True)
+    badges = db.relationship('Badge', secondary='user_badges', back_populates='users')
+>>>>>>> d745d5f (Fix badge image rendering and static path config)
     refined_markets = db.relationship('Market', back_populates='refiner', lazy=True)
     events = db.relationship('MarketEvent', back_populates='user', lazy=True)
     liquidity_providers = db.relationship('LiquidityProvider', back_populates='user')
     league_members = db.relationship('LeagueMember', back_populates='user')
+<<<<<<< HEAD
     market_events = db.relationship('MarketEvent', back_populates='user', lazy=True)
     
     @property
@@ -73,6 +97,9 @@ class User(UserMixin, db.Model):
             return user_badge
         return None
 
+=======
+    
+>>>>>>> d745d5f (Fix badge image rendering and static path config)
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         self.last_active = datetime.utcnow()
@@ -160,7 +187,11 @@ class Badge(db.Model):
     icon = db.Column(db.String(100))  # CSS class or image path
     
     # Relationship
+<<<<<<< HEAD
     user_badges = db.relationship('UserBadge', back_populates='badge')
+=======
+    users = db.relationship('User', secondary='user_badges', back_populates='badges')
+>>>>>>> d745d5f (Fix badge image rendering and static path config)
     
     def to_dict(self):
         return {
@@ -170,6 +201,7 @@ class Badge(db.Model):
             'description': self.description,
             'icon': self.icon
         }
+<<<<<<< HEAD
     
     def assign_to_user(self, user):
         """Assign this badge to a user"""
@@ -177,6 +209,8 @@ class Badge(db.Model):
         db.session.add(user_badge)
         db.session.commit()
         return user_badge
+=======
+>>>>>>> d745d5f (Fix badge image rendering and static path config)
 
 class Market(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -204,8 +238,11 @@ class Market(db.Model):
     liquidity_pool = db.Column(db.Float, default=2000.0)
     liquidity_provider_shares = db.Column(db.Float, default=1.0)
     liquidity_fee = db.Column(db.Float, default=0.003)
+<<<<<<< HEAD
     prediction_deadline = db.Column(db.DateTime, nullable=True, default=lambda: datetime.utcnow())
     resolution_deadline = db.Column(db.DateTime, nullable=True, default=lambda: datetime.utcnow())
+=======
+>>>>>>> d745d5f (Fix badge image rendering and static path config)
     
     # Relationships
     parent_market = db.relationship('Market', remote_side=[id], back_populates='child_markets')
@@ -228,7 +265,11 @@ class Market(db.Model):
     @property
     def lineage_chain(self):
         """Return a formatted string of the market lineage"""
+<<<<<<< HEAD
         return ' → '.join([m.title for m in list(reversed(self.lineage)) + [self]])
+=======
+        return ' → '.join([m.title for m in reversed(self.lineage) + [self]])
+>>>>>>> d745d5f (Fix badge image rendering and static path config)
     
     def __repr__(self):
         return f'<Market {self.id}: {self.title}>'
@@ -252,6 +293,7 @@ class Market(db.Model):
     
     def trade(self, user, amount, outcome):
         """
+<<<<<<< HEAD
         Execute a trade on this market.
         
         Args:
@@ -284,10 +326,60 @@ class Market(db.Model):
                 'price': trade_result['price'],
                 'shares': trade_result['shares'],
                 'outcome': trade_result['outcome']
+=======
+        Execute a trade on the market.
+        
+        Args:
+            user (User): User executing the trade
+            amount (float): Points to trade
+            outcome (bool): True for YES, False for NO
+            
+        Returns:
+            dict: Trade result containing price and shares
+            
+        Raises:
+            ValueError: If trade would exceed pool cap
+        """
+        # Validate amount
+        if amount < Config.MIN_TRADE_SIZE or amount > Config.MAX_TRADE_SIZE:
+            raise ValueError(f'Trade amount must be between {Config.MIN_TRADE_SIZE} and {Config.MAX_TRADE_SIZE} points')
+            
+        # Check pool cap
+        total_pool = self.yes_pool + self.no_pool
+        if total_pool + amount > Config.CONTRACT_POOL_CAP:
+            raise ValueError(f'Market pool cap reached. Total pool cannot exceed {Config.CONTRACT_POOL_CAP} points')
+            
+        # Calculate price
+        if outcome:  # Trading YES
+            price = self.yes_pool / self.no_pool
+            self.yes_pool += amount
+            shares = amount / price
+        else:  # Trading NO
+            price = self.no_pool / self.yes_pool
+            self.no_pool += amount
+            shares = amount / price
+            
+        # Update prices
+        self.update_prices()
+        
+        # Log the trade
+        event = MarketEvent(
+            market_id=self.id,
+            event_type='trade_executed',
+            user_id=user.id,
+            description=f'Trade executed on market "{self.title}"',
+            event_data={
+                'amount': amount,
+                'outcome': outcome,
+                'price': price,
+                'shares': shares,
+                'total_pool': total_pool + amount
+>>>>>>> d745d5f (Fix badge image rendering and static path config)
             }
         )
         db.session.add(event)
         
+<<<<<<< HEAD
         return trade_result
 
     def resolve(self, outcome: bool):
@@ -327,6 +419,14 @@ class Market(db.Model):
         
         return True
 
+=======
+        return {
+            'price': price,
+            'shares': shares,
+            'total_pool': total_pool + amount
+        }
+    
+>>>>>>> d745d5f (Fix badge image rendering and static path config)
     def update_prices(self):
         # Update prices
         pass
@@ -342,6 +442,7 @@ class Market(db.Model):
         
         for lp in self.liquidity_providers:
             reward = (fee * lp.shares) / total_shares
+<<<<<<< HEAD
             
             # Use payout engine to handle points
             from app.services.points_payout_engine import PointsPayoutEngine
@@ -351,6 +452,9 @@ class Market(db.Model):
                 market_id=self.id,
                 outcome='LIQUIDITY'  # Special outcome type for liquidity rewards
             )
+=======
+            lp.user.points += reward
+>>>>>>> d745d5f (Fix badge image rendering and static path config)
             
             # Log the reward
             event = MarketEvent(
@@ -366,6 +470,7 @@ class Market(db.Model):
             )
             db.session.add(event)
 
+<<<<<<< HEAD
     def award_xp_for_predictions(self, base_xp_per_share: int = 10):
         """
         Award XP to users with correct predictions on this market.
@@ -488,11 +593,51 @@ class Prediction(db.Model):
 
     def __repr__(self):
         return f'<Prediction {self.id}: {self.shares} shares on Market {self.market_id}>'
+=======
+    def resolve(self, outcome):
+        """Resolve the market with a given outcome"""
+        if self.resolved:
+            raise ValueError('Market is already resolved')
+            
+        if outcome not in ['YES', 'NO']:
+            raise ValueError('Outcome must be either "YES" or "NO"')
+            
+        self.resolved = True
+        self.resolved_outcome = outcome
+        self.resolved_at = datetime.utcnow()
+        self.integrity_hash = generate_contract_hash(self)
+        
+        # Calculate payouts for all predictions
+        for prediction in self.predictions:
+            if prediction.prediction == outcome:
+                # Calculate payout based on pool sizes
+                total_pool = self.yes_pool + self.no_pool
+                if outcome == 'YES':
+                    prediction.payout = prediction.shares * (total_pool / self.yes_pool)
+                else:
+                    prediction.payout = prediction.shares * (total_pool / self.no_pool)
+                prediction.user.points += prediction.payout
+        
+        db.session.commit()
+
+class Prediction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    market_id = db.Column(db.Integer, db.ForeignKey('market.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    prediction = db.Column(db.String(3), nullable=False)
+    shares = db.Column(db.Float, default=0.0)
+    average_price = db.Column(db.Float, default=0.0)
+    payout = db.Column(db.Float, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    market = db.relationship('Market', back_populates='predictions', lazy=True)
+    user = db.relationship('User', back_populates='predictions', lazy=True)
+>>>>>>> d745d5f (Fix badge image rendering and static path config)
 
 class MarketEvent(db.Model):
     """Model to track important events in a market's lifecycle"""
     id = db.Column(db.Integer, primary_key=True)
     market_id = db.Column(db.Integer, db.ForeignKey('market.id'), nullable=False)
+<<<<<<< HEAD
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     event_type = db.Column(db.String, nullable=False)  # Add required event_type field
     description = db.Column(db.String(200), nullable=False)
@@ -537,19 +682,55 @@ class MarketEvent(db.Model):
         
         return event
 
+=======
+    event_type = db.Column(db.String(20), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    description = db.Column(db.Text)
+    event_data = db.Column(db.JSON)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    market = db.relationship('Market', back_populates='events', lazy=True)
+    user = db.relationship('User', back_populates='events', lazy=True)
+    
+>>>>>>> d745d5f (Fix badge image rendering and static path config)
     @classmethod
     def log_market_creation(cls, market, user_id):
         """Log the creation of a new market"""
         return cls(
             market_id=market.id,
+<<<<<<< HEAD
             event_type='market_created',  # Add event_type
+=======
+            event_type='market_created',
+>>>>>>> d745d5f (Fix badge image rendering and static path config)
             user_id=user_id,
             description=f'Market "{market.title}" created',
             event_data={
                 'title': market.title,
+<<<<<<< HEAD
                 'description': market.description,
                 'resolution_date': market.resolution_date.isoformat(),
                 'resolution_method': market.resolution_method,
+=======
+                'domain': market.domain,
+                'resolution_date': market.resolution_date.isoformat(),
+                'resolution_method': market.resolution_method,
+                'lineage': market.lineage_chain
+            }
+        )
+    
+    @classmethod
+    def log_market_update(cls, market, user_id, changes):
+        """Log an update to an existing market"""
+        return cls(
+            market_id=market.id,
+            event_type='market_updated',
+            user_id=user_id,
+            description=f'Market "{market.title}" updated',
+            event_data={
+                'changes': changes,
+>>>>>>> d745d5f (Fix badge image rendering and static path config)
                 'domain': market.domain,
                 'lineage': market.lineage_chain
             }
@@ -557,15 +738,58 @@ class MarketEvent(db.Model):
     
     @classmethod
     def log_market_resolution(cls, market, user_id):
+<<<<<<< HEAD
         """Log market resolution"""
         return cls(
             market_id=market.id,
             event_type='market_resolved',  # Add event_type
+=======
+        """Log the resolution of a market"""
+        return cls(
+            market_id=market.id,
+            event_type='market_resolved',
+>>>>>>> d745d5f (Fix badge image rendering and static path config)
             user_id=user_id,
             description=f'Market "{market.title}" resolved',
             event_data={
                 'outcome': market.resolved_outcome,
+<<<<<<< HEAD
                 'resolved_at': datetime.utcnow().isoformat(),
+=======
+                'domain': market.domain,
+                'resolution_date': market.resolved_at.isoformat(),
+                'lineage': market.lineage_chain
+            }
+        )
+    
+    @classmethod
+    def log_prediction(cls, market, user_id, prediction):
+        """Log a user's prediction on a market"""
+        return cls(
+            market_id=market.id,
+            event_type='prediction',
+            user_id=user_id,
+            description=f'Prediction made on market "{market.title}"',
+            event_data={
+                'prediction': prediction,
+                'domain': market.domain,
+                'lineage': market.lineage_chain
+            }
+        )
+    
+    @classmethod
+    def log_lineage_change(cls, market, user_id, parent_market_id):
+        """Log a change in market lineage"""
+        return cls(
+            market_id=market.id,
+            event_type='lineage_changed',
+            user_id=user_id,
+            description=f'Market "{market.title}" lineage updated',
+            event_data={
+                'old_parent': market.parent_market_id,
+                'new_parent': parent_market_id,
+                'domain': market.domain,
+>>>>>>> d745d5f (Fix badge image rendering and static path config)
                 'lineage': market.lineage_chain
             }
         )
@@ -573,6 +797,7 @@ class MarketEvent(db.Model):
     def __repr__(self):
         return f'<MarketEvent {self.id}: {self.event_type} for Market {self.market_id}>'
 
+<<<<<<< HEAD
 class LiquidityPool(db.Model):
     __tablename__ = 'liquidity_pools'
 
@@ -611,6 +836,8 @@ class Contract(db.Model):
     liquidity_pool = db.relationship('LiquidityPool', uselist=False, back_populates='contract')
     amm_market = db.relationship('AMMMarket', uselist=False, back_populates='contract', lazy='joined')
 
+=======
+>>>>>>> d745d5f (Fix badge image rendering and static path config)
 class AnchoredHash(db.Model):
     """Placeholder table for future blockchain anchoring"""
     id = db.Column(db.Integer, primary_key=True)
@@ -719,6 +946,7 @@ class LeagueMember(db.Model):
 
     def __repr__(self):
         return f'<LeagueMember {self.user.username} in {self.league.name}>'
+<<<<<<< HEAD
 
 class PlatformWallet(db.Model):
     """Platform wallet to track cumulative platform fees."""
@@ -747,3 +975,5 @@ class PlatformWallet(db.Model):
 
     def __repr__(self):
         return f'<PlatformWallet id={self.id} balance={self.balance:.2f}>'
+=======
+>>>>>>> d745d5f (Fix badge image rendering and static path config)

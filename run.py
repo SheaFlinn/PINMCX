@@ -4,7 +4,11 @@ print("⚠️  Flask running from:", os.getcwd())
 from app import create_app
 from app.extensions import db
 from app.models import User
+<<<<<<< HEAD
 from flask import send_from_directory, render_template
+=======
+from flask import send_from_directory
+>>>>>>> d745d5f (Fix badge image rendering and static path config)
 
 app = create_app()
 
@@ -12,6 +16,7 @@ app = create_app()
 def debug_badge():
     return send_from_directory('static/badges', 'master_predictor.svg')
 
+<<<<<<< HEAD
 @app.errorhandler(404)
 def not_found(e):
     app.logger.warning(f"404 error: {str(e)}")
@@ -22,6 +27,8 @@ def server_error(e):
     app.logger.error(f"500 error: {str(e)}", exc_info=True)
     return render_template("500.html"), 500
 
+=======
+>>>>>>> d745d5f (Fix badge image rendering and static path config)
 if __name__ == '__main__':
     # Create admin user if it doesn't exist
     with app.app_context():
