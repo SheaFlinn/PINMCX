@@ -1,0 +1,902 @@
+{% extends "base.html" %}
+
+{% block title %}{{ market.title }}{% endblock %}
+
+{% block content %}
+<div class="market-detail">
+    <div class="market-header">
+        <h1>{{ market.title }}</h1>
+        <div class="market-meta">
+            <span class="domain-tag">{{ market.domain|capitalize }}</span>
+            <span class="resolution-date">Resolves: {{ market.resolution_date.strftime('%B %d, %Y') }}</span>
+            {% if market.resolved %}
+                <span class="resolution-status">Resolved: {{ market.resolved_outcome }}</span>
+            {% endif %}
+            
+            {% if market.yes_pool + market.no_pool >= config.CONTRACT_POOL_CAP %}
+            <div class="pool-cap-banner">
+                This market is full. Stay tuned for future versions.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Market Description -->
+    <div class="market-description">
+        <h2>Market Description</h2>
+        <p>{{ market.description }}</p>
+    </div>
+
+    <!-- Market Exports -->
+    <div class="market-exports mb-4">
+        {% if market.resolved %}
+        <div class="btn-group">
+            <a href="{{ url_for('main.market_transcript', market_id=market.id, format='csv') }}" class="btn btn-sm btn-secondary">
+                📄 Download CSV
+            </a>
+            <a href="{{ url_for('main.market_transcript', market_id=market.id, format='json') }}" class="btn btn-sm btn-outline-secondary">
+                � Download JSON
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Predictions Table -->
+    <div class="predictions-table">
+        <h2>Market Predictions</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Prediction</th>
+                    <th>Shares</th>
+                    <th>Payout</th>
+                    <th>Reliability Index</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prediction in market.predictions %}
+                <tr>
+                    <td>{{ prediction.user.username }}</td>
+                    <td>{{ "YES" if prediction.prediction == 1 else "NO" }}</td>
+                    <td>{{ "%.2f"|format(prediction.shares) }}</td>
+                    <td>{{ "%.2f"|format(prediction.payout) }}</td>
+                    <td>
+                        {% if market.resolved %}
+                            <div class="reliability-index">
+                                <span class="score">{{ "%.2f"|format(prediction.user.reliability_index or 0.0) }}</span>
+                            </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Market Transcript -->
+    <div class="market-transcript">
+        <h2>Market Transcript</h2>
+        <div class="mb-3">
+            <a href="{{ url_for('main.market_transcript_json', market_id=market.id) }}" class="btn btn-sm btn-outline-secondary">
+                📁 Download Transcript
+            </a>
+        </div>
+        <div class="event-timeline">
+            {% for event in market.events|sort(attribute='created_at', reverse=True) %}
+            <div class="event-item">
+                <div class="event-type">{{ event.event_type }}</div>
+                <div class="event-content">
+                    <div class="event-header">
+                        <span class="event-description">{{ event.description }}</span>
+                        <span class="event-time">{{ event.created_at.strftime('%B %d, %Y %H:%M') }}</span>
+                    </div>
+                    {% if event.user %}
+                        <div class="event-user">By: {{ event.user.username }}</div>
+                    {% endif %}
+                    <div class="event-details">
+                        <pre>{{ event.event_data|tojson|indent(2) }}</pre>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Market Lineage -->
+    <div class="market-lineage">
+        <h2>Market Lineage</h2>
+        <div class="lineage-chain">
+            {% if market.lineage_chain %}
+                {{ market.lineage_chain }}
+            {% else %}
+                <span class="no-lineage">This market has no parent markets.</span>
+            {% endif %}
+        </div>
+        <div class="lineage-history mt-3">
+            <h3>Lineage History</h3>
+            <div class="timeline">
+                <div class="timeline-items" id="lineageHistory">
+                    <!-- Timeline items will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if market.resolved %}
+    <div class="market-resolved">
+        <h3>Market Resolved</h3>
+        <p>Outcome: {{ market.resolved_outcome }}</p>
+        <p>Resolved at: {{ market.resolved_at.strftime('%B %d, %Y %H:%M') }}</p>
+    </div>
+
+    <div class="market-exports mb-4">
+        <a href="{{ url_for('main.export_market', market_id=market.id, format='csv') }}" class="btn btn-sm btn-secondary">
+            📄 Export CSV
+        </a>
+        <a href="{{ url_for('main.export_market', market_id=market.id, format='json') }}" class="btn btn-sm btn-outline-secondary">
+            📄 Export JSON
+        </a>
+        <a href="{{ url_for('main.prediction_transcript', market_id=market.id) }}" class="btn btn-sm btn-outline-secondary">
+            📁 Download Transcript
+        </a>
+    </div>
+    {% endif %}
+
+    <div class="market-trading-widget">
+        <h3>Trade Shares</h3>
+        
+        <div class="market-prices">
+            <div class="price-box">
+                <div class="price-label">YES Price</div>
+                <div class="price-value">{{ "%.2f"|format(market.yes_price) }} points</div>
+            </div>
+            <div class="price-box">
+                <div class="price-label">NO Price</div>
+                <div class="price-value">{{ "%.2f"|format(market.no_price) }} points</div>
+            </div>
+        </div>
+
+        <div class="trading-form">
+            <div class="form-group">
+                <label for="prediction_type">Prediction Type</label>
+                <select class="form-control" id="prediction_type">
+                    <option value="YES">YES</option>
+                    <option value="NO">NO</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="points_input">Points to Trade</label>
+                <input type="number" class="form-control" id="points_input" min="1" step="0.01" 
+                       value="100" required>
+                <div class="form-text">
+                    Available points: {{ current_user.points }}
+                </div>
+            </div>
+
+            <div class="trade-preview">
+                <h4>Trade Preview</h4>
+                <div class="preview-item">
+                    <span class="label">Price:</span>
+                    <span class="value" id="preview_price">0.00</span>
+                </div>
+                <div class="preview-item">
+                    <span class="label">Shares:</span>
+                    <span class="value" id="preview_shares">0.00</span>
+                </div>
+                <div class="preview-item">
+                    <span class="label">Total Cost:</span>
+                    <span class="value" id="preview_total">0.00</span>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-primary" id="trade_button">Execute Trade</button>
+        </div>
+
+        <div class="user-positions">
+            <h4>Your Positions</h4>
+            <div class="position-item">
+                <span class="label">YES Shares:</span>
+                <span class="value">{{ "%.2f"|format(yes_position.shares if yes_position else 0) }}</span>
+                <span class="value current-value">${{ "%.2f"|format(yes_position.current_value if yes_position else 0) }}</span>
+            </div>
+            <div class="position-item">
+                <span class="label">NO Shares:</span>
+                <span class="value">{{ "%.2f"|format(no_position.shares if no_position else 0) }}</span>
+                <span class="value current-value">${{ "%.2f"|format(no_position.current_value if no_position else 0) }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="market-trading-widget">
+        <h3>Liquidity Provider Interface</h3>
+        
+        <div class="liquidity-stats">
+            <div class="stat-box">
+                <div class="stat-label">Total Liquidity Pool</div>
+                <div class="stat-value">{{ "%.2f"|format(market.liquidity_pool) }} points</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Liquidity Fee</div>
+                <div class="stat-value">{{ "%.1f"|format(market.liquidity_fee * 100) }}%</div>
+            </div>
+        </div>
+
+        <div class="liquidity-form">
+            <div class="form-group">
+                <label for="liquidity_action">Action</label>
+                <select class="form-control" id="liquidity_action">
+                    <option value="provide">Provide Liquidity</option>
+                    <option value="withdraw">Withdraw Liquidity</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="liquidity_points">Points</label>
+                <input type="number" class="form-control" id="liquidity_points" min="1" step="0.01" 
+                       value="100" required>
+                <div class="form-text">
+                    Available points: {{ current_user.points }}
+                </div>
+            </div>
+
+            <div class="liquidity-preview">
+                <h4>Liquidity Preview</h4>
+                <div class="preview-item">
+                    <span class="label">Your Share:</span>
+                    <span class="value" id="preview_share">0.00%</span>
+                </div>
+                <div class="preview-item">
+                    <span class="label">Pool Impact:</span>
+                    <span class="value" id="preview_pool_impact">0.00%</span>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-primary" id="liquidity_button">Execute</button>
+        </div>
+
+        <div class="your-liquidity-position">
+            <h4>Your Liquidity Position</h4>
+            <div class="position-item">
+                <span class="label">Shares:</span>
+                <span class="value">{{ "%.2f"|format(lp.shares if lp else 0) }}</span>
+            </div>
+            <div class="position-item">
+                <span class="label">Share Percentage:</span>
+                <span class="value">{{ "%.2f"|format(lp.share_percentage if lp else 0) }}%</span>
+            </div>
+            <div class="position-item">
+                <span class="label">Total Rewards:</span>
+                <span class="value">{{ "%.2f"|format(lp.total_rewards if lp else 0) }} points</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Market Details</h5>
+                    <p><strong>Created:</strong> {{ market.created_at.strftime('%Y-%m-%d') }}</p>
+                    <p><strong>Resolution Date:</strong> {{ market.resolution_date.strftime('%Y-%m-%d') }}</p>
+                    <p><strong>Status:</strong> {% if market.resolved %}Resolved{% else %}Active{% endif %}</p>
+                    {% if market.resolved %}
+                    <p><strong>Outcome:</strong> {{ market.outcome }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            {% if not market.resolved %}
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Make Prediction</h5>
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="prediction" class="form-label">Prediction</label>
+                            <select class="form-select" id="prediction" name="prediction" required>
+                                <option value="YES">YES</option>
+                                <option value="NO">NO</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="points" class="form-label">Points to Stake</label>
+                            <input type="number" class="form-control" id="points" name="points" min="1" required>
+                            <div class="form-text">
+                                Available points: {{ current_user.points }}
+                                <br>
+                                Available LB points: {{ current_user.lb_deposit }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="lb_stake" name="lb_stake">
+                                <label class="form-check-label" for="lb_stake">
+                                    Stake from Liquidity Buffer (10% bonus if correct)
+                                </label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Make Prediction</button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if market.resolved %}
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Market Resolution</h5>
+            <div class="alert alert-info">
+                This market has been resolved with outcome: {{ market.outcome }}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Resolve Market</h5>
+            <form method="POST" action="{{ url_for('resolve_market', market_id=market.id) }}">
+                <div class="mb-3">
+                    <label for="outcome" class="form-label">Outcome</label>
+                    <select class="form-select" id="outcome" name="outcome" required>
+                        <option value="YES">YES</option>
+                        <option value="NO">NO</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Resolve Market</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <h2 class="mt-4">Predictions</h2>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Prediction</th>
+                    <th>Points Staked</th>
+                    <th>Status</th>
+                    <th>Points Won</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prediction in market.predictions %}
+                <tr>
+                    <td>{{ prediction.user.username }}</td>
+                    <td>{{ prediction.prediction }}</td>
+                    <td>{{ prediction.points_staked }}</td>
+                    <td>
+                        {% if prediction.resolved %}
+                            {% if prediction.points_won > 0 %}
+                                <span class="text-success">Correct</span>
+                            {% else %}
+                                <span class="text-danger">Incorrect</span>
+                            {% endif %}
+                        {% else %}
+                            Active
+                        {% endif %}
+                    </td>
+                    <td>{{ prediction.points_won }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Market Exports -->
+    <div class="market-exports mb-4">
+        {% if market.resolved %}
+        <a href="{{ url_for('main.market_transcript', market_id=market.id, format='csv') }}" class="btn btn-sm btn-secondary">
+            📄 Download CSV
+        </a>
+        <a href="{{ url_for('main.market_transcript', market_id=market.id, format='json') }}" class="btn btn-sm btn-outline-secondary">
+            📄 Download JSON
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    /* Mobile-first responsive design */
+    @media (max-width: 768px) {
+        .market-info {
+            padding: 1rem;
+        }
+        
+        .market-meta {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+        
+        .domain-badge {
+            display: block;
+            margin: 0.5rem 0;
+        }
+        
+        .status-badge {
+            display: block;
+            margin: 0.5rem 0;
+        }
+        
+        .pool-cap-banner {
+            font-size: 0.9rem;
+            padding: 0.75rem;
+        }
+        
+        .trading-widget {
+            padding: 1rem;
+        }
+        
+        .price-display {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .price-box {
+            width: 100%;
+            padding: 1rem;
+        }
+        
+        .trade-form {
+            gap: 1rem;
+        }
+        
+        .form-group {
+            gap: 0.75rem;
+        }
+        
+        .radio-group {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+        }
+        
+        .market-transcript {
+            padding: 1rem;
+        }
+        
+        .transcript-item {
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+        }
+        
+        .transcript-item .user {
+            font-size: 0.9rem;
+        }
+        
+        .transcript-item .action {
+            font-size: 0.9rem;
+        }
+        
+        .transcript-item .timestamp {
+            font-size: 0.75rem;
+        }
+    }
+
+    /* Desktop styles */
+    @media (min-width: 769px) {
+        .market-info {
+            padding: 2rem;
+        }
+        
+        .market-meta {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .domain-badge {
+            display: inline-block;
+            margin-right: 1rem;
+        }
+        
+        .status-badge {
+            display: inline-block;
+        }
+        
+        .pool-cap-banner {
+            font-size: 1.1rem;
+            padding: 1rem;
+        }
+        
+        .trading-widget {
+            padding: 1.5rem;
+        }
+        
+        .price-display {
+            flex-direction: row;
+            justify-content: space-between;
+        }
+        
+        .price-box {
+            width: auto;
+            padding: 1rem;
+        }
+        
+        .trade-form {
+            gap: 1.5rem;
+        }
+        
+        .form-group {
+            gap: 1rem;
+        }
+        
+        .radio-group {
+            flex-direction: row;
+            gap: 1.5rem;
+        }
+        
+        .btn-primary {
+            padding: 0.75rem 2rem;
+            font-size: 1.1rem;
+        }
+        
+        .market-transcript {
+            padding: 1.5rem;
+        }
+        
+        .transcript-item {
+            padding: 1rem;
+            margin: 0.75rem 0;
+        }
+        
+        .transcript-item .user {
+            font-size: 1rem;
+        }
+        
+        .transcript-item .action {
+            font-size: 1rem;
+        }
+        
+        .transcript-item .timestamp {
+            font-size: 0.85rem;
+        }
+    }
+
+    /* Prediction UX improvements */
+    .prediction-form {
+        background: #fff;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .prediction-form h3 {
+        margin-bottom: 1rem;
+        color: #0d6efd;
+    }
+
+    .prediction-form .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .prediction-form label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #6c757d;
+    }
+
+    .prediction-form input[type="number"] {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+    .prediction-form .btn-primary {
+        width: 100%;
+        margin-top: 1rem;
+    }
+
+    /* Resolved market indicator */
+    .resolved-market {
+        position: relative;
+    }
+
+    .resolved-market::before {
+        content: "Resolved";
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: #ffcccc;
+        color: #8b0000;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+
+    .resolved-market h1 {
+        text-decoration: line-through;
+        color: #6c757d;
+    }
+
+    /* Next market drop banner */
+    .next-market-drop {
+        background: #e9f3ff;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .next-market-drop h3 {
+        color: #0d6efd;
+        margin-bottom: 0.5rem;
+    }
+
+    .next-market-drop .countdown {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #0d6efd;
+    }
+
+    /* Leaderboard styles */
+    .leaderboard {
+        background: #fff;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .leaderboard h3 {
+        margin-bottom: 1rem;
+        color: #0d6efd;
+    }
+
+    .leaderboard-filters {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .leaderboard-filter {
+        padding: 0.5rem 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .leaderboard-filter.active {
+        background: #0d6efd;
+        color: white;
+        border-color: #0d6efd;
+    }
+
+    .leaderboard-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .leaderboard-table th,
+    .leaderboard-table td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .leaderboard-table th {
+        background: #f8f9fa;
+        font-weight: bold;
+    }
+
+    .leaderboard-table tr:hover {
+        background: #f8f9fa;
+    }
+
+    /* Radio landing page styles */
+    .radio-landing {
+        padding: 4rem 2rem;
+        text-align: center;
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        color: white;
+    }
+
+    .radio-landing h1 {
+        font-size: 3rem;
+        margin-bottom: 2rem;
+    }
+
+    .radio-landing .cta {
+        display: inline-block;
+        padding: 1rem 2rem;
+        background: white;
+        color: #0d6efd;
+        text-decoration: none;
+        border-radius: 4px;
+        margin-top: 2rem;
+    }
+
+    .radio-landing .cta:hover {
+        background: #f8f9fa;
+        color: #0a58ca;
+    }
+</style>
+
+<script>
+// Store server-side data in a JavaScript object
+const marketData = {
+    market: {
+        id: {{ market.id|tojson }},
+        yes_price: {{ market.yes_price|tojson }},
+        no_price: {{ market.no_price|tojson }},
+        liquidity_pool: {{ market.liquidity_pool|tojson }}
+    },
+    lp: {
+        shares: {{ lp.shares|tojson if lp else "0"|tojson }}
+    }
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Trade functionality
+    const predictionTypeSelect = document.getElementById('prediction_type');
+    const pointsInput = document.getElementById('points_input');
+    const tradeButton = document.getElementById('trade_button');
+    const previewPrice = document.getElementById('preview_price');
+    const previewShares = document.getElementById('preview_shares');
+    const previewTotal = document.getElementById('preview_total');
+
+    function updatePreview() {
+        const predictionType = predictionTypeSelect.value;
+        const points = parseFloat(pointsInput.value) || 0;
+        
+        let price, shares;
+        if (predictionType === 'YES') {
+            price = marketData.market.yes_price;
+        } else {
+            price = marketData.market.no_price;
+        }
+        
+        shares = points / price;
+        
+        previewPrice.textContent = price.toFixed(2);
+        previewShares.textContent = shares.toFixed(2);
+        previewTotal.textContent = points.toFixed(2);
+    }
+    
+    // Update preview when inputs change
+    predictionTypeSelect.addEventListener('change', updatePreview);
+    pointsInput.addEventListener('input', updatePreview);
+    
+    // Initialize preview
+    updatePreview();
+    
+    // Handle trade execution
+    tradeButton.addEventListener('click', async function() {
+        const predictionType = predictionTypeSelect.value;
+        const points = parseFloat(pointsInput.value);
+        
+        if (!points || points <= 0) {
+            alert('Please enter a valid number of points');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/market/${marketData.market.id}/trade`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    prediction_type: predictionType,
+                    points: points
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update UI with new market state
+                previewPrice.textContent = data.market.yes_price.toFixed(2);
+                previewShares.textContent = data.shares.toFixed(2);
+                previewTotal.textContent = points.toFixed(2);
+                
+                // Refresh user points
+                document.querySelector('.user-points').textContent = data.user.points;
+                
+                // Show success message
+                alert('Trade executed successfully!');
+            } else {
+                throw new Error(data.error || 'Trade failed');
+            }
+        } catch (error) {
+            alert(`Error: ${error.message}`);
+        }
+    });
+
+    // Liquidity functionality
+    const liquidityAction = document.getElementById('liquidity_action');
+    const liquidityPoints = document.getElementById('liquidity_points');
+    const liquidityButton = document.getElementById('liquidity_button');
+    const previewShare = document.getElementById('preview_share');
+    const previewPoolImpact = document.getElementById('preview_pool_impact');
+    
+    function updateLiquidityPreview() {
+        const action = liquidityAction.value;
+        const points = parseFloat(liquidityPoints.value) || 0;
+        const totalPool = marketData.market.liquidity_pool;
+        
+        if (action === 'provide') {
+            let sharePercentage = totalPool === 0 ? 100 : (points / totalPool) * 100;
+            previewShare.textContent = sharePercentage.toFixed(2) + '%';
+            previewPoolImpact.textContent = (points / totalPool * 100).toFixed(2) + '%';
+        } else {
+            const lp = marketData.lp.shares;
+            if (lp > 0) {
+                const sharePercentage = (points / lp) * 100;
+                previewShare.textContent = sharePercentage.toFixed(2) + '%';
+                previewPoolImpact.textContent = (points / totalPool * 100).toFixed(2) + '%';
+            } else {
+                previewShare.textContent = '0.00%';
+                previewPoolImpact.textContent = '0.00%';
+            }
+        }
+    }
+    
+    // Update preview when inputs change
+    liquidityAction.addEventListener('change', updateLiquidityPreview);
+    liquidityPoints.addEventListener('input', updateLiquidityPreview);
+    
+    // Initialize preview
+    updateLiquidityPreview();
+    
+    // Handle liquidity action
+    liquidityButton.addEventListener('click', async function() {
+        const action = liquidityAction.value;
+        const points = parseFloat(liquidityPoints.value);
+        
+        if (!points || points <= 0) {
+            alert('Please enter a valid number of points');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/market/${marketData.market.id}/liquidity`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: action,
+                    points: points
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update UI with new market state
+                previewShare.textContent = data.share_percentage.toFixed(2) + '%';
+                previewPoolImpact.textContent = data.pool_impact.toFixed(2) + '%';
+                
+                // Refresh user points
+                document.querySelector('.user-points').textContent = data.user.points;
+                
+                // Show success message
+                alert('Liquidity action executed successfully!');
+            } else {
+                throw new Error(data.error || 'Liquidity action failed');
+            }
+        } catch (error) {
+            alert(`Error: ${error.message}`);
+        }
+    });
+
+    // Initialize components
+    startCountdown();
+    filterLeaderboard('all');
+});
+</script>
+{% endblock %}

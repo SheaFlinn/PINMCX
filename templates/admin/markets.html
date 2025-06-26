@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Admin - Markets{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Markets</h2>
+        </div>
+        <div class="col-auto">
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                    Filter by Domain
+                </button>
+                <ul class="dropdown-menu" id="domain-filter">
+                    <li><a class="dropdown-item active" href="{{ url_for('admin.markets', domain='all') }}">All Domains</a></li>
+                    {% for category in domain_categories %}
+                    <li><a class="dropdown-item" href="{{ url_for('admin.markets', domain=category) }}">{{ category|title }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Domain</th>
+                    <th>Resolution Date</th>
+                    <th>Status</th>
+                    <th>Lineage</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for market in markets %}
+                <tr>
+                    <td>{{ market.title }}</td>
+                    <td>{{ market.description }}</td>
+                    <td>{{ market.domain|capitalize }}</td>
+                    <td>{{ market.resolution_date.strftime('%B %d, %Y') }}</td>
+                    <td>
+                        {% if market.resolved %}
+                            <span class="badge bg-success">Resolved</span>
+                        {% else %}
+                            <span class="badge bg-warning">Active</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="lineage-info">
+                            {% if market.parent_market %}
+                            <span class="parent-market">Parent: {{ market.parent_market.title }}</span>
+                            {% else %}
+                            <span class="no-parent">No Parent</span>
+                            {% endif %}
+                            <button class="btn btn-sm btn-outline-secondary manage-lineage" 
+                                    data-market-id="{{ market.id }}">
+                                Manage Lineage
+                            </button>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="btn-group">
+                            <a href="{{ url_for('main.market', market_id=market.id) }}" class="btn btn-primary btn-sm">View</a>
+                            {% if not market.resolved %}
+                            <button class="btn btn-success btn-sm resolve-market" 
+                                    data-market-id="{{ market.id }}">
+                                Resolve
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Lineage Management Modal -->
+<div class="modal fade" id="lineageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Manage Market Lineage</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="lineageForm">
+                    <input type="hidden" id="market_id" name="market_id">
+                    <div class="mb-3">
+                        <label for="parent_market" class="form-label">Parent Market</label>
+                        <select class="form-select" id="parent_market" name="parent_market_id">
+                            <option value="">No Parent Market</option>
+                            {% for market in markets %}
+                            <option value="{{ market.id }}">{{ market.title }} ({{ market.domain|capitalize }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary" form="lineageForm">Update Lineage</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize modals
+    const lineageModal = new bootstrap.Modal(document.getElementById('lineageModal'));
+    
+    // Handle lineage management button clicks
+    document.querySelectorAll('.manage-lineage').forEach(button => {
+        button.addEventListener('click', function() {
+            const marketId = this.dataset.marketId;
+            document.getElementById('market_id').value = marketId;
+            lineageModal.show();
+        });
+    });
+
+    // Handle lineage form submission
+    document.getElementById('lineageForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        fetch(`/admin/change_lineage/${formData.get('market_id')}`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                lineageModal.hide();
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating lineage');
+        });
+    });
+
+    // Handle resolve market buttons
+    const resolveButtons = document.querySelectorAll('.resolve-market');
+    resolveButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const marketId = this.dataset.marketId;
+            
+            // Get outcome from user
+            const outcome = prompt('Enter outcome (YES/NO):');
+            if (!outcome || (outcome.toUpperCase() !== 'YES' && outcome.toUpperCase() !== 'NO')) {
+                alert('Please enter a valid outcome (YES or NO)');
+                return;
+            }
+            
+            // Send resolution request
+            fetch(`/admin/resolve_market/${marketId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    outcome: outcome.toUpperCase()
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Error resolving market: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error resolving market:', error);
+                alert('Error resolving market');
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

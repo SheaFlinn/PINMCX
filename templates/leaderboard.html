@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Leaderboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Leaderboard</h2>
+    <table class="table table-striped mt-3">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Username</th>
+                <th>XP</th>
+                <th>Reliability</th>
+                <th>Points</th>
+                <th>Total Predictions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>
+                    {{ user.username }}
+                    {% if user.badges_sorted %}
+                        {% for badge in user.badges_sorted %}
+                            {% if badge.icon %}
+                            <img src="{{ url_for('static', filename='badges/' ~ badge.icon) }}"
+                                 alt="{{ badge.name }}"
+                                 style="height: 40px; margin-left: 5px; vertical-align: middle;">
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </td>
+                <td>{{ user.xp }}</td>
+                <td>{{ "%.1f"|format(user.reliability) }}%</td>
+                <td>{{ user.points }}</td>
+                <td>{{ user.total_predictions }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">User Profile</h5>
+                <p class="card-text"><strong>Username:</strong> {{ user.username }}</p>
+                <p class="card-text"><strong>Email:</strong> {{ user.email }}</p>
+                <div class="mb-3">
+                    <h6>Points</h6>
+                    <div class="d-flex align-items-center">
+                        <div class="text-success h4 mb-0">{{ user.points }}</div>
+                        <div class="ms-2">
+                            <small class="text-muted">Available Points</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <h6>XP</h6>
+                    <div class="d-flex align-items-center">
+                        <div class="text-primary h4 mb-0">{{ user.xp }}</div>
+                        <div class="ms-2">
+                            <small class="text-muted">Experience Points</small>
+                        </div>
+                    </div>
+                    <div class="progress mt-2" style="height: 6px;">
+                        <div class="progress-bar bg-primary" 
+                             role="progressbar" 
+                             style="width: {{ (user.xp / 1000 * 100)|round(1) }}%" 
+                             aria-valuenow="{{ user.xp }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="1000">
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <h6>Reliability Index</h6>
+                    <div class="d-flex align-items-center">
+                        <div class="text-success h4 mb-0">{{ "%.1f"|format(user.reliability_index) }}%</div>
+                        <div class="ms-2">
+                            <small class="text-muted">Prediction Accuracy</small>
+                        </div>
+                    </div>
+                    <div class="progress mt-2" style="height: 6px;">
+                        <div class="progress-bar bg-success" 
+                             role="progressbar" 
+                             style="width: {{ user.reliability_index }}%" 
+                             aria-valuenow="{{ user.reliability_index }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Recent Predictions</h5>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Market</th>
+                                <th>Prediction</th>
+                                <th>Points Staked</th>
+                                <th>Status</th>
+                                <th>Points Won</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prediction in user.predictions[-5:] %}
+                            <tr>
+                                <td>{{ prediction.market.title }}</td>
+                                <td>{{ prediction.outcome }}</td>
+                                <td>{{ prediction.amount }}</td>
+                                <td>
+                                    {% if prediction.market.resolved %}
+                                        {% if prediction.market.resolved_outcome == prediction.outcome %}
+                                            <span class="text-success">Correct</span>
+                                        {% else %}
+                                            <span class="text-danger">Incorrect</span>
+                                        {% endif %}
+                                    {% else %}
+                                        Active
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if prediction.market.resolved %}
+                                        {% if prediction.market.resolved_outcome == prediction.outcome %}
+                                            <span class="text-success">10</span>
+                                        {% else %}
+                                            <span class="text-danger">-5</span>
+                                        {% endif %}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">No recent predictions</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">User Profile</h5>
+                    <p class="card-text">
+                        <strong>Username:</strong> {{ user.username }}<br>
+                        <strong>Email:</strong> {{ user.email }}<br>
+                        <strong>Member Since:</strong> {{ user.created_at.strftime('%Y-%m-%d') }}<br>
+                        <strong>Last Active:</strong> {{ user.last_active.strftime('%Y-%m-%d %H:%M:%S') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Streak Stats</h5>
+                    <div class="streak-stats">
+                        <div class="streak-progress">
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: {{ (user.current_streak / user.longest_streak * 100) if user.longest_streak > 0 else 0 }}%">
+                                    <span class="streak-number">{{ user.current_streak }}</span>
+                                </div>
+                            </div>
+                            <div class="streak-labels">
+                                <span>Current Streak</span>
+                                <span>Longest: {{ user.longest_streak }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Badges</h5>
+                    <div class="badges-grid">
+                        {% for badge in user.badges %}
+                        <div class="badge-card">
+                            {% if badge.icon %}
+                                <img src="{{ url_for('static', filename='badges/' + badge.icon) }}" 
+                                     alt="{{ badge.name }}" 
+                                     class="badge-icon">
+                            {% endif %}
+                            <div class="badge-info">
+                                <h6>{{ badge.name }}</h6>
+                                <p class="badge-description">{{ badge.description }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if not user.badges %}
+                        <p>No badges earned yet. Keep checking in daily to earn your first badge!</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.badges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.badge-card {
+    text-align: center;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.badge-icon {
+    font-size: 2rem;
+    color: #4CAF50;
+    margin-bottom: 0.5rem;
+}
+
+.badge-info h6 {
+    margin: 0.5rem 0;
+    color: #333;
+}
+
+.badge-description {
+    font-size: 0.85rem;
+    color: #666;
+    margin: 0;
+}
+
+.streak-stats {
+    text-align: center;
+}
+
+.streak-progress {
+    margin-bottom: 1rem;
+}
+
+.progress {
+    height: 1.5rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background-color: #4CAF50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    transition: width 0.3s ease;
+}
+
+.streak-number {
+    font-size: 1.2rem;
+}
+
+.streak-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.5rem;
+}
+</style>
+{% endblock %}

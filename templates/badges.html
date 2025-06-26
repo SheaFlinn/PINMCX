@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Badges{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1>Your Badges</h1>
+            <div class="badge-grid">
+                {% for badge in user_badges %}
+                <div class="badge-card">
+                    <div class="badge-icon">
+                        <img src="{{ url_for('static', filename='badges/' + badge.badge.icon) }}" 
+                             alt="{{ badge.badge.name }} badge">
+                    </div>
+                    <div class="badge-info">
+                        <h3>{{ badge.badge.name }}</h3>
+                        <p class="badge-description">{{ badge.badge.description }}</p>
+                        <p class="badge-category">{{ badge.badge.category }}</p>
+                        <p class="badge-rarity">{{ badge.badge.rarity }}</p>
+                        <p class="badge-earned">Earned: {{ badge.earned_at.strftime('%B %d, %Y') }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12">
+            <h1>Available Badges</h1>
+            <div class="badge-grid">
+                {% for badge in available_badges %}
+                <div class="badge-card">
+                    <div class="badge-icon">
+                        <img src="{{ url_for('static', filename='badges/' + badge.icon) }}" 
+                             alt="{{ badge.name }} badge">
+                    </div>
+                    <div class="badge-info">
+                        <h3>{{ badge.name }}</h3>
+                        <p class="badge-description">{{ badge.description }}</p>
+                        <p class="badge-category">{{ badge.category }}</p>
+                        <p class="badge-rarity">{{ badge.rarity }}</p>
+                        <div class="badge-requirements">
+                            <h4>Requirements:</h4>
+                            <ul>
+                                {% for req, value in badge.requirements.items() %}
+                                <li>{{ req }}: {{ value }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.badge-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.badge-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.badge-card:hover {
+    transform: translateY(-5px);
+}
+
+.badge-icon {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.badge-icon img {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+}
+
+.badge-info {
+    text-align: center;
+}
+
+.badge-info h3 {
+    margin: 0 0 0.5rem 0;
+    color: #0d6efd;
+}
+
+.badge-description {
+    color: #6c757d;
+    margin: 0 0 0.5rem 0;
+}
+
+.badge-category {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.badge-rarity {
+    font-size: 0.875rem;
+    font-weight: bold;
+    color: #0d6efd;
+}
+
+.badge-earned {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.badge-requirements {
+    margin-top: 1rem;
+}
+
+.badge-requirements h4 {
+    color: #0d6efd;
+    font-size: 0.875rem;
+}
+
+.badge-requirements ul {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0;
+}
+
+.badge-requirements li {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin: 0.25rem 0;
+}
+</style>
+{% endblock %}
