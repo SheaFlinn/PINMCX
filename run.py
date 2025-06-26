@@ -1,12 +1,14 @@
-from app import create_app, db
+from app import create_app
+from app.extensions import db
 from flask_migrate import upgrade
-from app.models import User, Market, Prediction
 
 app = create_app()
 
-@app.shell_context_processor
-def make_shell_context():
-    return {'db': db, 'User': User, 'Market': Market, 'Prediction': Prediction}
+@app.before_first_request
+def initialize_database():
+    """Apply migrations on first request (for dev/demo purposes)."""
+    with app.app_context():
+        upgrade()
 
-if __name__ == "__main__":
-    app.run()
+if __name__ == '__main__':
+    app.run(debug=True)
