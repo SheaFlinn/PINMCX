@@ -83,26 +83,41 @@ def logout():
 @main.route('/create_market', methods=['GET', 'POST'])
 @login_required
 def create_market():
-    if not current_user.is_admin:
-        flash('Market creation is only available to administrators', 'error')
+    try:
+        if not current_user.is_admin:
+            flash('Market creation is only available to administrators', 'error')
+            return redirect(url_for('main.index'))
+        
+        form = MarketForm()
+        if form.validate_on_submit():
+            market = Market(
+                title=form.title.data,
+                description=form.description.data,
+                resolution_date=datetime.strptime(form.resolution_date.data, '%Y-%m-%d'),
+                resolution_method=form.resolution_method.data,
+                source_url=form.source_url.data,
+                yes_pool=500,  # Initialize with 50/50 odds
+                no_pool=500    # Initialize with 50/50 odds
+            )
+            
+            db.session.add(market)
+            db.session.commit()
+            flash('Market created successfully!')
+            return redirect(url_for('main.index'))
+        
+        return render_template('create_market.html', form=form)
+    except SQLAlchemyError as e:
+        app.logger.error(f"Database error in market creation: {str(e)}", exc_info=True)
+        flash('Database error occurred. Please try again later.', 'error')
         return redirect(url_for('main.index'))
-    
-    form = MarketForm()
-    if form.validate_on_submit():
-        market = Market(
-            title=form.title.data,
-            description=form.description.data,
-            resolution_date=datetime.strptime(form.resolution_date.data, '%Y-%m-%d'),
-            resolution_method=form.resolution_method.data,
-            source_url=form.source_url.data,
-            yes_pool=500,  # Initialize with 50/50 odds
-            no_pool=500    # Initialize with 50/50 odds
-        )
-        db.session.add(market)
-        db.session.commit()
-        flash('Market created successfully with 50/50 starting odds!')
+    except AttributeError as e:
+        app.logger.error(f"Attribute error in market creation: {str(e)}", exc_info=True)
+        flash('Invalid market data. Please check your inputs.', 'error')
         return redirect(url_for('main.index'))
-    return render_template('create_market.html', form=form)
+    except ValueError as e:
+        app.logger.error(f"Value error in market creation: {str(e)}", exc_info=True)
+        flash('Invalid date format. Please use YYYY-MM-DD.', 'error')
+        return redirect(url_for('main.create_market'))
 
 @main.route('/market/<int:market_id>')
 @login_required
@@ -123,11 +138,11 @@ def market(market_id):
 @main.route('/market/<int:market_id>/predict', methods=['POST'])
 @login_required
 def place_prediction(market_id):
-    market = Market.query.get_or_404(market_id)
-    form = PredictionForm()
-    
-    if form.validate_on_submit():
-        try:
+    try:
+        market = Market.query.get_or_404(market_id)
+        form = PredictionForm()
+        
+        if form.validate_on_submit():
             price = market.place_prediction(
                 user=current_user,
                 outcome=form.outcome.data.upper(),
@@ -135,33 +150,51 @@ def place_prediction(market_id):
             )
             flash(f'Prediction made successfully! Price: {price} points')
             return redirect(url_for('main.market', market_id=market_id))
-        except ValueError as e:
-            flash(str(e), 'error')
-    
-    # If validation failed, re-render the market page with form errors
-    return render_template('market.html', market=market, form=form)
+        
+        # If validation failed, re-render the market page with form errors
+        return render_template('market.html', market=market, form=form)
+    except SQLAlchemyError as e:
+        app.logger.error(f"Database error in prediction: {str(e)}", exc_info=True)
+        flash('Database error occurred. Please try again later.', 'error')
+        return redirect(url_for('main.market', market_id=market_id))
+    except AttributeError as e:
+        app.logger.error(f"Attribute error in prediction: {str(e)}", exc_info=True)
+        flash('Invalid market or user data. Please refresh the page.', 'error')
+        return redirect(url_for('main.market', market_id=market_id))
 
 @main.route('/market/<int:market_id>/resolve', methods=['POST'])
 @login_required
 def resolve_market(market_id):
-    if not current_user.is_admin:
-        flash('Market resolution is only available to administrators', 'error')
-        return redirect(url_for('main.index'))
-    
-    market = Market.query.get_or_404(market_id)
-    outcome = request.form.get('outcome')
-    
-    if outcome not in ['YES', 'NO']:
-        flash('Invalid outcome specified', 'error')
-        return redirect(url_for('main.market', market_id=market_id))
-    
     try:
-        market.resolve(outcome)
+        if not current_user.is_admin:
+            flash('Market resolution is only available to administrators', 'error')
+            return redirect(url_for('main.index'))
+        
+        market = Market.query.get_or_404(market_id)
+        outcome = request.form.get('outcome')
+        
+        if outcome not in ['YES', 'NO']:
+            flash('Invalid outcome specified', 'error')
+            return redirect(url_for('main.market', market_id=market_id))
+        
+        market.resolved = True
+        market.resolved_outcome = outcome
+        market.resolved_at = datetime.utcnow()
+        
+        # Award XP for predictions
+        market.award_xp_for_predictions()
+        
+        db.session.commit()
         flash('Market resolved successfully!')
-    except ValueError as e:
-        flash(str(e), 'error')
-    
-    return redirect(url_for('main.market', market_id=market_id))
+        return redirect(url_for('main.market', market_id=market_id))
+    except SQLAlchemyError as e:
+        app.logger.error(f"Database error in market resolution: {str(e)}", exc_info=True)
+        flash('Database error occurred. Please try again later.', 'error')
+        return redirect(url_for('main.market', market_id=market_id))
+    except AttributeError as e:
+        app.logger.error(f"Attribute error in market resolution: {str(e)}", exc_info=True)
+        flash('Invalid market data. Please refresh the page.', 'error')
+        return redirect(url_for('main.market', market_id=market_id))
 
 @main.route('/market/<int:market_id>/trade', methods=['POST'])
 @login_required
