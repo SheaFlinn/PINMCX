@@ -27,6 +27,10 @@ class TestMarketEvents(unittest.TestCase):
         )
         db.session.add(self.market)
         db.session.commit()
+        # Log market creation event
+        event = MarketEvent.log_market_creation(self.market, user_id=self.user.id)
+        db.session.add(event)
+        db.session.commit()
 
     def tearDown(self):
         db.session.remove()
@@ -40,8 +44,7 @@ class TestMarketEvents(unittest.TestCase):
             title='New Test Market',
             description='Created for testing events',
             resolution_date=datetime.utcnow() + timedelta(days=1),
-            resolution_method='Test method',
-            user_id=self.user.id
+            resolution_method='Test method'
         )
         
         # Verify event was created

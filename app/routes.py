@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_user, login_required, logout_user, current_user
 from . import db
 import config
-from .models import User, Market, Prediction, NewsSource, LiquidityProvider, MarketEvent, Badge, user_badges
+from .models import User, Market, Prediction, NewsSource, LiquidityProvider, MarketEvent, Badge, UserBadge
 from .forms import LoginForm, RegisterForm, MarketForm, PredictionForm, NewsSourceForm, LBForm
 from datetime import datetime
 import logging
@@ -373,13 +373,16 @@ def provide_liquidity(market_id):
 @main.route('/wallet')
 @login_required
 def wallet():
-    # Get user's top 3 most recently awarded badges
-    badges = (Badge.query
-              .join(user_badges)
-              .filter(user_badges.c.user_id == current_user.id)
-              .limit(3)
-              .all())
-    return render_template('wallet.html', user=current_user, badges=badges)
+    """Show user's wallet and badges"""
+    user = current_user
+    
+    # Get user's badges with creation dates
+    badges = user.badges_sorted
+    
+    return render_template('wallet.html', 
+        user=user,
+        badges=badges
+    )
 
 @main.route('/wallet/deposit', methods=['POST'])
 @login_required
@@ -543,8 +546,8 @@ def leaderboard():
         user.reliability = (correct_predictions / total_predictions * 100) if total_predictions > 0 else 0
         user.total_predictions = total_predictions
         
-        # Take top 3 badges without sorting by created_at
-        user.badges_sorted = user.badges[:3]
+        # Use the new badges_sorted property
+        user.badges_sorted = user.badges_sorted[:3]
     
     return render_template('leaderboard.html', users=top_users)
 
