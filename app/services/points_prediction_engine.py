@@ -149,13 +149,27 @@ class PointsPredictionEngine:
 
         # Process each prediction
         for prediction in predictions:
+            # Skip if points already awarded
+            if prediction.xp_awarded:
+                continue
+
             # Check if prediction was correct
             is_correct = prediction.outcome == correct_outcome
 
             if is_correct:
-                # Award points (e.g., 1 point per share)
+                # Calculate points based on shares
                 points_awarded = int(prediction.shares)
+                
+                # Update user points
                 prediction.user.points += points_awarded
+                
+                # Log points award
+                PointsLedger.log_transaction(
+                    user=prediction.user,
+                    amount=points_awarded,
+                    transaction_type="points_awarded",
+                    description=f"Points awarded for correct prediction on market {market_id}"
+                )
 
                 # Award XP (e.g., 1 XP per share)
                 xp_awarded = int(prediction.shares)
@@ -169,7 +183,7 @@ class PointsPredictionEngine:
                     description=f"XP awarded for correct prediction on market {market_id}"
                 )
 
-                # Mark XP as awarded
+                # Mark XP as awarded (also prevents double points)
                 prediction.xp_awarded = True
 
         # Update market status
@@ -180,5 +194,5 @@ class PointsPredictionEngine:
         # Log market resolution event
         MarketEvent.log_market_resolution(market, correct_outcome)
 
-        # Commit changes
+        # Commit all changes
         db.session.commit()
