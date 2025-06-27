@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, timedelta
 from unittest.mock import patch
 from app import create_app
-from app.models import User, Market, Prediction, db
+from app.models import User, Market, Prediction, db, PlatformWallet
 from app.services.points_prediction_engine import PointsPredictionEngine
 
 class PointsPredictionEngineTestCase(unittest.TestCase):
@@ -657,6 +657,168 @@ class PointsPredictionEngineTestCase(unittest.TestCase):
         updated_prediction = Prediction.query.get(prediction.id)
         self.assertTrue(updated_prediction.xp_awarded)
         self.assertEqual(self.user.xp, 100)  # XP based on gross shares
+
+    def test_platform_wallet_initialization(self):
+        """Test that PlatformWallet initializes with id=1 and balance=0.0"""
+        # Reset wallet if exists
+        wallet = PlatformWallet.query.get(1)
+        if wallet:
+            db.session.delete(wallet)
+            db.session.commit()
+
+        # Get wallet instance
+        wallet = PlatformWallet.get_instance()
+        
+        # Verify initialization
+        self.assertEqual(wallet.id, 1)
+        self.assertEqual(wallet.balance, 0.0)
+
+    def test_platform_wallet_accumulates_fee(self):
+        """Test that PlatformWallet accumulates platform fees from predictions across multiple users"""
+        # Reset wallet if exists
+        wallet = PlatformWallet.query.get(1)
+        if wallet:
+            db.session.delete(wallet)
+            db.session.commit()
+
+        predictions = []
+        expected_fees = []
+        users = []
+
+        # Create predictions with different users
+        for i, shares in enumerate([100.0, 200.0, 150.0]):
+            # Create a new user for each prediction
+            user = User(
+                username=f"fee_user_{i}",
+                email=f"fee_user_{i}@example.com"
+            )
+            user.set_password("password")
+            db.session.add(user)
+            db.session.commit()
+            users.append(user)
+
+            # Place prediction
+            prediction = PointsPredictionEngine.place_prediction(
+                user,
+                self.market,
+                shares=shares,
+                outcome=True
+            )
+            predictions.append(prediction)
+            expected_fees.append(shares * 0.05)  # 5% fee
+
+        # Verify each prediction has correct fee
+        for prediction, expected_fee in zip(predictions, expected_fees):
+            self.assertEqual(prediction.platform_fee, expected_fee)
+
+        # Verify total fees in PlatformWallet
+        wallet = PlatformWallet.query.get(1)
+        total_expected = sum(expected_fees)
+        self.assertIsNotNone(wallet)
+        self.assertAlmostEqual(wallet.total_fees, total_expected, places=2)
+
+        # Verify individual user fees
+        for i, user in enumerate(users):
+            user_predictions = Prediction.query.filter_by(user_id=user.id).all()
+            self.assertEqual(len(user_predictions), 1)  # Each user should have exactly one prediction
+            self.assertAlmostEqual(user_predictions[0].platform_fee, expected_fees[i], places=2)
+
+    def test_platform_wallet_multiple_users(self):
+        """Test that PlatformWallet correctly accumulates fees from multiple users"""
+        # Reset wallet if exists
+        wallet = PlatformWallet.query.get(1)
+        if wallet:
+            db.session.delete(wallet)
+            db.session.commit()
+
+        # Create two users
+        user1 = User(username="user1", email="user1@example.com")
+        user2 = User(username="user2", email="user2@example.com")
+        user1.set_password("password")
+        user2.set_password("password")
+        db.session.add_all([user1, user2])
+        db.session.commit()
+
+        # User 1 makes predictions
+        user1_predictions = []
+        user1_expected = []
+        for shares in [100.0, 150.0]:
+            prediction = PointsPredictionEngine.place_prediction(
+                user1,
+                self.market,
+                shares=shares,
+                outcome=True
+            )
+            user1_predictions.append(prediction)
+            user1_expected.append(shares * 0.05)
+
+        # User 2 makes predictions
+        user2_predictions = []
+        user2_expected = []
+        for shares in [200.0, 100.0]:
+            prediction = PointsPredictionEngine.place_prediction(
+                user2,
+                self.market,
+                shares=shares,
+                outcome=True
+            )
+            user2_predictions.append(prediction)
+            user2_expected.append(shares * 0.05)
+
+        # Verify total fees
+        wallet = PlatformWallet.query.get(1)
+        total_expected = sum(user1_expected + user2_expected)
+        self.assertAlmostEqual(wallet.total_fees, total_expected, places=2)
+
+        # Verify individual user fees
+        for pred, expected in zip(user1_predictions, user1_expected):
+            self.assertAlmostEqual(pred.platform_fee, expected, places=2)
+        for pred, expected in zip(user2_predictions, user2_expected):
+            self.assertAlmostEqual(pred.platform_fee, expected, places=2)
+
+    def test_platform_wallet_add_fee(self):
+        """Test that add_fee method correctly accumulates fees"""
+        # Reset wallet if exists
+        wallet = PlatformWallet.query.get(1)
+        if wallet:
+            db.session.delete(wallet)
+            db.session.commit()
+
+        # Get fresh wallet instance
+        wallet = PlatformWallet.get_instance()
+        
+        # Add multiple fees
+        fees = [10.0, 20.0, 15.0]
+        for fee in fees:
+            wallet.add_fee(fee)
+
+        # Verify total balance
+        expected_balance = sum(fees)
+        self.assertEqual(wallet.balance, expected_balance)
+
+    def test_platform_wallet_singleton(self):
+        """Test that PlatformWallet is a singleton (always returns same instance)"""
+        # Reset wallet if exists
+        wallet = PlatformWallet.query.get(1)
+        if wallet:
+            db.session.delete(wallet)
+            db.session.commit()
+
+        # Get two instances
+        wallet1 = PlatformWallet.get_instance()
+        wallet2 = PlatformWallet.get_instance()
+
+        # Verify they are the same instance
+        self.assertEqual(wallet1.id, 1)
+        self.assertEqual(wallet2.id, 1)
+        self.assertEqual(wallet1, wallet2)
+
+        # Add fee through one instance
+        wallet1.add_fee(10.0)
+
+        # Verify balance is updated in both instances
+        self.assertEqual(wallet1.balance, 10.0)
+        self.assertEqual(wallet2.balance, 10.0)
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,6 +1,6 @@
 from typing import Optional
 from datetime import datetime
-from app.models import User, Market, Prediction, db, MarketEvent
+from app.models import User, Market, Prediction, db, MarketEvent, PlatformWallet
 from app.services.points_ledger import PointsLedger
 from config import Config
 
@@ -13,7 +13,8 @@ class PointsPredictionEngine:
     @staticmethod
     def place_prediction(user: User, market: Market, shares: float, outcome: bool, use_liquidity_buffer: bool = False) -> Prediction:
         """
-        Place a prediction on a market with platform fee deduction and optional liquidity buffer staking.
+        Place a prediction on a market with platform fee deduction, optional liquidity buffer staking,
+        and platform fee accumulation in PlatformWallet.
 
         Args:
             user: User placing the prediction
@@ -52,6 +53,10 @@ class PointsPredictionEngine:
         # Calculate platform fee (5%)
         platform_fee = 0.05 * shares
         net_shares = shares - platform_fee
+
+        # Add platform fee to wallet
+        wallet = PlatformWallet.get_instance()
+        wallet.add_fee(platform_fee)
 
         # Create prediction
         prediction = Prediction(
