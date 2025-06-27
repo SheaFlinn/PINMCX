@@ -16,10 +16,14 @@ def generate_contract_hash(market):
     return hashlib.sha256(hash_data.encode()).hexdigest()
 
 # Association table for User-Badge relationship
-user_badges = db.Table('user_badges',
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
-    db.Column('badge_id', db.Integer, db.ForeignKey('badge.id'), primary_key=True)
-)
+class UserBadge(db.Model):
+    __tablename__ = 'user_badges'
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    badge_id = db.Column(db.Integer, db.ForeignKey('badge.id'), primary_key=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    user = db.relationship('User', back_populates='user_badges')
+    badge = db.relationship('Badge', back_populates='user_badges')
 
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
@@ -45,12 +49,31 @@ class User(UserMixin, db.Model):
     
     # Relationships
     predictions = db.relationship('Prediction', back_populates='user', lazy=True)
-    badges = db.relationship('Badge', secondary='user_badges', back_populates='users')
+    user_badges = db.relationship('UserBadge', back_populates='user', lazy='dynamic')
     refined_markets = db.relationship('Market', back_populates='refiner', lazy=True)
     events = db.relationship('MarketEvent', back_populates='user', lazy=True)
     liquidity_providers = db.relationship('LiquidityProvider', back_populates='user')
     league_members = db.relationship('LeagueMember', back_populates='user')
     
+    @property
+    def badges(self):
+        """Return all badges for this user"""
+        return [ub.badge for ub in self.user_badges]
+
+    @property
+    def badges_sorted(self):
+        """Return badges sorted by creation date"""
+        return sorted(self.badges, key=lambda b: b.user_badges[0].created_at, reverse=True)
+
+    def assign_badge(self, badge):
+        """Assign a badge to this user"""
+        if not any(ub.badge.id == badge.id for ub in self.user_badges):
+            user_badge = UserBadge(user=self, badge=badge)
+            db.session.add(user_badge)
+            db.session.commit()
+            return user_badge
+        return None
+
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         self.last_active = datetime.utcnow()
@@ -138,7 +161,7 @@ class Badge(db.Model):
     icon = db.Column(db.String(100))  # CSS class or image path
     
     # Relationship
-    users = db.relationship('User', secondary='user_badges', back_populates='badges')
+    user_badges = db.relationship('UserBadge', back_populates='badge')
     
     def to_dict(self):
         return {
@@ -148,6 +171,13 @@ class Badge(db.Model):
             'description': self.description,
             'icon': self.icon
         }
+    
+    def assign_to_user(self, user):
+        """Assign this badge to a user"""
+        user_badge = UserBadge(user=user, badge=self)
+        db.session.add(user_badge)
+        db.session.commit()
+        return user_badge
 
 class Market(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -197,7 +227,7 @@ class Market(db.Model):
     @property
     def lineage_chain(self):
         """Return a formatted string of the market lineage"""
-        return ' → '.join([m.title for m in reversed(self.lineage) + [self]])
+        return ' → '.join([m.title for m in list(reversed(self.lineage)) + [self]])
     
     def __repr__(self):
         return f'<Market {self.id}: {self.title}>'
@@ -312,20 +342,23 @@ class Market(db.Model):
     def resolve(self, outcome):
         """Resolve the market with a given outcome"""
         if self.resolved:
-            raise ValueError('Market is already resolved')
-            
-        if outcome not in ['YES', 'NO']:
-            raise ValueError('Outcome must be either "YES" or "NO"')
+            return
             
         self.resolved = True
         self.resolved_outcome = outcome
         self.resolved_at = datetime.utcnow()
         self.integrity_hash = generate_contract_hash(self)
+
+        # Log market resolution event
+        event = MarketEvent.log_market_resolution(self, user_id=None)
+        db.session.add(event)
+
+        # Award XP for correct predictions
+        self.award_xp_for_predictions()
         
         # Calculate payouts for all predictions
         for prediction in self.predictions:
             if prediction.prediction == outcome:
-                # Calculate payout based on pool sizes
                 total_pool = self.yes_pool + self.no_pool
                 if outcome == 'YES':
                     prediction.payout = prediction.shares * (total_pool / self.yes_pool)
@@ -333,15 +366,40 @@ class Market(db.Model):
                     prediction.payout = prediction.shares * (total_pool / self.no_pool)
                 prediction.user.points += prediction.payout
         
-        db.session.commit()
+        return True
 
     def award_xp_for_predictions(self, base_xp_per_share: int = 10):
-        """Award XP to users with correct predictions on this market
+        """
+        Award XP to users with correct predictions on this market.
         
         Args:
             base_xp_per_share: Base XP amount per share (default 10)
+            
+        XP Awarding Rules:
+        1. Market Resolution:
+           - XP can only be awarded if market is resolved
+           - Requires market.resolved = True and market.resolved_outcome != None
+           
+        2. Prediction Validity:
+           - Only correct predictions receive XP
+           - Prediction must match market.resolved_outcome (case-insensitive)
+           - XP amount = base_xp_per_share * prediction.shares
+           
+        3. Prevention of Re-Award:
+           - Each prediction has an xp_awarded flag
+           - XP is never awarded twice for the same prediction
+           - Flag is set to True after first XP award
+           - Applies regardless of prediction correctness
+           
+        4. PointsService Integration:
+           - Uses PointsService.award_xp() for actual XP awarding
+           - Handles streaks, daily limits, and multipliers
+           - XP is only awarded if user hasn't checked in today
+        
+        Returns:
+            None
         """
-        from app.services.points_service import PointsService  # Import moved here
+        from app.services.points_service import PointsService
         if not self.resolved or self.resolved_outcome is None:
             return  # Can't award XP if market not resolved
 
@@ -364,6 +422,30 @@ class Market(db.Model):
 
         db.session.commit()
 
+    @classmethod
+    def create_with_event(cls, **kwargs):
+        """
+        Create a market and log its creation event.
+
+        Args:
+            user_id: ID of the user creating the market
+            **kwargs: Market creation arguments
+
+        Returns:
+            tuple: (Market instance, MarketEvent instance)
+        """
+        user_id = kwargs.pop('user_id', None)  # Extract user_id first
+
+        market = cls(**kwargs)
+        db.session.add(market)
+        db.session.commit()  # Ensure market.id is assigned
+
+        event = MarketEvent.log_market_creation(market, user_id)
+        db.session.add(event)
+        db.session.commit()
+
+        return market, event
+
 class Prediction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     market_id = db.Column(db.Integer, db.ForeignKey('market.id'), nullable=False)
@@ -376,6 +458,13 @@ class Prediction(db.Model):
     xp_awarded = db.Column(db.Boolean, default=False)  # Add xp_awarded field
     market = db.relationship('Market', back_populates='predictions', lazy=True)
     user = db.relationship('User', back_populates='predictions', lazy=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Log prediction event
+        market = Market.query.get(kwargs['market_id'])
+        if market:
+            db.session.add(MarketEvent.log_prediction(market, kwargs['user_id'], self))
 
 class MarketEvent(db.Model):
     """Model to track important events in a market's lifecycle"""
@@ -401,23 +490,9 @@ class MarketEvent(db.Model):
             description=f'Market "{market.title}" created',
             event_data={
                 'title': market.title,
-                'domain': market.domain,
+                'description': market.description,
                 'resolution_date': market.resolution_date.isoformat(),
                 'resolution_method': market.resolution_method,
-                'lineage': market.lineage_chain
-            }
-        )
-    
-    @classmethod
-    def log_market_update(cls, market, user_id, changes):
-        """Log an update to an existing market"""
-        return cls(
-            market_id=market.id,
-            event_type='market_updated',
-            user_id=user_id,
-            description=f'Market "{market.title}" updated',
-            event_data={
-                'changes': changes,
                 'domain': market.domain,
                 'lineage': market.lineage_chain
             }
@@ -425,7 +500,7 @@ class MarketEvent(db.Model):
     
     @classmethod
     def log_market_resolution(cls, market, user_id):
-        """Log the resolution of a market"""
+        """Log market resolution"""
         return cls(
             market_id=market.id,
             event_type='market_resolved',
@@ -433,40 +508,24 @@ class MarketEvent(db.Model):
             description=f'Market "{market.title}" resolved',
             event_data={
                 'outcome': market.resolved_outcome,
-                'domain': market.domain,
-                'resolution_date': market.resolved_at.isoformat(),
+                'resolved_at': datetime.utcnow().isoformat(),
                 'lineage': market.lineage_chain
             }
         )
     
     @classmethod
     def log_prediction(cls, market, user_id, prediction):
-        """Log a user's prediction on a market"""
+        """Log prediction creation"""
         return cls(
             market_id=market.id,
-            event_type='prediction',
+            event_type='prediction_made',
             user_id=user_id,
             description=f'Prediction made on market "{market.title}"',
             event_data={
-                'prediction': prediction,
-                'domain': market.domain,
-                'lineage': market.lineage_chain
-            }
-        )
-    
-    @classmethod
-    def log_lineage_change(cls, market, user_id, parent_market_id):
-        """Log a change in market lineage"""
-        return cls(
-            market_id=market.id,
-            event_type='lineage_changed',
-            user_id=user_id,
-            description=f'Market "{market.title}" lineage updated',
-            event_data={
-                'old_parent': market.parent_market_id,
-                'new_parent': parent_market_id,
-                'domain': market.domain,
-                'lineage': market.lineage_chain
+                'user_id': user_id,
+                'prediction': prediction.prediction,
+                'shares': prediction.shares,
+                'average_price': prediction.average_price
             }
         )
     
