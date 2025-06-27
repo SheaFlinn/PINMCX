@@ -506,5 +506,157 @@ class PointsPredictionEngineTestCase(unittest.TestCase):
         total_awarded = sum(user.points for user in users)
         self.assertEqual(total_awarded, total_points)
 
+    def test_place_prediction_with_fee(self):
+        """Test prediction placement with platform fee deduction"""
+        # Place prediction with 100 shares
+        prediction = PointsPredictionEngine.place_prediction(
+            self.user,
+            self.market,
+            shares=100.0,
+            outcome=True
+        )
+
+        # Verify fee calculation (5% of 100 = 5)
+        self.assertEqual(prediction.platform_fee, 5.0)
+        
+        # Verify net shares (100 - 5 = 95)
+        self.assertEqual(prediction.shares, 100.0)  # Original amount stored
+
+    def test_award_xp_with_fee(self):
+        """Test XP awarding with platform fee deduction"""
+        # Create prediction with 100 shares
+        prediction = Prediction(
+            user=self.user,
+            market=self.market,
+            shares=100.0,
+            platform_fee=5.0,  # 5% fee
+            outcome=True,
+            xp_awarded=False
+        )
+        db.session.add(prediction)
+        db.session.commit()
+
+        # Set market to resolve YES
+        self.market.resolved = True
+        self.market.resolved_outcome = "YES"
+        self.market.resolved_at = datetime.utcnow()
+        db.session.commit()
+
+        # Award XP
+        PointsPredictionEngine.award_xp_for_predictions(self.market)
+
+        # Verify XP was awarded based on gross shares (100)
+        updated_prediction = Prediction.query.get(prediction.id)
+        self.assertTrue(updated_prediction.xp_awarded)
+        self.assertEqual(self.user.xp, 100)  # XP based on gross shares
+
+    def test_resolve_market_with_fee(self):
+        """Test market resolution with platform fee deduction"""
+        # Create prediction with 100 shares
+        prediction = Prediction(
+            user=self.user,
+            market=self.market,
+            shares=100.0,
+            platform_fee=5.0,  # 5% fee
+            outcome=True,
+            xp_awarded=False
+        )
+        db.session.add(prediction)
+        db.session.commit()
+
+        # Resolve market to YES
+        PointsPredictionEngine.resolve_market(self.market.id, True)
+
+        # Verify points and XP were awarded correctly
+        updated_prediction = Prediction.query.get(prediction.id)
+        self.assertTrue(updated_prediction.xp_awarded)
+        self.assertEqual(self.user.points, 95)  # Points based on net shares (100 - 5)
+        self.assertEqual(self.user.xp, 100)     # XP based on gross shares
+
+    @patch('app.services.points_ledger.PointsLedger.log_transaction')
+    def test_ledger_logging_with_fee(self, mock_log_transaction):
+        """Test PointsLedger logging with platform fee deduction"""
+        # Create prediction with 100 shares
+        prediction = Prediction(
+            user=self.user,
+            market=self.market,
+            shares=100.0,
+            platform_fee=5.0,  # 5% fee
+            outcome=True,
+            xp_awarded=False
+        )
+        db.session.add(prediction)
+        db.session.commit()
+
+        # Resolve market to YES
+        PointsPredictionEngine.resolve_market(self.market.id, True)
+
+        # Verify transaction logging for points (based on net shares)
+        mock_log_transaction.assert_any_call(
+            user=self.user,
+            amount=95,
+            transaction_type="points_awarded",
+            description=f"Points awarded for correct prediction on market {self.market.id}"
+        )
+
+        # Verify transaction logging for XP (based on gross shares)
+        mock_log_transaction.assert_any_call(
+            user=self.user,
+            amount=0,
+            transaction_type="xp_awarded",
+            description=f"XP awarded for correct prediction on market {self.market.id}"
+        )
+
+    def test_fee_handling_with_none(self):
+        """Test that platform fee handling works correctly when fee is None"""
+        # Create prediction with no platform fee
+        prediction = Prediction(
+            user=self.user,
+            market=self.market,
+            shares=100.0,
+            platform_fee=None,  # No fee
+            outcome=True,
+            xp_awarded=False
+        )
+        db.session.add(prediction)
+        db.session.commit()
+
+        # Resolve market to YES
+        PointsPredictionEngine.resolve_market(self.market.id, True)
+
+        # Verify points and XP were awarded correctly
+        updated_prediction = Prediction.query.get(prediction.id)
+        self.assertTrue(updated_prediction.xp_awarded)
+        self.assertEqual(self.user.points, 100)  # Points based on gross shares (no fee)
+        self.assertEqual(self.user.xp, 100)     # XP based on gross shares
+
+    def test_award_xp_no_fee(self):
+        """Test XP awarding when no platform fee exists"""
+        # Create prediction with no platform fee
+        prediction = Prediction(
+            user=self.user,
+            market=self.market,
+            shares=100.0,
+            platform_fee=None,  # No fee
+            outcome=True,
+            xp_awarded=False
+        )
+        db.session.add(prediction)
+        db.session.commit()
+
+        # Set market to resolve YES
+        self.market.resolved = True
+        self.market.resolved_outcome = "YES"
+        self.market.resolved_at = datetime.utcnow()
+        db.session.commit()
+
+        # Award XP
+        PointsPredictionEngine.award_xp_for_predictions(self.market)
+
+        # Verify XP was awarded based on gross shares (100)
+        updated_prediction = Prediction.query.get(prediction.id)
+        self.assertTrue(updated_prediction.xp_awarded)
+        self.assertEqual(self.user.xp, 100)  # XP based on gross shares
+
 if __name__ == '__main__':
     unittest.main()

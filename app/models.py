@@ -457,6 +457,7 @@ class Prediction(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     market_id = db.Column(db.Integer, db.ForeignKey('market.id'), nullable=False)
     shares = db.Column(db.Float, nullable=False)
+    platform_fee = db.Column(db.Float, nullable=True)  # 5% fee deducted from shares
     outcome = db.Column(db.Boolean, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     xp_awarded = db.Column(db.Boolean, default=False)

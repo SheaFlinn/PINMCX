@@ -13,12 +13,12 @@ class PointsPredictionEngine:
     @staticmethod
     def place_prediction(user: User, market: Market, shares: float, outcome: bool) -> Prediction:
         """
-        Place a prediction on a market.
+        Place a prediction on a market with platform fee deduction.
 
         Args:
             user: User placing the prediction
             market: Market to predict on
-            shares: Number of shares to purchase
+            shares: Number of shares to purchase (before fee)
             outcome: Predicted outcome (True for YES, False for NO)
 
         Returns:
@@ -42,11 +42,16 @@ class PointsPredictionEngine:
         if existing:
             raise ValueError(f"User {user.id} already has prediction on market {market.id}")
 
+        # Calculate platform fee (5%)
+        platform_fee = 0.05 * shares
+        net_shares = shares - platform_fee
+
         # Create prediction
         prediction = Prediction(
             user=user,
             market=market,
-            shares=shares,
+            shares=shares,  # Store original shares amount
+            platform_fee=platform_fee,
             outcome=outcome,
             created_at=datetime.utcnow()
         )
@@ -81,7 +86,7 @@ class PointsPredictionEngine:
     @staticmethod
     def award_xp_for_predictions(market: Market) -> None:
         """
-        Award XP to users with correct predictions.
+        Award XP to users with correct predictions based on gross shares.
 
         Args:
             market: Resolved market to evaluate predictions for
@@ -104,7 +109,7 @@ class PointsPredictionEngine:
             is_correct = PointsPredictionEngine.evaluate_prediction(prediction, market)
 
             if is_correct:
-                # Calculate XP based on shares (e.g., 1 XP per share)
+                # Calculate XP based on gross shares (no fee deduction)
                 xp_awarded = int(prediction.shares)
                 
                 # Update user XP
@@ -127,6 +132,7 @@ class PointsPredictionEngine:
     def resolve_market(market_id: int, correct_outcome: bool) -> None:
         """
         Resolve a market and award points/XP for correct predictions.
+        XP is awarded on gross shares, points on net shares (shares - platform_fee).
 
         Args:
             market_id: ID of the market to resolve
@@ -157,8 +163,8 @@ class PointsPredictionEngine:
             is_correct = prediction.outcome == correct_outcome
 
             if is_correct:
-                # Calculate points based on shares
-                points_awarded = int(prediction.shares)
+                # Calculate points based on net shares (shares - platform_fee)
+                points_awarded = int(prediction.shares - (prediction.platform_fee or 0.0))
                 
                 # Update user points
                 prediction.user.points += points_awarded
@@ -171,7 +177,7 @@ class PointsPredictionEngine:
                     description=f"Points awarded for correct prediction on market {market_id}"
                 )
 
-                # Award XP (e.g., 1 XP per share)
+                # Award XP based on gross shares (no fee deduction)
                 xp_awarded = int(prediction.shares)
                 prediction.user.xp += xp_awarded
 
