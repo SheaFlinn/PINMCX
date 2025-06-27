@@ -459,6 +459,7 @@ class Prediction(db.Model):
     shares = db.Column(db.Float, nullable=False)
     platform_fee = db.Column(db.Float, nullable=True)  # 5% fee deducted from shares
     outcome = db.Column(db.Boolean, nullable=False)
+    used_liquidity_buffer = db.Column(db.Boolean, default=False)  # Track if prediction used LB
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     xp_awarded = db.Column(db.Boolean, default=False)
     
