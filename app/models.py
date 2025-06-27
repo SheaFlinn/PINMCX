@@ -47,6 +47,7 @@ class User(UserMixin, db.Model):
     last_check_in_date = db.Column(db.DateTime)
     accuracy = db.Column(db.Float, default=0.0)
     predictions_count = db.Column(db.Integer, default=0)
+    liquidity_buffer_deposit = db.Column(db.Float, default=0.0)
     
     # Relationships
     predictions = db.relationship('Prediction', back_populates='user', lazy=True)
