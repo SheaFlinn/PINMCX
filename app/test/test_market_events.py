@@ -35,21 +35,16 @@ class TestMarketEvents(unittest.TestCase):
 
     def test_market_creation_event(self):
         """Test that market creation logs an event"""
-        # Create a new market
-        market = Market(
+        # Create a new market using the new method
+        market, event = Market.create_with_event(
             title='New Test Market',
             description='Created for testing events',
             resolution_date=datetime.utcnow() + timedelta(days=1),
-            resolution_method='Test method'
+            resolution_method='Test method',
+            user_id=self.user.id
         )
-        db.session.add(market)
-        db.session.commit()
         
         # Verify event was created
-        event = MarketEvent.query.filter_by(
-            market_id=market.id,
-            event_type='market_created'
-        ).first()
         self.assertIsNotNone(event)
         self.assertEqual(event.description, f'Market "{market.title}" created')
         self.assertIsNotNone(event.event_data)
