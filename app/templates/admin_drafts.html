@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Admin Drafts</h1>
+    
+    {% if drafts %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Source</th>
+                        <th>Relevance Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for draft in drafts %}
+                    <tr>
+                        <td>{{ draft.title or 'Untitled' }}</td>
+                        <td>
+                            {% if draft.source_id and 'reddit' in draft.source_id %}
+                                <span class="badge bg-danger text-white">
+                                    Reddit
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>{{ draft.relevance_score }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-warning">
+            No drafts found
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

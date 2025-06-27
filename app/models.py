@@ -294,13 +294,13 @@ class Market(db.Model):
         
         return trade_result
 
-    def resolve(self, outcome):
+    def resolve(self, outcome: bool):
         """Resolve the market with a given outcome"""
         if self.resolved:
             return
             
         self.resolved = True
-        self.resolved_outcome = outcome
+        self.resolved_outcome = "YES" if outcome else "NO"
         self.resolved_at = datetime.utcnow()
         self.integrity_hash = generate_contract_hash(self)
 
@@ -313,9 +313,9 @@ class Market(db.Model):
         
         # Calculate and award payouts for all predictions
         for prediction in self.predictions:
-            if prediction.prediction.upper() == self.resolved_outcome.upper():
+            if prediction.outcome == outcome:
                 total_pool = self.yes_pool + self.no_pool
-                if outcome == 'YES':
+                if outcome:
                     payout = prediction.shares * (total_pool / self.yes_pool)
                 else:
                     payout = prediction.shares * (total_pool / self.no_pool)
@@ -413,7 +413,7 @@ class Market(db.Model):
                 continue
 
             # Only award XP for correct predictions
-            if prediction.prediction.upper() == self.resolved_outcome.upper():
+            if prediction.outcome == (self.resolved_outcome == "YES"):
                 xp_amount = base_xp_per_share * prediction.shares
                 PointsPayoutEngine.award_resolution_payout(
                     user=prediction.user,
