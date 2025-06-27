@@ -245,9 +245,9 @@ class PointsPredictionEngineTestCase(unittest.TestCase):
         # Verify points and XP awarded
         updated_user1 = User.query.get(user1.id)
         updated_user2 = User.query.get(user2.id)
-        self.assertEqual(updated_user1.points, 5)  # 5 shares
+        self.assertEqual(updated_user1.points, 5)  # 5 points
         self.assertEqual(updated_user1.xp, 5)
-        self.assertEqual(updated_user2.points, 3)  # 3 shares
+        self.assertEqual(updated_user2.points, 3)  # 3 points
         self.assertEqual(updated_user2.xp, 3)
 
     def test_resolve_market_partial_correct(self):
@@ -302,7 +302,7 @@ class PointsPredictionEngineTestCase(unittest.TestCase):
         # Verify points and XP awarded
         updated_user1 = User.query.get(user1.id)
         updated_user2 = User.query.get(user2.id)
-        self.assertEqual(updated_user1.points, 5)  # 5 shares
+        self.assertEqual(updated_user1.points, 5)  # 5 points
         self.assertEqual(updated_user1.xp, 5)
         self.assertEqual(updated_user2.points, 0)  # Incorrect prediction
         self.assertEqual(updated_user2.xp, 0)
@@ -422,8 +422,8 @@ class PointsPredictionEngineTestCase(unittest.TestCase):
         # Verify points were awarded correctly
         updated_user1 = User.query.get(user1.id)
         updated_user2 = User.query.get(user2.id)
-        self.assertEqual(updated_user1.points, 10)  # 10 points for 10 shares
-        self.assertEqual(updated_user1.xp, 10)     # 10 XP for 10 shares
+        self.assertEqual(updated_user1.points, 10)  # 10 points
+        self.assertEqual(updated_user1.xp, 10)     # 10 XP
         self.assertEqual(updated_user2.points, 0)   # No points for incorrect prediction
         self.assertEqual(updated_user2.xp, 0)       # No XP for incorrect prediction
 
@@ -819,6 +819,176 @@ class PointsPredictionEngineTestCase(unittest.TestCase):
         # Verify balance is updated in both instances
         self.assertEqual(wallet1.balance, 10.0)
         self.assertEqual(wallet2.balance, 10.0)
+
+    def test_liquidity_buffer_majority_correct(self):
+        """Test liquidity buffer simulation where majority predictions are correct"""
+        # Reset wallet and LB
+        wallet = PlatformWallet.query.get(1)
+        if wallet:
+            db.session.delete(wallet)
+            db.session.commit()
+
+        # Create market
+        market = Market(
+            title="Test Market",
+            description="Test market for liquidity buffer simulation",
+            prediction_deadline=datetime.utcnow() + timedelta(days=1),
+            resolution_deadline=datetime.utcnow() + timedelta(days=2),
+            resolution_date=datetime.utcnow() + timedelta(days=2),
+            resolution_method="Manual",
+            created_at=datetime.utcnow()
+        )
+        db.session.add(market)
+        db.session.commit()
+
+        # Create 3 users with liquidity buffer
+        users = []
+        for i in range(3):
+            user = User(
+                username=f"user_{i}",
+                email=f"user_{i}@example.com",
+                liquidity_buffer_deposit=1000.0  # Each user starts with 1000 LB
+            )
+            user.set_password("password")
+            db.session.add(user)
+            db.session.commit()
+            users.append(user)
+
+        # User 1 and 2 predict YES (majority)
+        for user in users[:2]:
+            prediction = PointsPredictionEngine.place_prediction(
+                user,
+                market,
+                shares=500.0,
+                outcome=True,
+                use_liquidity_buffer=True
+            )
+            self.assertTrue(prediction.used_liquidity_buffer)
+            self.assertEqual(user.liquidity_buffer_deposit, 500.0)  # 500 used
+
+        # User 3 predicts NO (minority)
+        prediction = PointsPredictionEngine.place_prediction(
+            users[2],
+            market,
+            shares=500.0,
+            outcome=False,
+            use_liquidity_buffer=True
+        )
+        self.assertTrue(prediction.used_liquidity_buffer)
+        self.assertEqual(users[2].liquidity_buffer_deposit, 500.0)  # 500 used
+
+        # Resolve market to YES (majority correct)
+        PointsPredictionEngine.resolve_market(market.id, True)
+
+        # Verify platform wallet received fees
+        wallet = PlatformWallet.query.get(1)
+        self.assertEqual(wallet.total_fees, 75.0)  # 5% of 1500 total shares
+
+        # Verify users' liquidity buffer deposits remain stable
+        for user in users:
+            self.assertEqual(user.liquidity_buffer_deposit, 500.0)  # No refund to LB
+
+        # Verify majority users (1 and 2) received correct points
+        for user in users[:2]:
+            # Each gets 475 points (500 - 5% fee)
+            self.assertEqual(user.points, 475)
+            self.assertEqual(user.xp, 500)  # Gross shares
+
+        # Verify minority user (3) lost stake and got no points
+        self.assertEqual(users[2].points, 0)
+        self.assertEqual(users[2].xp, 0)  # Incorrect prediction
+
+        # Verify no double payouts
+        for user in users:
+            if user.predictions[0].outcome == True:  # Only correct predictions should have xp_awarded
+                self.assertTrue(user.predictions[0].xp_awarded)
+            else:
+                self.assertFalse(user.predictions[0].xp_awarded)
+
+    def test_liquidity_buffer_majority_incorrect(self):
+        """Test liquidity buffer simulation where majority predictions are incorrect"""
+        # Reset wallet and LB
+        wallet = PlatformWallet.query.get(1)
+        if wallet:
+            db.session.delete(wallet)
+            db.session.commit()
+
+        # Create market
+        market = Market(
+            title="Test Market",
+            description="Test market for liquidity buffer simulation",
+            prediction_deadline=datetime.utcnow() + timedelta(days=1),
+            resolution_deadline=datetime.utcnow() + timedelta(days=2),
+            resolution_date=datetime.utcnow() + timedelta(days=2),
+            resolution_method="Manual",
+            created_at=datetime.utcnow()
+        )
+        db.session.add(market)
+        db.session.commit()
+
+        # Create 3 users with liquidity buffer
+        users = []
+        for i in range(3):
+            user = User(
+                username=f"user_{i}",
+                email=f"user_{i}@example.com",
+                liquidity_buffer_deposit=1000.0  # Each user starts with 1000 LB
+            )
+            user.set_password("password")
+            db.session.add(user)
+            db.session.commit()
+            users.append(user)
+
+        # User 1 and 2 predict YES (majority)
+        for user in users[:2]:
+            prediction = PointsPredictionEngine.place_prediction(
+                user,
+                market,
+                shares=500.0,
+                outcome=True,
+                use_liquidity_buffer=True
+            )
+            self.assertTrue(prediction.used_liquidity_buffer)
+            self.assertEqual(user.liquidity_buffer_deposit, 500.0)  # 500 used
+
+        # User 3 predicts NO (minority)
+        prediction = PointsPredictionEngine.place_prediction(
+            users[2],
+            market,
+            shares=500.0,
+            outcome=False,
+            use_liquidity_buffer=True
+        )
+        self.assertTrue(prediction.used_liquidity_buffer)
+        self.assertEqual(users[2].liquidity_buffer_deposit, 500.0)  # 500 used
+
+        # Resolve market to NO (minority correct)
+        PointsPredictionEngine.resolve_market(market.id, False)
+
+        # Verify platform wallet received fees
+        wallet = PlatformWallet.query.get(1)
+        self.assertEqual(wallet.total_fees, 75.0)  # 5% of 1500 total shares
+
+        # Verify users' liquidity buffer deposits remain stable
+        for user in users:
+            self.assertEqual(user.liquidity_buffer_deposit, 500.0)  # No refund to LB
+
+        # Verify majority users (1 and 2) lost stake and got no points
+        for user in users[:2]:
+            self.assertEqual(user.points, 0)
+            self.assertEqual(user.xp, 0)  # Incorrect prediction
+
+        # Verify minority user (3) received correct points
+        # Note: Points are based on their own shares (500 - 5% fee), not total pool
+        self.assertEqual(users[2].points, 475)  # 500 - 5% fee
+        self.assertEqual(users[2].xp, 500)  # Gross shares
+
+        # Verify no double payouts
+        for user in users:
+            if user.predictions[0].outcome == False:  # Only correct predictions should have xp_awarded
+                self.assertTrue(user.predictions[0].xp_awarded)
+            else:
+                self.assertFalse(user.predictions[0].xp_awarded)
 
 if __name__ == '__main__':
     unittest.main()
