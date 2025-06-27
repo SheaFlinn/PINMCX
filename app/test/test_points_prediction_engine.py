@@ -389,5 +389,122 @@ class PointsPredictionEngineTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             PointsPredictionEngine.resolve_market(market.id, True)
 
+    @patch('app.services.points_ledger.PointsLedger.log_transaction')
+    def test_resolve_market_points_award(self, mock_log_transaction):
+        """Test points awarding for correct predictions during market resolution"""
+        # Create test users
+        user1 = User(username="user1", email="user1@example.com")
+        user2 = User(username="user2", email="user2@example.com")
+        db.session.add_all([user1, user2])
+        db.session.commit()
+
+        # Create predictions
+        pred1 = Prediction(
+            user=user1,
+            market=self.market,
+            shares=10.0,
+            outcome=True,
+            xp_awarded=False
+        )
+        pred2 = Prediction(
+            user=user2,
+            market=self.market,
+            shares=5.0,
+            outcome=False,
+            xp_awarded=False
+        )
+        db.session.add_all([pred1, pred2])
+        db.session.commit()
+
+        # Resolve market to YES (user1 should get points, user2 should not)
+        PointsPredictionEngine.resolve_market(self.market.id, True)
+
+        # Verify points were awarded correctly
+        updated_user1 = User.query.get(user1.id)
+        updated_user2 = User.query.get(user2.id)
+        self.assertEqual(updated_user1.points, 10)  # 10 points for 10 shares
+        self.assertEqual(updated_user1.xp, 10)     # 10 XP for 10 shares
+        self.assertEqual(updated_user2.points, 0)   # No points for incorrect prediction
+        self.assertEqual(updated_user2.xp, 0)       # No XP for incorrect prediction
+
+        # Verify transaction logging
+        self.assertEqual(mock_log_transaction.call_count, 2)
+        mock_log_transaction.assert_any_call(
+            user=user1,
+            amount=10,
+            transaction_type="points_awarded",
+            description=f"Points awarded for correct prediction on market {self.market.id}"
+        )
+        mock_log_transaction.assert_any_call(
+            user=user1,
+            amount=0,
+            transaction_type="xp_awarded",
+            description=f"XP awarded for correct prediction on market {self.market.id}"
+        )
+
+    def test_points_award_only_once(self):
+        """Test that points and XP are awarded only once"""
+        # Create prediction
+        prediction = Prediction(
+            user=self.user,
+            market=self.market,
+            shares=10.0,
+            outcome=True,
+            xp_awarded=False
+        )
+        db.session.add(prediction)
+        db.session.commit()
+
+        # First resolution should award points and XP
+        PointsPredictionEngine.resolve_market(self.market.id, True)
+        updated_user = User.query.get(self.user.id)
+        self.assertEqual(updated_user.points, 10)  # Points awarded
+        self.assertEqual(updated_user.xp, 10)     # XP awarded
+
+        # Second resolution should raise ValueError due to market already resolved
+        with self.assertRaises(ValueError):
+            PointsPredictionEngine.resolve_market(self.market.id, True)
+
+        # Verify points and XP remain unchanged after error
+        final_user = User.query.get(self.user.id)
+        self.assertEqual(final_user.points, 10)  # Points remain unchanged
+        self.assertEqual(final_user.xp, 10)      # XP remains unchanged
+
+    def test_points_award_for_multiple_correct_predictions(self):
+        """Test points awarding for multiple correct predictions"""
+        # Create multiple users and predictions
+        users = [User(username=f"user{i}", email=f"user{i}@example.com") for i in range(3)]
+        db.session.add_all(users)
+        db.session.commit()
+
+        predictions = []
+        total_points = 0
+        for i, user in enumerate(users):
+            shares = (i + 1) * 5  # 5, 10, 15 shares
+            prediction = Prediction(
+                user=user,
+                market=self.market,
+                shares=shares,
+                outcome=True,
+                xp_awarded=False
+            )
+            predictions.append(prediction)
+            total_points += shares
+            db.session.add(prediction)
+        db.session.commit()
+
+        # Resolve market to YES
+        PointsPredictionEngine.resolve_market(self.market.id, True)
+
+        # Verify points were awarded correctly
+        for i, user in enumerate(users):
+            updated_user = User.query.get(user.id)
+            expected_points = (i + 1) * 5  # 5, 10, 15 points
+            self.assertEqual(updated_user.points, expected_points)
+
+        # Verify total points awarded
+        total_awarded = sum(user.points for user in users)
+        self.assertEqual(total_awarded, total_points)
+
 if __name__ == '__main__':
     unittest.main()
