@@ -494,6 +494,7 @@ class MarketEvent(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     market_id = db.Column(db.Integer, db.ForeignKey('market.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    event_type = db.Column(db.String, nullable=False)  # Add required event_type field
     description = db.Column(db.String(200), nullable=False)
     event_data = db.Column(db.JSON, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -529,6 +530,7 @@ class MarketEvent(db.Model):
         event = MarketEvent(
             market_id=market.id,
             user_id=user_id,
+            event_type='prediction',  # Add event_type
             description=f"Prediction made by user {user_id} on market {market.id}",
             event_data=event_data
         )
@@ -540,7 +542,7 @@ class MarketEvent(db.Model):
         """Log the creation of a new market"""
         return cls(
             market_id=market.id,
-            event_type='market_created',
+            event_type='market_created',  # Add event_type
             user_id=user_id,
             description=f'Market "{market.title}" created',
             event_data={
@@ -558,7 +560,7 @@ class MarketEvent(db.Model):
         """Log market resolution"""
         return cls(
             market_id=market.id,
-            event_type='market_resolved',
+            event_type='market_resolved',  # Add event_type
             user_id=user_id,
             description=f'Market "{market.title}" resolved',
             event_data={

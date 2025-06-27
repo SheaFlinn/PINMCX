@@ -1,6 +1,6 @@
 from typing import Optional
 from datetime import datetime
-from app.models import User, Market, Prediction, db
+from app.models import User, Market, Prediction, db, MarketEvent
 from app.services.points_ledger import PointsLedger
 from config import Config
 
@@ -112,7 +112,7 @@ class PointsPredictionEngine:
                 
                 # Log XP award in ledger
                 PointsLedger.log_transaction(
-                    user_id=prediction.user.id,
+                    user=prediction.user,
                     amount=0,
                     transaction_type="xp_awarded",
                     description=f"XP awarded for correct prediction on market {market.id}"
@@ -121,4 +121,64 @@ class PointsPredictionEngine:
                 # Mark XP as awarded
                 prediction.xp_awarded = True
 
+        db.session.commit()
+
+    @staticmethod
+    def resolve_market(market_id: int, correct_outcome: bool) -> None:
+        """
+        Resolve a market and award points/XP for correct predictions.
+
+        Args:
+            market_id: ID of the market to resolve
+            correct_outcome: The correct outcome (True for YES, False for NO)
+
+        Raises:
+            ValueError: If market is already resolved
+        """
+        # Get market
+        market = Market.query.get(market_id)
+        if not market:
+            raise ValueError(f"Market {market_id} not found")
+
+        # Check if market is already resolved
+        if market.resolved:
+            raise ValueError(f"Market {market_id} is already resolved")
+
+        # Get all predictions for this market
+        predictions = Prediction.query.filter_by(market_id=market_id).all()
+
+        # Process each prediction
+        for prediction in predictions:
+            # Check if prediction was correct
+            is_correct = prediction.outcome == correct_outcome
+
+            if is_correct:
+                # Award points (e.g., 1 point per share)
+                points_awarded = int(prediction.shares)
+                prediction.user.points += points_awarded
+
+                # Award XP (e.g., 1 XP per share)
+                xp_awarded = int(prediction.shares)
+                prediction.user.xp += xp_awarded
+
+                # Log XP award
+                PointsLedger.log_transaction(
+                    user=prediction.user,
+                    amount=0,
+                    transaction_type="xp_awarded",
+                    description=f"XP awarded for correct prediction on market {market_id}"
+                )
+
+                # Mark XP as awarded
+                prediction.xp_awarded = True
+
+        # Update market status
+        market.resolved = True
+        market.resolved_outcome = "YES" if correct_outcome else "NO"
+        market.resolved_at = datetime.utcnow()
+
+        # Log market resolution event
+        MarketEvent.log_market_resolution(market, correct_outcome)
+
+        # Commit changes
         db.session.commit()
