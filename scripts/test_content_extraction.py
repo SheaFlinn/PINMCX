@@ -1,5 +1,6 @@
 import sys
 import os
+import pytest
 # Add the parent directory to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -15,8 +16,7 @@ with app.app_context():
     # Get the Daily Memphian source
     source = NewsSource.query.filter_by(name="Daily Memphian").first()
     if not source:
-        print("Daily Memphian source not found in database")
-        exit(1)
+        pytest.skip("Daily Memphian source not found in database", allow_module_level=True)
     
     print(f"\nTesting content extraction for Daily Memphian")
     print(f"URL: {source.url}")

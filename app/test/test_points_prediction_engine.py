@@ -70,24 +70,35 @@ class PointsPredictionEngineTestCase(unittest.TestCase):
                 outcome=True
             )
 
-    def test_place_duplicate_prediction(self):
-        """Test placing duplicate prediction"""
+    def test_place_multiple_predictions(self):
+        """Test placing multiple predictions from same user on same market"""
         # Place first prediction
-        PointsPredictionEngine.place_prediction(
+        prediction1 = PointsPredictionEngine.place_prediction(
             self.user,
             self.market,
             shares=10.0,
             outcome=True
         )
+        self.assertIsNotNone(prediction1.id)
+        self.assertEqual(prediction1.shares, 10.0)
 
-        # Attempt to place second prediction
-        with self.assertRaises(ValueError):
-            PointsPredictionEngine.place_prediction(
-                self.user,
-                self.market,
-                shares=10.0,
-                outcome=True
-            )
+        # Place second prediction
+        prediction2 = PointsPredictionEngine.place_prediction(
+            self.user,
+            self.market,
+            shares=15.0,
+            outcome=False
+        )
+        self.assertIsNotNone(prediction2.id)
+        self.assertNotEqual(prediction1.id, prediction2.id)
+        self.assertEqual(prediction2.shares, 15.0)
+
+        # Verify both predictions exist
+        predictions = Prediction.query.filter_by(
+            user_id=self.user.id,
+            market_id=self.market.id
+        ).all()
+        self.assertEqual(len(predictions), 2)
 
     def test_evaluate_prediction_correct(self):
         """Test evaluating correct prediction"""
@@ -739,42 +750,34 @@ class PointsPredictionEngineTestCase(unittest.TestCase):
         db.session.add_all([user1, user2])
         db.session.commit()
 
-        # User 1 makes predictions
-        user1_predictions = []
-        user1_expected = []
-        for shares in [100.0, 150.0]:
-            prediction = PointsPredictionEngine.place_prediction(
-                user1,
-                self.market,
-                shares=shares,
-                outcome=True
-            )
-            user1_predictions.append(prediction)
-            user1_expected.append(shares * 0.05)
+        # User 1 makes one prediction with combined shares
+        total_shares_user1 = 100.0 + 150.0
+        prediction1 = PointsPredictionEngine.place_prediction(
+            user1,
+            self.market,
+            shares=total_shares_user1,
+            outcome=True
+        )
+        user1_expected = total_shares_user1 * 0.05
 
-        # User 2 makes predictions
-        user2_predictions = []
-        user2_expected = []
-        for shares in [200.0, 100.0]:
-            prediction = PointsPredictionEngine.place_prediction(
-                user2,
-                self.market,
-                shares=shares,
-                outcome=True
-            )
-            user2_predictions.append(prediction)
-            user2_expected.append(shares * 0.05)
+        # User 2 makes one prediction with combined shares
+        total_shares_user2 = 200.0 + 100.0
+        prediction2 = PointsPredictionEngine.place_prediction(
+            user2,
+            self.market,
+            shares=total_shares_user2,
+            outcome=True
+        )
+        user2_expected = total_shares_user2 * 0.05
 
         # Verify total fees
         wallet = PlatformWallet.query.get(1)
-        total_expected = sum(user1_expected + user2_expected)
+        total_expected = user1_expected + user2_expected
         self.assertAlmostEqual(wallet.total_fees, total_expected, places=2)
 
         # Verify individual user fees
-        for pred, expected in zip(user1_predictions, user1_expected):
-            self.assertAlmostEqual(pred.platform_fee, expected, places=2)
-        for pred, expected in zip(user2_predictions, user2_expected):
-            self.assertAlmostEqual(pred.platform_fee, expected, places=2)
+        self.assertAlmostEqual(prediction1.platform_fee, user1_expected, places=2)
+        self.assertAlmostEqual(prediction2.platform_fee, user2_expected, places=2)
 
     def test_platform_wallet_add_fee(self):
         """Test that add_fee method correctly accumulates fees"""

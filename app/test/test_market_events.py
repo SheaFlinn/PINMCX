@@ -63,7 +63,7 @@ class TestMarketEvents(unittest.TestCase):
         prediction = Prediction(
             market_id=self.market.id,
             user_id=self.user.id,
-            prediction='YES',
+            outcome=True,
             shares=10
         )
         db.session.add(prediction)
@@ -93,7 +93,7 @@ class TestMarketEvents(unittest.TestCase):
         prediction = Prediction(
             market_id=self.market.id,
             user_id=self.user.id,
-            prediction='YES',
+            outcome=True,
             shares=10
         )
         db.session.add(prediction)
@@ -102,16 +102,17 @@ class TestMarketEvents(unittest.TestCase):
         # Verify prediction event was created
         event = MarketEvent.query.filter_by(
             market_id=self.market.id,
-            event_type='prediction_made'
+            event_type='prediction'
         ).first()
         self.assertIsNotNone(event)
-        self.assertEqual(event.description, f'Prediction made on market "{self.market.title}"')
+        self.assertEqual(event.description, f"Prediction made by user {self.user.id} on market {self.market.id}")
         self.assertIsNotNone(event.event_data)
         
         # Verify event data contains prediction details
-        self.assertIn('user_id', event.event_data)
-        self.assertIn('prediction', event.event_data)
+        self.assertIn('prediction_id', event.event_data)
         self.assertIn('shares', event.event_data)
+        self.assertIn('outcome', event.event_data)
+        self.assertIn('xp_awarded', event.event_data)
 
 if __name__ == '__main__':
     unittest.main()

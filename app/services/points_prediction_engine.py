@@ -16,6 +16,9 @@ class PointsPredictionEngine:
         Place a prediction on a market with platform fee deduction, optional liquidity buffer staking,
         and platform fee accumulation in PlatformWallet.
 
+        Supports multiple predictions per user on the same market (re-betting). Each prediction is
+        treated as a distinct unit of stake, allowing users to adjust their position over time.
+
         Args:
             user: User placing the prediction
             market: Market to predict on
@@ -28,7 +31,6 @@ class PointsPredictionEngine:
 
         Raises:
             ValueError: If prediction is placed after market deadline
-            ValueError: If user already has prediction on this market
             ValueError: If using liquidity buffer and insufficient balance
         """
         # Check prediction deadline
@@ -36,14 +38,6 @@ class PointsPredictionEngine:
             raise ValueError(f"Market {market.id} is already resolved")
         if datetime.utcnow() > market.prediction_deadline:
             raise ValueError(f"Prediction deadline for market {market.id} has passed")
-
-        # Check for existing prediction
-        existing = Prediction.query.filter_by(
-            user_id=user.id,
-            market_id=market.id
-        ).first()
-        if existing:
-            raise ValueError(f"User {user.id} already has prediction on market {market.id}")
 
         # If using liquidity buffer, check balance
         if use_liquidity_buffer:

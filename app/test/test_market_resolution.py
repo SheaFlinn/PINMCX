@@ -41,9 +41,8 @@ class TestMarketResolution(unittest.TestCase):
         self.prediction = Prediction(
             user_id=self.user1.id,
             market_id=self.market.id,
-            prediction="YES",
-            shares=10,
-            average_price=0.5
+            outcome=True,
+            shares=10
         )
         db.session.add(self.prediction)
         db.session.commit()
@@ -63,11 +62,11 @@ class TestMarketResolution(unittest.TestCase):
     def test_correct_prediction_awards_xp(self):
         """Test that correct predictions award XP"""
         # Make a correct prediction
-        self.prediction.prediction = "YES"
+        self.prediction.outcome = True
         db.session.commit()
 
         # Resolve market to YES
-        self.market.resolve("YES")
+        self.market.resolve(True)
         self.market.award_xp_for_predictions()
 
         user = User.query.get(self.user1.id)
@@ -78,11 +77,11 @@ class TestMarketResolution(unittest.TestCase):
     def test_incorrect_prediction_awards_no_xp(self):
         """Test that incorrect predictions do not award XP"""
         # Make an incorrect prediction
-        self.prediction.prediction = "NO"
+        self.prediction.outcome = False
         db.session.commit()
 
         # Resolve market to YES
-        self.market.resolve("YES")
+        self.market.resolve(True)
         self.market.award_xp_for_predictions()
 
         user = User.query.get(self.user1.id)
@@ -93,11 +92,11 @@ class TestMarketResolution(unittest.TestCase):
     def test_xp_not_awarded_twice(self):
         """Test that XP is not awarded twice for the same prediction"""
         # Make a correct prediction
-        self.prediction.prediction = "YES"
+        self.prediction.outcome = True
         db.session.commit()
 
         # Resolve market to YES
-        self.market.resolve("YES")
+        self.market.resolve(True)
         self.market.award_xp_for_predictions()
         
         # Save XP before second award attempt
@@ -115,15 +114,14 @@ class TestMarketResolution(unittest.TestCase):
         prediction2 = Prediction(
             user_id=self.user1.id,
             market_id=self.market.id,
-            prediction="NO",
-            shares=15,
-            average_price=0.4
+            outcome=False,
+            shares=15
         )
         db.session.add(prediction2)
         db.session.commit()
         
         # Resolve market with YES outcome
-        self.market.resolve("YES")
+        self.market.resolve(True)
         self.market.award_xp_for_predictions()
         
         # Verify XP is awarded only for correct prediction
@@ -149,7 +147,7 @@ class TestMarketResolution(unittest.TestCase):
         db.session.commit()
         
         # Resolve market
-        market.resolve("YES")
+        market.resolve(True)
         market.award_xp_for_predictions()
         
         # Verify user XP remains unchanged
@@ -159,11 +157,11 @@ class TestMarketResolution(unittest.TestCase):
     def test_incorrect_prediction_awards_no_xp(self):
         """Test that incorrect predictions award 0 XP"""
         # Update prediction to be incorrect
-        self.prediction.prediction = "NO"
+        self.prediction.outcome = False
         db.session.commit()
         
         # Resolve market with opposite outcome
-        self.market.resolve("YES")
+        self.market.resolve(True)
         db.session.commit()
         
         # Award XP for predictions

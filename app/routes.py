@@ -758,3 +758,28 @@ def debug_reddit_drafts():
         return "Invalid JSON format"
     except Exception as e:
         return f"Error: {str(e)}"
+
+@main.route('/admin/drafts')
+@login_required
+def admin_drafts():
+    """Display drafts with Reddit badges"""
+    if not current_user.is_admin:
+        flash('Admin access required', 'error')
+        return redirect(url_for('main.index'))
+    
+    try:
+        with open('drafts/refined_reddit_drafts.json', 'r') as f:
+            drafts = json.load(f)
+    except FileNotFoundError:
+        drafts = []
+    
+    # Get Reddit NewsSource
+    reddit_source = NewsSource.query.filter_by(name="Reddit").first()
+    
+    # Filter drafts if Reddit source is not found
+    if not reddit_source:
+        drafts = []  # Hide all drafts if Reddit source is missing
+    
+    return render_template('admin_drafts.html', 
+                         drafts=drafts,
+                         reddit_source=reddit_source)
