@@ -11,15 +11,16 @@ class PointsPredictionEngine:
     """
 
     @staticmethod
-    def place_prediction(user: User, market: Market, shares: float, outcome: bool) -> Prediction:
+    def place_prediction(user: User, market: Market, shares: float, outcome: bool, use_liquidity_buffer: bool = False) -> Prediction:
         """
-        Place a prediction on a market with platform fee deduction.
+        Place a prediction on a market with platform fee deduction and optional liquidity buffer staking.
 
         Args:
             user: User placing the prediction
             market: Market to predict on
-            shares: Number of shares to purchase (before fee)
+            shares: Number of shares to purchase
             outcome: Predicted outcome (True for YES, False for NO)
+            use_liquidity_buffer: If True, use liquidity buffer instead of normal points
 
         Returns:
             Prediction object
@@ -27,6 +28,7 @@ class PointsPredictionEngine:
         Raises:
             ValueError: If prediction is placed after market deadline
             ValueError: If user already has prediction on this market
+            ValueError: If using liquidity buffer and insufficient balance
         """
         # Check prediction deadline
         if market.resolved:
@@ -42,6 +44,11 @@ class PointsPredictionEngine:
         if existing:
             raise ValueError(f"User {user.id} already has prediction on market {market.id}")
 
+        # If using liquidity buffer, check balance
+        if use_liquidity_buffer:
+            if user.liquidity_buffer_deposit < shares:
+                raise ValueError(f"Insufficient liquidity buffer balance. Required: {shares}, Available: {user.liquidity_buffer_deposit}")
+
         # Calculate platform fee (5%)
         platform_fee = 0.05 * shares
         net_shares = shares - platform_fee
@@ -53,10 +60,22 @@ class PointsPredictionEngine:
             shares=shares,  # Store original shares amount
             platform_fee=platform_fee,
             outcome=outcome,
+            used_liquidity_buffer=use_liquidity_buffer,
             created_at=datetime.utcnow()
         )
         db.session.add(prediction)
         db.session.commit()
+
+        # If using liquidity buffer, deduct from deposit
+        if use_liquidity_buffer:
+            user.liquidity_buffer_deposit -= shares
+            PointsLedger.log_transaction(
+                user=user,
+                amount=-shares,
+                transaction_type="liquidity_buffer_stake",
+                description=f"Stake placed from liquidity buffer for market {market.id}"
+            )
+            db.session.commit()
 
         return prediction
 
