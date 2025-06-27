@@ -56,6 +56,7 @@ class User(UserMixin, db.Model):
     events = db.relationship('MarketEvent', back_populates='user', lazy=True)
     liquidity_providers = db.relationship('LiquidityProvider', back_populates='user')
     league_members = db.relationship('LeagueMember', back_populates='user')
+    market_events = db.relationship('MarketEvent', back_populates='user', lazy=True)
     
     @property
     def badges(self):
@@ -207,6 +208,8 @@ class Market(db.Model):
     liquidity_pool = db.Column(db.Float, default=2000.0)
     liquidity_provider_shares = db.Column(db.Float, default=1.0)
     liquidity_fee = db.Column(db.Float, default=0.003)
+    prediction_deadline = db.Column(db.DateTime, nullable=True, default=lambda: datetime.utcnow())
+    resolution_deadline = db.Column(db.DateTime, nullable=True, default=lambda: datetime.utcnow())
     
     # Relationships
     parent_market = db.relationship('Market', remote_side=[id], back_populates='child_markets')
@@ -310,7 +313,7 @@ class Market(db.Model):
         
         # Calculate and award payouts for all predictions
         for prediction in self.predictions:
-            if prediction.prediction == outcome:
+            if prediction.prediction.upper() == self.resolved_outcome.upper():
                 total_pool = self.yes_pool + self.no_pool
                 if outcome == 'YES':
                     payout = prediction.shares * (total_pool / self.yes_pool)
@@ -449,39 +452,89 @@ class Market(db.Model):
         return market, event
 
 class Prediction(db.Model):
+    """Prediction model."""
     id = db.Column(db.Integer, primary_key=True)
-    market_id = db.Column(db.Integer, db.ForeignKey('market.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    prediction = db.Column(db.String(3), nullable=False)
-    shares = db.Column(db.Float, default=0.0)
-    average_price = db.Column(db.Float, default=0.0)
-    payout = db.Column(db.Float, default=0)
+    market_id = db.Column(db.Integer, db.ForeignKey('market.id'), nullable=False)
+    shares = db.Column(db.Float, nullable=False)
+    outcome = db.Column(db.Boolean, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    xp_awarded = db.Column(db.Boolean, default=False)  # Add xp_awarded field
-    market = db.relationship('Market', back_populates='predictions', lazy=True)
-    user = db.relationship('User', back_populates='predictions', lazy=True)
+    xp_awarded = db.Column(db.Boolean, default=False)
+    
+    # Relationships
+    user = db.relationship('User', back_populates='predictions')
+    market = db.relationship('Market', back_populates='predictions')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Log prediction event
-        market = Market.query.get(kwargs['market_id'])
-        if market:
-            db.session.add(MarketEvent.log_prediction(market, kwargs['user_id'], self))
+
+        # Handle market_id or market object
+        market_id = kwargs.get('market_id')
+        if not market_id and 'market' in kwargs and kwargs['market']:
+            market_id = kwargs['market'].id
+
+        # Handle user_id or user object
+        user_id = kwargs.get('user_id')
+        if not user_id and 'user' in kwargs and kwargs['user']:
+            user_id = kwargs['user'].id
+
+        # Log prediction if we have both market_id and user_id
+        if market_id and user_id:
+            market = Market.query.get(market_id)
+            if market:
+                print(f"Prediction logged for market: {market.title}")
+                event = MarketEvent.log_prediction(market, user_id, self)
+                db.session.add(event)
+
+    def __repr__(self):
+        return f'<Prediction {self.id}: {self.shares} shares on Market {self.market_id}>'
 
 class MarketEvent(db.Model):
     """Model to track important events in a market's lifecycle"""
     id = db.Column(db.Integer, primary_key=True)
     market_id = db.Column(db.Integer, db.ForeignKey('market.id'), nullable=False)
-    event_type = db.Column(db.String(20), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    description = db.Column(db.Text)
-    event_data = db.Column(db.JSON)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    description = db.Column(db.String(200), nullable=False)
+    event_data = db.Column(db.JSON, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     # Relationships
-    market = db.relationship('Market', back_populates='events', lazy=True)
-    user = db.relationship('User', back_populates='events', lazy=True)
-    
+    market = db.relationship('Market', back_populates='events')
+    user = db.relationship('User', back_populates='market_events')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        db.session.add(self)
+
+    @staticmethod
+    def log_prediction(market: Market, user_id: int, prediction: Prediction) -> 'MarketEvent':
+        """
+        Log a new prediction event.
+        
+        Args:
+            market: Market object
+            user_id: ID of the user making the prediction
+            prediction: Prediction object
+            
+        Returns:
+            MarketEvent object
+        """
+        event_data = {
+            'prediction_id': prediction.id,
+            'shares': prediction.shares,
+            'outcome': prediction.outcome,
+            'xp_awarded': prediction.xp_awarded
+        }
+        
+        event = MarketEvent(
+            market_id=market.id,
+            user_id=user_id,
+            description=f"Prediction made by user {user_id} on market {market.id}",
+            event_data=event_data
+        )
+        
+        return event
+
     @classmethod
     def log_market_creation(cls, market, user_id):
         """Log the creation of a new market"""
@@ -512,22 +565,6 @@ class MarketEvent(db.Model):
                 'outcome': market.resolved_outcome,
                 'resolved_at': datetime.utcnow().isoformat(),
                 'lineage': market.lineage_chain
-            }
-        )
-    
-    @classmethod
-    def log_prediction(cls, market, user_id, prediction):
-        """Log prediction creation"""
-        return cls(
-            market_id=market.id,
-            event_type='prediction_made',
-            user_id=user_id,
-            description=f'Prediction made on market "{market.title}"',
-            event_data={
-                'user_id': user_id,
-                'prediction': prediction.prediction,
-                'shares': prediction.shares,
-                'average_price': prediction.average_price
             }
         )
     
