@@ -6,6 +6,7 @@ from sqlalchemy import func
 import hashlib
 from config import Config
 import logging
+from app.services.points_payout_engine import PointsPayoutEngine
 
 def generate_contract_hash(market):
     """Generate a SHA-256 hash for market integrity verification"""
@@ -251,93 +252,43 @@ class Market(db.Model):
     
     def trade(self, user, amount, outcome):
         """
-        Execute a trade on the market.
+        Execute a trade on this market.
         
         Args:
-            user (User): User executing the trade
-            amount (float): Points to trade
-            outcome (bool): True for YES, False for NO
+            user: User making the trade
+            amount: Amount of points to trade
+            outcome: True for YES trade, False for NO trade
             
         Returns:
-            dict: Trade result containing price and shares
+            Dict containing trade details:
+            - price: Price per share
+            - shares: Number of shares purchased
+            - outcome: 'YES' or 'NO'
             
         Raises:
-            ValueError: If trade would exceed pool cap
+            ValueError: If trade amount is invalid
         """
-        # Validate amount
-        if amount < Config.MIN_TRADE_SIZE or amount > Config.MAX_TRADE_SIZE:
-            raise ValueError(f'Trade amount must be between {Config.MIN_TRADE_SIZE} and {Config.MAX_TRADE_SIZE} points')
-            
-        # Check pool cap
-        total_pool = self.yes_pool + self.no_pool
-        if total_pool + amount > Config.CONTRACT_POOL_CAP:
-            raise ValueError(f'Market pool cap reached. Total pool cannot exceed {Config.CONTRACT_POOL_CAP} points')
-            
-        # Calculate price
-        if outcome:  # Trading YES
-            price = self.yes_pool / self.no_pool
-            self.yes_pool += amount
-            shares = amount / price
-        else:  # Trading NO
-            price = self.no_pool / self.yes_pool
-            self.no_pool += amount
-            shares = amount / price
-            
-        # Update prices
-        self.update_prices()
+        from app.services.points_trade_engine import PointsTradeEngine
         
-        # Log the trade
+        # Execute the trade through the trade engine
+        trade_result = PointsTradeEngine.execute_trade(user, self, amount, outcome)
+        
+        # Log the trade event with values from trade result
         event = MarketEvent(
-            market_id=self.id,
-            event_type='trade_executed',
-            user_id=user.id,
-            description=f'Trade executed on market "{self.title}"',
+            market=self,
+            event_type='trade',
+            user=user,
+            description=f"User {user.username} traded {amount:.2f} points on {trade_result['outcome']} outcome",
             event_data={
                 'amount': amount,
-                'outcome': outcome,
-                'price': price,
-                'shares': shares,
-                'total_pool': total_pool + amount
+                'price': trade_result['price'],
+                'shares': trade_result['shares'],
+                'outcome': trade_result['outcome']
             }
         )
         db.session.add(event)
         
-        return {
-            'price': price,
-            'shares': shares,
-            'total_pool': total_pool + amount
-        }
-    
-    def update_prices(self):
-        # Update prices
-        pass
-    
-    def distribute_liquidity_rewards(self, fee):
-        """
-        Distribute liquidity rewards to all liquidity providers based on their share.
-        """
-        if not self.liquidity_providers:
-            return
-            
-        total_shares = sum(lp.shares for lp in self.liquidity_providers)
-        
-        for lp in self.liquidity_providers:
-            reward = (fee * lp.shares) / total_shares
-            lp.user.points += reward
-            
-            # Log the reward
-            event = MarketEvent(
-                market=self,
-                event_type='liquidity_reward',
-                user=lp.user,
-                description=f'Liquidity reward distributed to user "{lp.user.username}"',
-                event_data={
-                    'amount': reward,
-                    'total_shares': total_shares,
-                    'lp_shares': lp.shares
-                }
-            )
-            db.session.add(event)
+        return trade_result
 
     def resolve(self, outcome):
         """Resolve the market with a given outcome"""
@@ -356,17 +307,62 @@ class Market(db.Model):
         # Award XP for correct predictions
         self.award_xp_for_predictions()
         
-        # Calculate payouts for all predictions
+        # Calculate and award payouts for all predictions
         for prediction in self.predictions:
             if prediction.prediction == outcome:
                 total_pool = self.yes_pool + self.no_pool
                 if outcome == 'YES':
-                    prediction.payout = prediction.shares * (total_pool / self.yes_pool)
+                    payout = prediction.shares * (total_pool / self.yes_pool)
                 else:
-                    prediction.payout = prediction.shares * (total_pool / self.no_pool)
-                prediction.user.points += prediction.payout
+                    payout = prediction.shares * (total_pool / self.no_pool)
+                
+                # Use payout engine to handle points
+                PointsPayoutEngine.award_resolution_payout(
+                    user=prediction.user,
+                    amount=payout,
+                    market_id=self.id
+                )
+                prediction.payout = payout
         
         return True
+
+    def update_prices(self):
+        # Update prices
+        pass
+    
+    def distribute_liquidity_rewards(self, fee):
+        """
+        Distribute liquidity rewards to all liquidity providers based on their share.
+        """
+        if not self.liquidity_providers:
+            return
+            
+        total_shares = sum(lp.shares for lp in self.liquidity_providers)
+        
+        for lp in self.liquidity_providers:
+            reward = (fee * lp.shares) / total_shares
+            
+            # Use payout engine to handle points
+            PointsPayoutEngine.award_trade_payout(
+                user=lp.user,
+                amount=reward,
+                market_id=self.id,
+                outcome='LIQUIDITY'  # Special outcome type for liquidity rewards
+            )
+            
+            # Log the reward
+            event = MarketEvent(
+                market=self,
+                event_type='liquidity_reward',
+                user=lp.user,
+                description=f'Liquidity reward distributed to user "{lp.user.username}"',
+                event_data={
+                    'amount': reward,
+                    'total_shares': total_shares,
+                    'lp_shares': lp.shares
+                }
+            )
+            db.session.add(event)
 
     def award_xp_for_predictions(self, base_xp_per_share: int = 10):
         """
@@ -392,18 +388,19 @@ class Market(db.Model):
            - Applies regardless of prediction correctness
            
         4. PointsService Integration:
-           - Uses PointsService.award_xp() for actual XP awarding
+           - Uses PointsPayoutEngine.award_resolution_payout() for actual XP awarding
            - Handles streaks, daily limits, and multipliers
            - XP is only awarded if user hasn't checked in today
         
         Returns:
             None
         """
-        from app.services.points_service import PointsService
-        if not self.resolved or self.resolved_outcome is None:
-            return  # Can't award XP if market not resolved
+        from app.services.points_payout_engine import PointsPayoutEngine
+        from app.models import Prediction
 
-        # Get all predictions for this market
+        if not self.resolved or not self.resolved_outcome:
+            return
+
         predictions = Prediction.query.filter_by(market_id=self.id).all()
         
         for prediction in predictions:
@@ -414,7 +411,11 @@ class Market(db.Model):
             # Only award XP for correct predictions
             if prediction.prediction.upper() == self.resolved_outcome.upper():
                 xp_amount = base_xp_per_share * prediction.shares
-                PointsService.award_xp(prediction.user, xp_amount)
+                PointsPayoutEngine.award_resolution_payout(
+                    user=prediction.user,
+                    amount=xp_amount,
+                    market_id=self.id
+                )
                 
             # Mark prediction as XP awarded (whether correct or not)
             prediction.xp_awarded = True
