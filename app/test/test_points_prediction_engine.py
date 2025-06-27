@@ -161,7 +161,7 @@ class PointsPredictionEngineTestCase(unittest.TestCase):
 
         # Verify ledger logging
         mock_log_transaction.assert_called_once_with(
-            user_id=self.user.id,
+            user=self.user,
             amount=0,
             transaction_type="xp_awarded",
             description=f"XP awarded for correct prediction on market {self.market.id}"
@@ -192,6 +192,202 @@ class PointsPredictionEngineTestCase(unittest.TestCase):
         # Verify XP wasn't awarded again
         updated_prediction = Prediction.query.get(prediction.id)
         self.assertEqual(self.user.xp, 0)  # Should remain unchanged
+
+    def test_resolve_market_full_correct(self):
+        """Test market resolution with all correct predictions"""
+        # Create test users
+        user1 = User(username="user1", email="user1@example.com")
+        user2 = User(username="user2", email="user2@example.com")
+        db.session.add_all([user1, user2])
+        db.session.commit()
+
+        # Create test market
+        market = Market(
+            title="Test Market",
+            description="Test market for resolution",
+            prediction_deadline=datetime.utcnow() + timedelta(days=1),
+            resolution_deadline=datetime.utcnow() + timedelta(days=2),
+            resolution_date=datetime.utcnow() + timedelta(days=3),
+            resolution_method="Manual",
+            yes_pool=1000.0,
+            no_pool=1000.0,
+            liquidity_pool=2000.0,
+            liquidity_provider_shares=1.0,
+            liquidity_fee=0.003
+        )
+        db.session.add(market)
+        db.session.commit()
+
+        # Create correct predictions
+        prediction1 = Prediction(
+            user=user1,
+            market=market,
+            shares=5.0,
+            outcome=True
+        )
+        prediction2 = Prediction(
+            user=user2,
+            market=market,
+            shares=3.0,
+            outcome=True
+        )
+        db.session.add_all([prediction1, prediction2])
+        db.session.commit()
+
+        # Resolve market with correct outcome
+        PointsPredictionEngine.resolve_market(market.id, True)
+
+        # Verify results
+        updated_market = Market.query.get(market.id)
+        self.assertTrue(updated_market.resolved)
+        self.assertEqual(updated_market.resolved_outcome, "YES")
+
+        # Verify points and XP awarded
+        updated_user1 = User.query.get(user1.id)
+        updated_user2 = User.query.get(user2.id)
+        self.assertEqual(updated_user1.points, 5)  # 5 shares
+        self.assertEqual(updated_user1.xp, 5)
+        self.assertEqual(updated_user2.points, 3)  # 3 shares
+        self.assertEqual(updated_user2.xp, 3)
+
+    def test_resolve_market_partial_correct(self):
+        """Test market resolution with mixed predictions"""
+        # Create test users
+        user1 = User(username="user1", email="user1@example.com")
+        user2 = User(username="user2", email="user2@example.com")
+        db.session.add_all([user1, user2])
+        db.session.commit()
+
+        # Create test market
+        market = Market(
+            title="Test Market",
+            description="Test market for resolution",
+            prediction_deadline=datetime.utcnow() + timedelta(days=1),
+            resolution_deadline=datetime.utcnow() + timedelta(days=2),
+            resolution_date=datetime.utcnow() + timedelta(days=3),
+            resolution_method="Manual",
+            yes_pool=1000.0,
+            no_pool=1000.0,
+            liquidity_pool=2000.0,
+            liquidity_provider_shares=1.0,
+            liquidity_fee=0.003
+        )
+        db.session.add(market)
+        db.session.commit()
+
+        # Create predictions (one correct, one incorrect)
+        prediction1 = Prediction(
+            user=user1,
+            market=market,
+            shares=5.0,
+            outcome=True  # Will be correct
+        )
+        prediction2 = Prediction(
+            user=user2,
+            market=market,
+            shares=3.0,
+            outcome=False  # Will be incorrect
+        )
+        db.session.add_all([prediction1, prediction2])
+        db.session.commit()
+
+        # Resolve market with correct outcome
+        PointsPredictionEngine.resolve_market(market.id, True)
+
+        # Verify results
+        updated_market = Market.query.get(market.id)
+        self.assertTrue(updated_market.resolved)
+        self.assertEqual(updated_market.resolved_outcome, "YES")
+
+        # Verify points and XP awarded
+        updated_user1 = User.query.get(user1.id)
+        updated_user2 = User.query.get(user2.id)
+        self.assertEqual(updated_user1.points, 5)  # 5 shares
+        self.assertEqual(updated_user1.xp, 5)
+        self.assertEqual(updated_user2.points, 0)  # Incorrect prediction
+        self.assertEqual(updated_user2.xp, 0)
+
+    def test_resolve_market_all_incorrect(self):
+        """Test market resolution with all incorrect predictions"""
+        # Create test users
+        user1 = User(username="user1", email="user1@example.com")
+        user2 = User(username="user2", email="user2@example.com")
+        db.session.add_all([user1, user2])
+        db.session.commit()
+
+        # Create test market
+        market = Market(
+            title="Test Market",
+            description="Test market for resolution",
+            prediction_deadline=datetime.utcnow() + timedelta(days=1),
+            resolution_deadline=datetime.utcnow() + timedelta(days=2),
+            resolution_date=datetime.utcnow() + timedelta(days=3),
+            resolution_method="Manual",
+            yes_pool=1000.0,
+            no_pool=1000.0,
+            liquidity_pool=2000.0,
+            liquidity_provider_shares=1.0,
+            liquidity_fee=0.003
+        )
+        db.session.add(market)
+        db.session.commit()
+
+        # Create incorrect predictions
+        prediction1 = Prediction(
+            user=user1,
+            market=market,
+            shares=5.0,
+            outcome=False  # Will be incorrect
+        )
+        prediction2 = Prediction(
+            user=user2,
+            market=market,
+            shares=3.0,
+            outcome=False  # Will be incorrect
+        )
+        db.session.add_all([prediction1, prediction2])
+        db.session.commit()
+
+        # Resolve market with correct outcome
+        PointsPredictionEngine.resolve_market(market.id, True)
+
+        # Verify results
+        updated_market = Market.query.get(market.id)
+        self.assertTrue(updated_market.resolved)
+        self.assertEqual(updated_market.resolved_outcome, "YES")
+
+        # Verify no points or XP awarded
+        updated_user1 = User.query.get(user1.id)
+        updated_user2 = User.query.get(user2.id)
+        self.assertEqual(updated_user1.points, 0)
+        self.assertEqual(updated_user1.xp, 0)
+        self.assertEqual(updated_user2.points, 0)
+        self.assertEqual(updated_user2.xp, 0)
+
+    def test_resolve_already_resolved_market(self):
+        """Test resolving an already resolved market"""
+        # Create test market
+        market = Market(
+            title="Test Market",
+            description="Test market for resolution",
+            prediction_deadline=datetime.utcnow() + timedelta(days=1),
+            resolution_deadline=datetime.utcnow() + timedelta(days=2),
+            resolution_date=datetime.utcnow() + timedelta(days=3),
+            resolution_method="Manual",
+            yes_pool=1000.0,
+            no_pool=1000.0,
+            liquidity_pool=2000.0,
+            liquidity_provider_shares=1.0,
+            liquidity_fee=0.003,
+            resolved=True,
+            resolved_outcome="YES"
+        )
+        db.session.add(market)
+        db.session.commit()
+
+        # Attempt to resolve again
+        with self.assertRaises(ValueError):
+            PointsPredictionEngine.resolve_market(market.id, True)
 
 if __name__ == '__main__':
     unittest.main()
