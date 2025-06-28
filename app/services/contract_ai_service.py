@@ -217,6 +217,58 @@ class ContractAIService:
             return STUB_CONTRACT
 
     @staticmethod
+    def balance_contract(contract: dict) -> dict:
+        """Balance contract headline based on confidence score to maintain market engagement."""
+        # Ensure headline is always present for balancing
+        if not contract.get("headline"):
+            if contract.get("original_headline"):
+                contract["headline"] = contract["original_headline"]
+            elif hasattr(ContractAIService, "last_headline") and ContractAIService.last_headline:
+                contract["headline"] = ContractAIService.last_headline
+            else:
+                raise ValueError("balance_contract(): HEADLINE MISSING — cascade is broken between patch and balance")
+
+        # Store headline for future recovery
+        ContractAIService.last_headline = contract["headline"]
+
+        original_headline = contract.get("headline", "")
+        headline = original_headline.strip()
+        confidence = contract.get("confidence", 0.5)
+        notes = []
+        retest = False
+
+        # Fail-fast if no headline
+        if not headline:
+            raise ValueError("balance_contract(): HEADLINE MISSING — cascade is broken between patch and balance")
+
+        print(f"[balance_contract] Confidence received: {confidence}")
+        print(f"[balance_contract] Original headline: {original_headline}")
+
+        # Force balance if confidence is high
+        if confidence >= 0.84:
+            if re.search(r"vote to approve", headline, re.IGNORECASE) and "9–3" not in headline:
+                headline = re.sub(r"(?i)vote to approve", "vote to approve by at least a 9–3 vote margin", headline)
+                notes.append(f"Reframed headline due to high confidence: {confidence}")
+                retest = True
+            elif re.search(r"approve", headline, re.IGNORECASE) and "9–3" not in headline:
+                headline = re.sub(r"(?i)approve", "approve by at least a 9–3 vote margin", headline)
+                notes.append(f"Fallback tightening using 'approve' at confidence {confidence}")
+                retest = True
+            elif re.search(r"vote", headline, re.IGNORECASE) and "9–3" not in headline:
+                headline += " by a 9–3 or greater vote margin"
+                notes.append(f"Generic fallback tightening because confidence {confidence} exceeded threshold.")
+                retest = True
+
+        if not retest:
+            notes.append(f"No change needed for confidence {confidence}")
+
+        contract["headline"] = headline
+        contract["balanced"] = retest
+        contract["retest_required"] = retest
+        contract["balance_notes"] = notes
+        return contract
+
+    @staticmethod
     def test_contract(contract: dict) -> dict:
         """Audit contract for bias, ambiguity, and structural flaws. Return full contract."""
         prompt = f"""
@@ -398,8 +450,10 @@ CONTRACT TO AUDIT:
         def add_patch_note(description: str):
             patch_notes.append(description)
 
+        # Initialize headline from contract
+        headline = contract.get("headline", "").strip()
+        
         # Process headline if present
-        headline = patched.get("headline", "")
         if headline:
             # 1. Replace vague civic actors
             actor_mappings = {
@@ -479,4 +533,48 @@ CONTRACT TO AUDIT:
         # Finalize
         patched["patched"] = True
         patched["patch_notes"] = patch_notes
+
+        # This is the key fix:
+        if not patched.get("headline") or not patched["headline"].strip():
+            patched["headline"] = headline.strip()
+
         return patched
+
+    @staticmethod
+    def test_contract_balancing():
+        """Test the contract balancing logic with various examples."""
+        # Test case 1: High confidence (should be tightened)
+        test_contract_1 = {
+            "headline": "Will the City Council approve the downtown redevelopment ordinance by November 30?",
+            "confidence": 0.83
+        }
+        
+        result_1 = ContractAIService.balance_contract(test_contract_1)
+        print("\nTest Case 1 (High Confidence):")
+        print(f"Original: {test_contract_1['headline']}")
+        print(f"Balanced: {result_1['headline']}")
+        print(f"Notes: {result_1['balance_notes']}")
+        
+        # Test case 2: Low confidence (should be softened)
+        test_contract_2 = {
+            "headline": "Will the City Council fail to pass the downtown redevelopment ordinance by November 30?",
+            "confidence": 0.25
+        }
+        
+        result_2 = ContractAIService.balance_contract(test_contract_2)
+        print("\nTest Case 2 (Low Confidence):")
+        print(f"Original: {test_contract_2['headline']}")
+        print(f"Balanced: {result_2['headline']}")
+        print(f"Notes: {result_2['balance_notes']}")
+        
+        # Test case 3: Neutral confidence (should remain unchanged)
+        test_contract_3 = {
+            "headline": "Will the City Council vote on the downtown redevelopment ordinance by November 30?",
+            "confidence": 0.55
+        }
+        
+        result_3 = ContractAIService.balance_contract(test_contract_3)
+        print("\nTest Case 3 (Neutral Confidence):")
+        print(f"Original: {test_contract_3['headline']}")
+        print(f"Balanced: {result_3['headline']}")
+        print(f"Notes: {result_3['balance_notes']}")

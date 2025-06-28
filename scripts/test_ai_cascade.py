@@ -47,6 +47,22 @@ def main():
         tested = service.test_contract(weighed)
         print_contract_stage("Tested Contract", tested)
         
+        # Safety: copy headline back in if it got lost
+        if not tested.get("headline") and draft.get("headline"):
+            tested["headline"] = draft["headline"]
+            tested["original_headline"] = draft["headline"]
+        
+        # Balance contract if confidence is extreme
+        if "confidence" in tested and (tested["confidence"] > 0.7 or tested["confidence"] < 0.3):
+            print("[Stage 5] Running balance_contract()")
+            tested = service.balance_contract(tested)
+            print_contract_stage("Balanced Contract", tested)
+
+            if tested.get("retest_required"):
+                print("[Stage 6] Re-running test_contract() after balance")
+                tested = service.test_contract(tested)
+                print_contract_stage("Re-tested Contract", tested)
+        
         if tested.get("publish_ready", False):
             logger.info("Contract is ready for publishing!")
         else:
