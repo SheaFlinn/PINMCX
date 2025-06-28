@@ -31,6 +31,14 @@ def main():
         draft = service.generate_draft_contract(args.headline)
         print_contract_stage("Draft Contract", draft)
         
+        # Patch contract if needed
+        if not draft.get("patched"):
+            print("[Stage 4] Running patch_contract()")
+            draft = service.patch_contract(draft)
+            print_contract_stage("Patched Contract", draft)
+        else:
+            print("[Stage 4] Skipped - already patched.")
+        
         # Weigh contract
         weighed = service.weigh_contract(draft)
         print_contract_stage("Weighed Contract", weighed)
