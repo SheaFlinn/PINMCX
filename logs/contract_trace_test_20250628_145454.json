@@ -1,0 +1,53 @@
+{
+  "timestamp": "20250628_145454",
+  "stage": "test",
+  "input": {
+    "refinements": [
+      {
+        "section": "Purpose",
+        "suggestions": [
+          "Consider specifying the duration of the projects or the expected outcomes in more detail to provide clearer objectives."
+        ]
+      },
+      {
+        "section": "Scope",
+        "suggestions": [
+          "Define 'specific projects' more clearly to avoid ambiguity. Include a list of projects if possible or a process for selection."
+        ]
+      },
+      {
+        "section": "Terms",
+        "suggestions": [
+          "Define 'X' and 'Y' to avoid confusion. Consider adding provisions for what happens in case of default or changes in interest rates."
+        ]
+      }
+    ],
+    "confidence": 0.75,
+    "issues": [
+      "Lack of specific definitions for monetary figures (M, X, Y) could lead to confusion.",
+      "Absence of a dispute resolution mechanism.",
+      "No provisions for changes in project scope or funding allocation."
+    ],
+    "original_headline": "City Council approves M stormwater bond"
+  },
+  "output": {
+    "sections": [
+      {
+        "title": "Purpose",
+        "content": "[STUB] Contract purpose based on headline"
+      },
+      {
+        "title": "Scope",
+        "content": "[STUB] Contract scope and boundaries"
+      },
+      {
+        "title": "Terms",
+        "content": "[STUB] Key terms and conditions"
+      }
+    ],
+    "confidence": 0.5,
+    "issues": [
+      "API key not found"
+    ]
+  }
+}

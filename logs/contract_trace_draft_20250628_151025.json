@@ -1,0 +1,28 @@
+{
+  "timestamp": "20250628_151025",
+  "stage": "draft",
+  "input": "City Council approves M stormwater bond",
+  "output": {
+    "sections": [
+      {
+        "title": "Purpose",
+        "content": "The purpose of this contract is to outline the terms and conditions under which the City Council of [City Name] approves the issuance of a bond to fund stormwater management projects aimed at improving drainage systems, preventing flooding, and enhancing water quality within the city."
+      },
+      {
+        "title": "Scope",
+        "content": "This contract applies to the issuance of a bond totaling [amount] to be allocated specifically for stormwater management projects identified in the City Council's approved budget for the fiscal year [year]. The projects may include, but are not limited to, the construction of retention basins, installation of drainage systems, and other infrastructural improvements necessary for effective stormwater management."
+      },
+      {
+        "title": "Terms",
+        "content": "The bond shall be issued at an interest rate of [interest rate]% with a maturity period of [number] years. The repayment schedule will commence on [start date] and will be paid through the city's general fund. The City Council commits to ensuring that all proceeds from the bond are used solely for the purposes outlined in this contract and in accordance with applicable laws and regulations."
+      }
+    ],
+    "confidence": 0.85,
+    "issues": [
+      "Specific amount of the bond not provided.",
+      "Interest rate and repayment schedule need to be finalized.",
+      "Details on project implementation timelines are not included."
+    ],
+    "headline": "City Council approves M stormwater bond"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "timestamp": "20250628_145239",
+  "stage": "test",
+  "input": {
+    "refinements": [
+      {
+        "section": "Terms",
+        "suggestions": [
+          "Specify the actual amounts for M, X, and Y to provide clarity.",
+          "Include provisions for what constitutes a default and the specific legal actions that may be taken.",
+          "Add a section on the timeline for issuing the bond and disbursing funds."
+        ]
+      },
+      {
+        "section": "Scope",
+        "suggestions": [
+          "Consider including a more detailed list of eligible projects or a criteria for project approval to avoid ambiguity.",
+          "Discuss potential contingencies for project delays or cost overruns."
+        ]
+      },
+      {
+        "section": "Purpose",
+        "suggestions": [
+          "Clarify the expected outcomes of the stormwater management projects to provide measurable goals.",
+          "Include a statement regarding community engagement or input in project selection."
+        ]
+      }
+    ],
+    "confidence": 0.75,
+    "issues": [
+      "Lack of specific financial details (M, X, Y) could lead to misunderstandings.",
+      "Absence of a contingency plan for project delays or budget overruns.",
+      "No mention of how compliance with local regulations and standards will be verified."
+    ],
+    "original_headline": "City Council approves M stormwater bond"
+  },
+  "output": {
+    "sections": [
+      {
+        "title": "Purpose",
+        "content": "[STUB] Contract purpose based on headline"
+      },
+      {
+        "title": "Scope",
+        "content": "[STUB] Contract scope and boundaries"
+      },
+      {
+        "title": "Terms",
+        "content": "[STUB] Key terms and conditions"
+      }
+    ],
+    "confidence": 0.5,
+    "issues": [
+      "API key not found"
+    ]
+  }
+}

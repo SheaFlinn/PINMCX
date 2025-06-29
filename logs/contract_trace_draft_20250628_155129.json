@@ -1,0 +1,28 @@
+{
+  "timestamp": "20250628_155129",
+  "stage": "draft",
+  "input": "Will the mayor push through the controversial downtown redevelopment ordinance by November?",
+  "output": {
+    "sections": [
+      {
+        "title": "Purpose",
+        "content": "This contract outlines the intentions and responsibilities regarding the proposed downtown redevelopment ordinance, aimed at revitalizing the downtown area while addressing community concerns."
+      },
+      {
+        "title": "Scope",
+        "content": "The scope of this contract includes the evaluation, modification, and potential approval of the downtown redevelopment ordinance. It involves community engagement, assessment of economic impacts, and adherence to legal requirements."
+      },
+      {
+        "title": "Terms",
+        "content": "The mayor will take necessary actions to push the ordinance through the legislative process by November. This includes holding public hearings, consulting with stakeholders, and ensuring that all amendments are considered in a timely manner."
+      }
+    ],
+    "confidence": 0.75,
+    "issues": [
+      "Potential community opposition to the ordinance.",
+      "Legal challenges that may arise during the approval process.",
+      "Timeline constraints related to public hearings and feedback incorporation."
+    ],
+    "headline": "Will the mayor push through the controversial downtown redevelopment ordinance by November?"
+  }
+}

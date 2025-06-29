@@ -1,0 +1,50 @@
+{
+  "timestamp": "20250628_185320",
+  "stage": "test",
+  "input": {
+    "sections": [
+      {
+        "title": "Purpose",
+        "content": "The purpose of this contract is to establish a clear framework for the city council's approval process regarding the downtown redevelopment ordinance, ensuring transparency and community involvement in decision-making."
+      },
+      {
+        "title": "Scope",
+        "content": "This contract covers the public meetings scheduled to discuss the downtown redevelopment ordinance. Specific dates for these meetings will be established and communicated to the public in advance to ensure accountability. Additionally, the contract includes provisions for addressing any amendments or objections raised during these discussions, allowing for community feedback and participation."
+      },
+      {
+        "title": "Terms",
+        "content": "The voting process for the approval of the downtown redevelopment ordinance will be clearly defined. A quorum will be established as [insert specific number] of council members present. In the event of a tie, the ordinance will be considered rejected. A majority vote will be defined as more than half of the votes cast by present council members, excluding any absent members. The criteria for determining the majority will be explicitly outlined to ensure fairness in the voting process."
+      }
+    ],
+    "confidence": 0.95,
+    "issues": [],
+    "headline": "Will the city council vote to approve by at least a 9\u20133 vote margin the downtown redevelopment ordinance by november 30?",
+    "original_headline": "Will the city council vote to approve the downtown redevelopment ordinance by november 30?",
+    "balanced": true,
+    "retest_required": true,
+    "balance_notes": [
+      "Reframed headline due to high confidence: 0.95"
+    ]
+  },
+  "output": {
+    "sections": [
+      {
+        "title": "Purpose",
+        "content": "The purpose of this contract is to clearly outline the process by which the city council will approve the downtown redevelopment ordinance. This contract aims to promote transparency and actively involve the community in the decision-making process to ensure that all voices are heard and considered."
+      },
+      {
+        "title": "Scope",
+        "content": "This contract encompasses the public meetings organized to discuss the downtown redevelopment ordinance. These meetings will be scheduled at specific times and dates that will be communicated to the public in advance, allowing for adequate preparation and participation. Additionally, the contract includes provisions for addressing any amendments, concerns, or objections raised during these discussions to foster meaningful community feedback and engagement."
+      },
+      {
+        "title": "Terms",
+        "content": "The voting process for the approval of the downtown redevelopment ordinance will be explicitly defined within this contract. A quorum will consist of a specific number of council members, which will be disclosed. In the case of a tie vote, the ordinance will be deemed rejected. A majority vote will be defined as more than half of the votes cast by council members present at the meeting, excluding those who are absent. The criteria for determining what constitutes a majority will be thoroughly outlined to ensure a fair and equitable voting process."
+      }
+    ],
+    "confidence": 0.95,
+    "issues": [
+      "The specific number of council members required for a quorum is missing.",
+      "Clarification needed on how community feedback will be collected and incorporated."
+    ]
+  }
+}

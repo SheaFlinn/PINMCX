@@ -1,0 +1,28 @@
+{
+  "timestamp": "20250628_153804",
+  "stage": "draft",
+  "input": "Will the mayor push through the controversial downtown redevelopment ordinance by November?",
+  "output": {
+    "sections": [
+      {
+        "title": "Purpose",
+        "content": "The purpose of this document is to outline the intentions and implications of the proposed downtown redevelopment ordinance, including the potential impact on the community, businesses, and urban development."
+      },
+      {
+        "title": "Scope",
+        "content": "This ordinance pertains to the redevelopment of the downtown area, covering land use policies, building regulations, zoning changes, and community engagement processes. It will affect all stakeholders, including residents, business owners, and city officials."
+      },
+      {
+        "title": "Terms",
+        "content": "The ordinance will be subject to public review and comment before final approval. The mayor will aim to push the ordinance through by November, contingent upon successful negotiations, public support, and adherence to legal requirements. Specific timelines, phases of development, and enforcement measures will be detailed in subsequent documentation."
+      }
+    ],
+    "confidence": 0.85,
+    "issues": [
+      "Potential community opposition",
+      "Legal challenges to zoning changes",
+      "Need for stakeholder engagement"
+    ],
+    "headline": "Will the mayor push through the controversial downtown redevelopment ordinance by November?"
+  }
+}
