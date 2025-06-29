@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Memphis Civic Exchange - Radio Edition{% endblock %}
+
+{% block content %}
+<div class="radio-landing">
+    <h1>Memphis Civic Exchange</h1>
+    <p class="subtitle">Your Voice. Your City. Your Future.</p>
+    
+    <div class="market-filters">
+        <h3>Filter Markets</h3>
+        <select id="domain-filter" onchange="filterMarkets()">
+            <option value="">All Domains</option>
+            {% for category in ['infrastructure', 'public_safety', 'housing', 'education', 'transportation', 'environment', 'economy', 'health', 'other'] %}
+            <option value="{{ category }}" {% if domain == category %}selected{% endif %}>
+                {{ category|capitalize }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <div class="next-market-drop">
+        <h3>Next Market Drop</h3>
+        <div class="countdown">00h 00m 00s</div>
+    </div>
+    
+    <div class="cta-section">
+        <a href="{{ url_for('main.login') }}" class="cta">Get Started</a>
+        <p class="description">Join Memphis Civic Exchange to predict and shape the future of our city.</p>
+    </div>
+    
+    <div class="features">
+        <div class="feature">
+            <h4>Real Civic Impact</h4>
+            <p>Make predictions about Memphis City Council decisions and other civic matters.</p>
+        </div>
+        
+        <div class="feature">
+            <h4>Community Engagement</h4>
+            <p>Connect with fellow Memphians and earn badges for your civic participation.</p>
+        </div>
+        
+        <div class="feature">
+            <h4>Transparent Process</h4>
+            <p>Track market predictions and outcomes in real-time.</p>
+        </div>
+    </div>
+    
+    <div class="market-list">
+        <h3>Active Markets</h3>
+        <div class="markets-grid">
+            {% for market in markets %}
+            <div class="market-card">
+                <div class="domain-tag">{{ market.domain|capitalize }}</div>
+                <h4>{{ market.title }}</h4>
+                <p>{{ market.description }}</p>
+                <div class="market-meta">
+                    <span>Resolves: {{ market.resolution_date.strftime('%B %d, %Y') }}</span>
+                    <span>Domain: {{ market.domain|capitalize }}</span>
+                </div>
+                <a href="{{ url_for('main.market', market_id=market.id) }}" class="market-button">View Market</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="leaderboard-section">
+        <h3>Top Predictors</h3>
+        <div class="leaderboard-filters">
+            <button class="leaderboard-filter active" data-filter="all">All</button>
+            <button class="leaderboard-filter" data-filter="xp">XP</button>
+            <button class="leaderboard-filter" data-filter="points">Points</button>
+            <button class="leaderboard-filter" data-filter="reliability">Reliability</button>
+        </div>
+        
+        <table class="leaderboard-table">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>User</th>
+                    <th>XP</th>
+                    <th>Points</th>
+                    <th>Reliability</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in top_users %}
+                <tr class="leaderboard-row" data-xp="{{ user.xp }}" data-points="{{ user.points }}" data-reliability="{{ user.reliability }}">
+                    <td>{{ loop.index }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.xp }}</td>
+                    <td>{{ user.points }}</td>
+                    <td>{{ "%.2f"|format(user.reliability) }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterMarkets() {
+    const filter = document.getElementById('domain-filter').value;
+    window.location.href = `/?domain=${filter}`;
+}
+
+// Countdown timer for next market drop
+function startCountdown() {
+    const countdownElement = document.querySelector('.countdown');
+    if (!countdownElement) return;
+    
+    // Dummy countdown logic (replace with real logic later)
+    const targetDate = new Date();
+    targetDate.setHours(targetDate.getHours() + 24); // Next market drop in 24 hours
+    
+    function updateCountdown() {
+        const now = new Date();
+        const diff = targetDate - now;
+        
+        if (diff <= 0) {
+            countdownElement.textContent = 'Market Drop Now!';
+            return;
+        }
+        
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        countdownElement.textContent = `${hours}h ${minutes}m ${seconds}s`;
+    }
+    
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+}
+
+// Leaderboard filtering
+function filterLeaderboard(filterBy) {
+    const filterButtons = document.querySelectorAll('.leaderboard-filter');
+    filterButtons.forEach(button => {
+        button.classList.remove('active');
+    });
+    
+    document.querySelector(`[data-filter="${filterBy}"]`).classList.add('active');
+    
+    const rows = document.querySelectorAll('.leaderboard-row');
+    rows.forEach(row => {
+        const data = row.dataset;
+        if (filterBy === 'all' || data[filterBy]) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Initialize components
+document.addEventListener('DOMContentLoaded', () => {
+    startCountdown();
+    
+    // Add event listeners for leaderboard filters
+    const filterButtons = document.querySelectorAll('.leaderboard-filter');
+    filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            filterLeaderboard(button.dataset.filter);
+        });
+    });
+});
+</script>
+{% endblock %}

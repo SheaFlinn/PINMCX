@@ -1,0 +1,58 @@
+{
+  "timestamp": "20250628_154051",
+  "stage": "test",
+  "input": {
+    "refinements": [
+      {
+        "section": "Scope",
+        "suggestions": [
+          "Include specific metrics for assessing community input and environmental impacts.",
+          "Define the criteria for economic benefits to ensure clarity in expectations."
+        ]
+      },
+      {
+        "section": "Terms",
+        "suggestions": [
+          "Add a timeline or specific dates for public hearings and community feedback.",
+          "Clarify what special conditions may apply and how they will be determined."
+        ]
+      },
+      {
+        "section": "Purpose",
+        "suggestions": [
+          "Specify the parties involved in the contract for clarity.",
+          "State the intended outcomes of the review process to give context."
+        ]
+      }
+    ],
+    "confidence": 0.85,
+    "issues": [
+      "Community opposition may delay approval",
+      "Legal challenges to the ordinance",
+      "Funding and resource allocation concerns"
+    ],
+    "original_headline": "Will the mayor push through the controversial downtown redevelopment ordinance by November?"
+  },
+  "output": {
+    "sections": [
+      {
+        "title": "Purpose",
+        "content": "This contract is entered into by the City Council and the Mayor's Office to outline the framework for reviewing the downtown redevelopment ordinance. The intended outcome of this review process is to ensure that community input is adequately considered, environmental impacts are assessed, and economic benefits are clearly defined."
+      },
+      {
+        "title": "Scope",
+        "content": "The scope of this review includes assessing community input through specific metrics such as surveys and public forums. It also involves evaluating potential environmental impacts and defining the criteria for economic benefits to ensure all stakeholders have a clear understanding of expectations."
+      },
+      {
+        "title": "Terms",
+        "content": "The review process will include a timeline for public hearings and opportunities for community feedback, with specific dates to be announced. Special conditions that may apply to the ordinance will be clearly defined and communicated, including the criteria for their determination."
+      }
+    ],
+    "confidence": 0.9,
+    "issues": [
+      "Community opposition may delay approval",
+      "Legal challenges to the ordinance",
+      "Funding and resource allocation concerns"
+    ]
+  }
+}

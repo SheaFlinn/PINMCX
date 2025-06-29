@@ -1,0 +1,25 @@
+{
+  "timestamp": "20250628_175918",
+  "stage": "draft",
+  "input": "Will the City Council vote to approve the downtown redevelopment ordinance by November?",
+  "output": {
+    "sections": [
+      {
+        "title": "Purpose",
+        "content": "[STUB] Contract purpose based on headline"
+      },
+      {
+        "title": "Scope",
+        "content": "[STUB] Contract scope and boundaries"
+      },
+      {
+        "title": "Terms",
+        "content": "[STUB] Key terms and conditions"
+      }
+    ],
+    "confidence": 0.5,
+    "issues": [
+      "API key not found"
+    ]
+  }
+}

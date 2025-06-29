@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>MCX Analytics Dashboard</h2>
+    
+    <div class="row mt-4">
+        <!-- User Statistics -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">User Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        <strong>Total Users:</strong> {{ stats.total_users }}<br>
+                        <strong>Average Reliability:</strong> {{ "%.1f"|format(stats.avg_reliability) }}%
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Market Statistics -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Market Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        <strong>Resolved Markets:</strong> {{ stats.resolved_markets }}<br>
+                        <strong>Unresolved Markets:</strong> {{ stats.unresolved_markets }}<br>
+                        <strong>Most Active Market:</strong> {{ stats.most_active_market.title if stats.most_active_market else "N/A" }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prediction Statistics -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Prediction Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        <strong>Total Predictions:</strong> {{ stats.total_predictions }}<br>
+                        <strong>Liquidity Buffer Total:</strong> {{ "%.0f"|format(stats.lb_total) }} points
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Domain Distribution -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Domain Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        <strong>Most Common Domain:</strong> {{ stats.most_common_domain[0] if stats.most_common_domain else "N/A" }}<br>
+                        <strong>Count:</strong> {{ stats.most_common_domain[1] if stats.most_common_domain else 0 }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

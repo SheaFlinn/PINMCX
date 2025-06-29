@@ -1,0 +1,63 @@
+{
+  "timestamp": "20250628_162003",
+  "stage": "weigh",
+  "input": {
+    "sections": [
+      {
+        "title": "Purpose",
+        "content": "The purpose of this contract is to outline the expectations and processes involved in the approval of the downtown redevelopment ordinance by the City Council."
+      },
+      {
+        "title": "Scope",
+        "content": "This contract applies to the proposed downtown redevelopment ordinance, including all necessary assessments, recommendations, and final voting procedures to ensure its approval by the City Council by the specified deadline of November."
+      },
+      {
+        "title": "Terms",
+        "content": "The City Council shall review the ordinance and all related documents by October 15. A public hearing will be held on October 25, and final voting will occur no later than November 1. If the ordinance is not approved by this date, the proposal will be re-evaluated for future consideration."
+      }
+    ],
+    "confidence": 0.85,
+    "issues": [
+      "The timeline may be too tight for thorough public review.",
+      "Potential conflicts of interest among council members should be considered."
+    ],
+    "headline": "Will the city council vote to approve the downtown redevelopment ordinance by november 30?",
+    "patched": true,
+    "patch_notes": [
+      "Rephrased 'approve' to 'vote to approve'",
+      "Clarified timeframe 'by\\s+november' to 'by November 30'",
+      "Deduplicated repeated phrases"
+    ]
+  },
+  "output": {
+    "refinements": [
+      {
+        "section": "Purpose",
+        "suggestions": [
+          "Consider adding definitions for key terms related to the ordinance.",
+          "Include a brief overview of the goals of the redevelopment."
+        ]
+      },
+      {
+        "section": "Scope",
+        "suggestions": [
+          "Specify the parties involved in the approval process.",
+          "Outline any potential limitations or exclusions related to the ordinance."
+        ]
+      },
+      {
+        "section": "Terms",
+        "suggestions": [
+          "Add provisions for handling conflicts of interest among council members.",
+          "Include a contingency plan in case the timeline cannot be met."
+        ]
+      }
+    ],
+    "confidence": 0.85,
+    "issues": [
+      "The timeline may be too tight for thorough public review.",
+      "Potential conflicts of interest among council members should be considered."
+    ],
+    "original_headline": "Will the city council vote to approve the downtown redevelopment ordinance by november 30?"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "title": "Will the mayor push through the controversial downtown redevelopment ordinance by November?",
+  "scope": "City leadership",
+  "timeframe": "By November",
+  "market_type": "binary",
+  "tags": ["redevelopment", "downtown", "ordinance"],
+  "drafted_by": "ai_v1",
+  "weighting": 0.91,
+  "tested": true
+}
+

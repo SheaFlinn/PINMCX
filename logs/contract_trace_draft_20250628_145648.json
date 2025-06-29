@@ -1,0 +1,24 @@
+{
+  "timestamp": "20250628_145648",
+  "stage": "draft",
+  "input": "City Council approves M stormwater bond",
+  "output": {
+    "sections": [
+      {
+        "title": "Purpose",
+        "content": "This contract outlines the terms and conditions under which the City Council approves the issuance of bonds for stormwater management projects, aimed at improving drainage, reducing flooding, and enhancing water quality within the city."
+      },
+      {
+        "title": "Scope",
+        "content": "The bond proceeds will be utilized exclusively for the design, construction, and maintenance of stormwater infrastructure, including but not limited to retention basins, drainage systems, and water treatment facilities. The projects funded by this bond will address areas identified as high-risk for flooding and stormwater runoff."
+      },
+      {
+        "title": "Terms",
+        "content": "The total amount of bonds approved is M dollars, with an interest rate not to exceed 5%. The bonds will be repaid over a period of 20 years through a combination of property taxes and fees collected from the stormwater utility. The City Council commits to providing annual reports on the progress of the projects funded by this bond and ensuring compliance with all applicable environmental regulations."
+      }
+    ],
+    "confidence": 0.85,
+    "issues": [],
+    "headline": "City Council approves M stormwater bond"
+  }
+}

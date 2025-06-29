@@ -1,0 +1,53 @@
+{
+  "timestamp": "20250628_150006",
+  "stage": "weigh",
+  "input": {
+    "sections": [
+      {
+        "title": "Purpose",
+        "content": "This contract outlines the agreement for the issuance and management of the M stormwater bond approved by the City Council to fund stormwater management projects and improve the city's drainage systems."
+      },
+      {
+        "title": "Scope",
+        "content": "The scope of this contract includes the allocation of funds generated from the M stormwater bond for designated stormwater improvement projects within the city limits, ensuring compliance with environmental regulations and adherence to the proposed project timelines."
+      },
+      {
+        "title": "Terms",
+        "content": "The terms of the bond issuance include the principal amount, interest rate, repayment schedule, and conditions under which the funds may be used. The city agrees to maintain transparency in the use of funds and provide regular updates to the City Council on project progress and financial status."
+      }
+    ],
+    "confidence": 0.85,
+    "issues": [
+      "Potential need for detailed project descriptions and timelines",
+      "Consideration of environmental impact assessments",
+      "Clarification on fund allocation and management responsibilities"
+    ],
+    "headline": "City Council approves M stormwater bond"
+  },
+  "output": {
+    "refinements": [
+      {
+        "section": "Scope",
+        "suggestions": [
+          "Include detailed descriptions of each designated stormwater improvement project.",
+          "Specify the timelines for project completion and milestones for reporting."
+        ]
+      },
+      {
+        "section": "Terms",
+        "suggestions": [
+          "Define the principal amount, interest rate, and repayment schedule in a clear format.",
+          "Establish clear guidelines for fund allocation and management responsibilities.",
+          "Include a section on environmental impact assessments and how they will be conducted."
+        ]
+      }
+    ],
+    "confidence": 0.85,
+    "issues": [
+      "Potential need for detailed project descriptions and timelines",
+      "Consideration of environmental impact assessments",
+      "Clarification on fund allocation and management responsibilities"
+    ],
+    "original_headline": "City Council approves M stormwater bond"
+  }
+}

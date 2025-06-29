@@ -1,0 +1,56 @@
+{
+  "timestamp": "20250628_154645",
+  "stage": "test",
+  "input": {
+    "refinements": [
+      {
+        "section": "Purpose",
+        "suggestions": [
+          "Clarify the roles and responsibilities of the city administration and stakeholders.",
+          "Include a definition of 'stakeholders' for better understanding."
+        ]
+      },
+      {
+        "section": "Scope",
+        "suggestions": [
+          "Specify the timeline for each phase of the evaluation and discussion process.",
+          "Incorporate a section on how community concerns will be addressed."
+        ]
+      },
+      {
+        "section": "Terms",
+        "suggestions": [
+          "Outline the specific methods for integrating stakeholder feedback.",
+          "Define what constitutes a 'final version' of the ordinance."
+        ]
+      }
+    ],
+    "confidence": 0.85,
+    "issues": [
+      "Potential community opposition may not be adequately addressed.",
+      "Insufficient details on public consultation processes.",
+      "Risks associated with economic implications of redevelopment are not explored."
+    ],
+    "original_headline": "will the city council vote to approve the downtown redevelopment ordinance by november?"
+  },
+  "output": {
+    "sections": [
+      {
+        "title": "Purpose",
+        "content": "[STUB] Contract purpose based on headline"
+      },
+      {
+        "title": "Scope",
+        "content": "[STUB] Contract scope and boundaries"
+      },
+      {
+        "title": "Terms",
+        "content": "[STUB] Key terms and conditions"
+      }
+    ],
+    "confidence": 0.5,
+    "issues": [
+      "API key not found"
+    ]
+  }
+}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Edit News Source{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Edit News Source</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('main.edit_source', source_id=source.id) }}">
+                {{ form.hidden_tag() }}
+                <div class="mb-3">
+                    {{ form.name.label(class="form-label") }}
+                    {{ form.name(class="form-control") }}
+                    {% if form.name.errors %}
+                        {% for error in form.name.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    {{ form.url.label(class="form-label") }}
+                    {{ form.url(class="form-control") }}
+                    {% if form.url.errors %}
+                        {% for error in form.url.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    {{ form.selector.label(class="form-label") }}
+                    {{ form.selector(class="form-control") }}
+                    {% if form.selector.errors %}
+                        {% for error in form.selector.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    {{ form.date_selector.label(class="form-label") }}
+                    {{ form.date_selector(class="form-control") }}
+                    {% if form.date_selector.errors %}
+                        {% for error in form.date_selector.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    {{ form.domain_tag.label(class="form-label") }}
+                    {{ form.domain_tag(class="form-control") }}
+                    {% if form.domain_tag.description %}
+                        <small class="form-text text-muted">{{ form.domain_tag.description }}</small>
+                    {% endif %}
+                    {% if form.domain_tag.errors %}
+                        {% for error in form.domain_tag.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    {{ form.source_weight.label(class="form-label") }}
+                    {{ form.source_weight(class="form-control") }}
+                    {% if form.source_weight.description %}
+                        <small class="form-text text-muted">{{ form.source_weight.description }}</small>
+                    {% endif %}
+                    {% if form.source_weight.errors %}
+                        {% for error in form.source_weight.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <div class="mb-3 form-check">
+                    {{ form.active(class="form-check-input") }}
+                    {{ form.active.label(class="form-check-label") }}
+                </div>
+                <button type="submit" class="btn btn-primary">Update Source</button>
+                <a href="{{ url_for('main.manage_sources') }}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
