@@ -1,26 +1,28 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from app.services.points_admin_service import PointsAdminService
-from app.models import User, Market, Badge, UserBadge
+from app.models import User, Market, Badge, UserBadge, Prediction
 from app.services.points_ledger import PointsLedger
+from app import db
+from datetime import datetime, timedelta
 
 def create_test_user():
     return User(
         username="test_user",
         points=1000.0,
         xp=100,
-        lb_deposit=500.0
+        liquidity_buffer_deposit=500.0
     )
 
 def create_test_market():
     return Market(
         title="Test Market",
         description="Test Description",
-        yes_pool=1000.0,
-        no_pool=1000.0,
-        liquidity_pool=1000.0,
-        liquidity_provider_shares=1000.0,
-        liquidity_fee=0.01
+        deadline=datetime.utcnow() + timedelta(days=1),
+        creator_id=1,
+        platform_fee=0.05,
+        liquidity_fee=0.01,
+        status='open'
     )
 
 def create_test_badge():
@@ -65,7 +67,7 @@ class TestPointsAdminService:
         
         PointsAdminService.adjust_liquidity_buffer(user, amount, 'deposit')
         
-        assert user.lb_deposit == 600.0  # 500 + 100
+        assert user.liquidity_buffer_deposit == 600.0  # 500 + 100
         mock_log_transaction.assert_called_once_with(
             user=user,
             amount=amount,
@@ -80,7 +82,7 @@ class TestPointsAdminService:
         
         PointsAdminService.adjust_liquidity_buffer(user, amount, 'withdraw')
         
-        assert user.lb_deposit == 400.0  # 500 - 100
+        assert user.liquidity_buffer_deposit == 400.0  # 500 - 100
         mock_log_transaction.assert_called_once_with(
             user=user,
             amount=-amount,
@@ -101,68 +103,69 @@ class TestPointsAdminService:
             user=user,
             amount=amount,
             transaction_type="admin_manual",
-            description="Admin point credit - Test credit"
+            description="Admin credit: 500.0 - Test credit"
         )
 
     @patch('app.services.points_ledger.PointsLedger.log_transaction')
     def test_debit_points(self, mock_log_transaction, user):
         """Test point debit"""
-        amount = 500.0
+        amount = 300.0
         reason = "Test debit"
         
         PointsAdminService.debit_points(user, amount, reason)
         
-        assert user.points == 500.0  # 1000 - 500
+        assert user.points == 700.0  # 1000 - 300
         mock_log_transaction.assert_called_once_with(
             user=user,
             amount=-amount,
             transaction_type="admin_manual",
-            description="Admin point debit - Test debit"
+            description="Admin debit: 300.0 - Test debit"
         )
 
     @patch('app.services.points_ledger.PointsLedger.log_transaction')
-    def test_force_resolve_market(self, mock_log_transaction, market):
-        """Test market forced resolution"""
-        outcome = "YES"
-        admin_user_id = 1
+    def test_award_badge(self, mock_log_transaction, user, badge):
+        """Test badge awarding"""
+        PointsAdminService.award_badge(user, badge)
         
-        PointsAdminService.force_resolve_market(market, outcome, admin_user_id)
+        user_badge = UserBadge.query.filter_by(
+            user_id=user.id,
+            badge_id=badge.id
+        ).first()
         
-        assert market.resolved
-        assert market.resolved_outcome == outcome
+        assert user_badge is not None
         mock_log_transaction.assert_called_once_with(
-            user_id=admin_user_id,
+            user=user,
             amount=0,
-            transaction_type="admin_manual",
-            description=f"Admin forced market {market.id} resolution to {outcome}"
+            transaction_type="badge_awarded",
+            description=f"Badge awarded: {badge.name}"
         )
 
     @patch('app.services.points_ledger.PointsLedger.log_transaction')
-    def test_grant_badge(self, mock_log_transaction):
-        """Test badge granting"""
-        from app import create_app, db
-        from app.models import User, Badge, UserBadge
-        from app.services.points_admin_service import PointsAdminService
+    def test_award_points_for_market_resolution(self, mock_log_transaction, user, market):
+        """Test points awarding for market resolution"""
+        # Create test prediction
+        prediction = Prediction(
+            user_id=user.id,
+            market_id=market.id,
+            outcome='YES',
+            stake=100.0,
+            confidence=1.0,
+            timestamp=datetime.utcnow()
+        )
+        db.session.add(prediction)
+        db.session.commit()
 
-        app = create_app("testing")
-        with app.app_context():
-            # Create and persist user and badge
-            user = User(username="test_user", email="test@example.com")
-            user.set_password("password")
-            badge = Badge(type="test_badge", name="Test Badge", description="Test", icon="fa-test")
-            db.session.add_all([user, badge])
-            db.session.commit()
-
-            # Grant badge
-            PointsAdminService.grant_badge(user, badge, "Test badge grant")
-
-            # Validate result
-            user_badge = UserBadge.query.filter_by(user_id=user.id, badge_id=badge.id).first()
-            assert user_badge is not None
-            
-            mock_log_transaction.assert_called_once_with(
-                user_id=user.id,
-                amount=0,
-                transaction_type="badge_awarded",
-                description="Badge 'Test Badge' granted. Reason: Test badge grant"
-            )
+        # Resolve market
+        market.resolve('YES')
+        
+        # Award points
+        PointsAdminService.award_points_for_market_resolution(market)
+        
+        # Verify points were awarded
+        assert user.points > 1000.0  # Should have more than initial 1000 points
+        mock_log_transaction.assert_called_with(
+            user=user,
+            amount=100.0,  # Should be equal to prediction stake
+            transaction_type="market_resolution",
+            description=f"Points awarded for correct prediction on market {market.id}"
+        )

@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime, timedelta
-from app import create_app
-from app.models import User, db
+from app import create_app, db
+from app.models import User
 from app.services import PointsService
 
 class TestPointsService(unittest.TestCase):

@@ -1,18 +1,19 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from app.services.points_trade_engine import PointsTradeEngine
-from app.models import Market, User
+from app.models import Market, User, Prediction
 from app.services.points_ledger import PointsLedger
+from datetime import datetime, timedelta
 
 def create_test_market():
     market = Market(
         title="Test Market",
         description="Test Description",
-        yes_pool=1000.0,
-        no_pool=1000.0,
-        liquidity_pool=1000.0,
-        liquidity_provider_shares=1000.0,
-        liquidity_fee=0.01
+        deadline=datetime.utcnow() + timedelta(days=1),
+        creator_id=1,
+        platform_fee=0.05,
+        liquidity_fee=0.01,
+        status='open'
     )
     return market
 
@@ -35,12 +36,11 @@ class TestPointsTradeEngine:
         
         result = PointsTradeEngine.execute_trade(user, market, amount, outcome)
         
-        assert result['shares'] > 0
+        assert result['stake'] > 0
         assert result['price'] > 0
         assert result['outcome'] == 'YES'
         assert user.points == 900.0  # 1000 - 100
-        assert market.yes_pool == 1100.0  # 1000 + 100
-        assert market.no_pool == 1000.0
+        assert market.status == 'open'
 
     def test_execute_trade_no(self, market, user):
         """Test NO trade execution"""
@@ -49,18 +49,17 @@ class TestPointsTradeEngine:
         
         result = PointsTradeEngine.execute_trade(user, market, amount, outcome)
         
-        assert result['shares'] > 0
+        assert result['stake'] > 0
         assert result['price'] > 0
         assert result['outcome'] == 'NO'
         assert user.points == 900.0  # 1000 - 100
-        assert market.yes_pool == 1000.0
-        assert market.no_pool == 1100.0  # 1000 + 100
+        assert market.status == 'open'
 
     def test_trade_amount_validation(self, market, user):
         """Test trade amount validation"""
         # Test with valid trade amount
         result = PointsTradeEngine.execute_trade(user, market, 100.0, True)
-        assert result['shares'] > 0
+        assert result['stake'] > 0
         
         # Test with negative amount
         with pytest.raises(ValueError):
@@ -92,8 +91,41 @@ class TestPointsTradeEngine:
         """Test that trade result contains correct structure"""
         result = PointsTradeEngine.execute_trade(user, market, 100.0, True)
         assert 'price' in result
-        assert 'shares' in result
+        assert 'stake' in result
         assert 'outcome' in result
         assert isinstance(result['price'], float)
-        assert isinstance(result['shares'], float)
+        assert isinstance(result['stake'], float)
         assert isinstance(result['outcome'], str)
+
+    def test_prediction_creation(self, market, user):
+        """Test that trade creates prediction correctly"""
+        amount = 100.0
+        outcome = True
+        
+        result = PointsTradeEngine.execute_trade(user, market, amount, outcome)
+        
+        prediction = Prediction.query.filter_by(
+            user_id=user.id,
+            market_id=market.id,
+            outcome='YES'
+        ).first()
+        
+        assert prediction is not None
+        assert prediction.stake == amount
+        assert prediction.confidence == 1.0
+        assert prediction.timestamp is not None
+
+    def test_market_status_validation(self, market, user):
+        """Test that trades cannot be made on resolved markets"""
+        market.status = 'resolved'
+        market.outcome = 'YES'
+        
+        with pytest.raises(ValueError):
+            PointsTradeEngine.execute_trade(user, market, 100.0, True)
+
+    def test_insufficient_points(self, market, user):
+        """Test trade with insufficient points"""
+        user.points = 50.0  # Less than trade amount
+        
+        with pytest.raises(ValueError):
+            PointsTradeEngine.execute_trade(user, market, 100.0, True)

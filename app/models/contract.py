@@ -14,3 +14,4 @@ class Contract(db.Model):
     
     liquidity_pool = db.relationship('LiquidityPool', uselist=False, back_populates='contract')
     amm_market = db.relationship('AMMMarket', uselist=False, back_populates='contract', lazy='joined')
+    market = db.relationship('Market', back_populates='contract', uselist=False)

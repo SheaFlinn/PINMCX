@@ -21,7 +21,7 @@ class PointsPayoutEngine:
         
         # Log the transaction
         PointsLedger.log_transaction(
-            user=user,
+            user_id=user.id,
             amount=amount,
             transaction_type='trade',
             description=f"Trade payout for market {market_id} - {outcome}"
@@ -51,7 +51,7 @@ class PointsPayoutEngine:
         
         # Log the transaction
         PointsLedger.log_transaction(
-            user=user,
+            user_id=user.id,
             amount=amount,
             transaction_type='resolution',
             description=f"Resolution payout for market {market_id} - XP: {xp_awarded}"

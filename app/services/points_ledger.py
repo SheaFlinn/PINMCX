@@ -1,34 +1,37 @@
 from datetime import datetime
 from app import db
+from app.models import User, UserLedger
 
 class PointsLedger:
     """Service for tracking and logging all point transactions"""
     
     @staticmethod
-    def log_transaction(user, amount: float, transaction_type: str, description: str = None) -> None:
+    def log_transaction(user_id: int, amount: float, transaction_type: str, description: str = None) -> None:
         """
         Log a point transaction in the ledger
         
         Args:
-            user: User object involved in the transaction
+            user_id: ID of the user involved in the transaction
             amount: Amount of points (positive for credit, negative for debit)
             transaction_type: Type of transaction (e.g., 'trade', 'resolution', 'xp')
             description: Optional description of the transaction
         """
-        from app.models import User
-        
         # Create a ledger entry
-        entry = {
-            'user_id': user.id,
-            'amount': amount,
-            'transaction_type': transaction_type,
-            'description': description,
-            'timestamp': datetime.utcnow()
-        }
-        
-        # Store in database or other persistent storage
-        # For now, we'll just print to console for debugging
-        print(f"PointsLedger: Logged transaction - {entry}")
-        
-        # TODO: Implement actual database storage
-        return entry
+        ledger_entry = UserLedger(
+            user_id=user_id,
+            amount=amount,
+            transaction_type=transaction_type,
+            description=description or f"{transaction_type} transaction"
+        )
+        db.session.add(ledger_entry)
+        db.session.commit()
+
+    @staticmethod
+    def get_user_balance(user: 'User') -> float:
+        """Get user's current point balance"""
+        return user.points
+
+    @staticmethod
+    def get_transaction_history(user: 'User', limit: int = 10) -> list:
+        """Get user's transaction history"""
+        return UserLedger.query.filter_by(user_id=user.id).order_by(UserLedger.created_at.desc()).limit(limit).all()

@@ -1,6 +1,6 @@
 import unittest
-from app import create_app
-from app.models import User, db
+from app import create_app, db
+from app.models import User
 from app.services.leaderboard_service import LeaderboardService
 
 class LeaderboardServiceTestCase(unittest.TestCase):
