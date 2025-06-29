@@ -6,7 +6,6 @@ from sqlalchemy import func
 import hashlib
 from config import Config
 import logging
-from app.services.points_payout_engine import PointsPayoutEngine
 
 def generate_contract_hash(market):
     """Generate a SHA-256 hash for market integrity verification"""
@@ -321,6 +320,7 @@ class Market(db.Model):
                     payout = prediction.shares * (total_pool / self.no_pool)
                 
                 # Use payout engine to handle points
+                from app.services.points_payout_engine import PointsPayoutEngine
                 PointsPayoutEngine.award_resolution_payout(
                     user=prediction.user,
                     amount=payout,
@@ -347,6 +347,7 @@ class Market(db.Model):
             reward = (fee * lp.shares) / total_shares
             
             # Use payout engine to handle points
+            from app.services.points_payout_engine import PointsPayoutEngine
             PointsPayoutEngine.award_trade_payout(
                 user=lp.user,
                 amount=reward,
@@ -574,6 +575,28 @@ class MarketEvent(db.Model):
     
     def __repr__(self):
         return f'<MarketEvent {self.id}: {self.event_type} for Market {self.market_id}>'
+
+class LiquidityPool(db.Model):
+    __tablename__ = 'liquidity_pools'
+
+    id = db.Column(db.Integer, primary_key=True)
+    contract_id = db.Column(db.Integer, db.ForeignKey('contract.id'), nullable=False, unique=True)
+    max_liquidity = db.Column(db.Integer, nullable=False)  # cap funded from LB
+    current_liquidity = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    contract = db.relationship('Contract', back_populates='liquidity_pool')
+
+class Contract(db.Model):
+    __tablename__ = 'contract'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128), nullable=False)
+    headline = db.Column(db.String(500), nullable=False)
+    original_headline = db.Column(db.String(500))
+    confidence = db.Column(db.Float, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    liquidity_pool = db.relationship('LiquidityPool', uselist=False, back_populates='contract')
 
 class AnchoredHash(db.Model):
     """Placeholder table for future blockchain anchoring"""
