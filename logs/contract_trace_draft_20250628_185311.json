@@ -1,0 +1,27 @@
+{
+  "timestamp": "20250628_185311",
+  "stage": "draft",
+  "input": "Will the City Council vote to approve the downtown redevelopment ordinance by November?",
+  "output": {
+    "sections": [
+      {
+        "title": "Purpose",
+        "content": "The purpose of this contract is to outline the expectations and responsibilities of the City Council in relation to the vote on the downtown redevelopment ordinance, ensuring transparency and accountability in the decision-making process."
+      },
+      {
+        "title": "Scope",
+        "content": "This contract applies to the City Council members involved in the voting process for the downtown redevelopment ordinance, detailing the timeline for the vote, any public hearings or discussions that need to occur, and the criteria for approval or rejection of the ordinance."
+      },
+      {
+        "title": "Terms",
+        "content": "The City Council agrees to discuss and vote on the downtown redevelopment ordinance by November XX, 2023. The council will conduct at least two public meetings prior to the vote to gather community input. The ordinance will be approved if it receives a majority vote from the council members present."
+      }
+    ],
+    "confidence": 0.85,
+    "issues": [
+      "Specific dates for public meetings and voting need to be established.",
+      "Consideration of potential objections or amendments to the ordinance should be addressed."
+    ],
+    "headline": "Will the City Council vote to approve the downtown redevelopment ordinance by November?"
+  }
+}

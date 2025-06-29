@@ -1,0 +1,24 @@
+{
+  "timestamp": "20250628_150335",
+  "stage": "draft",
+  "input": "City Council approves M stormwater bond",
+  "output": {
+    "sections": [
+      {
+        "title": "Purpose",
+        "content": "The purpose of this contract is to outline the terms and conditions under which the City Council authorizes the issuance of a stormwater bond, referred to as the M stormwater bond, to fund necessary improvements and developments in stormwater management within the city."
+      },
+      {
+        "title": "Scope",
+        "content": "This contract encompasses the issuance of the M stormwater bond, its utilization for stormwater infrastructure projects, and the responsibilities of the City Council in overseeing the proper allocation of the funds generated from this bond. The scope includes but is not limited to planning, designing, and executing stormwater management initiatives aimed at reducing flooding and improving water quality."
+      },
+      {
+        "title": "Terms",
+        "content": "The City Council shall issue the M stormwater bond in accordance with applicable local, state, and federal laws. The bond amount, interest rates, repayment schedule, and any applicable fees will be determined at the time of issuance. The City Council is responsible for ensuring that the funds are used exclusively for the intended stormwater projects and for providing regular reports on the status of the projects funded by the bond."
+      }
+    ],
+    "confidence": 0.85,
+    "issues": [],
+    "headline": "City Council approves M stormwater bond"
+  }
+}

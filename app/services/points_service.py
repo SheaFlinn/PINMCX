@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from app.extensions import db
+from app.models import User, LiquidityPool
 
 class PointsService:
     @staticmethod
@@ -28,8 +29,6 @@ class PointsService:
            - Adds 0.1 per consecutive day
            - Caps at 2.0 (max 10 consecutive days)
         """
-        from app.models import User
-        
         # Get today's date in UTC
         today = datetime.utcnow().date()
         
@@ -73,3 +72,24 @@ class PointsService:
         
         # Commit changes
         db.session.commit()
+
+class LiquidityPoolService:
+
+    @staticmethod
+    def fund_pool(user: User, contract_id: int, amount: int) -> bool:
+        if user.lb_balance < amount:
+            raise ValueError("Insufficient LB balance")
+
+        pool = LiquidityPool.query.filter_by(contract_id=contract_id).first()
+        if not pool:
+            raise ValueError("Liquidity pool not found")
+
+        if pool.current_liquidity + amount > pool.max_liquidity:
+            raise ValueError("Funding exceeds pool cap")
+
+        # Deduct from LB and update pool
+        user.lb_balance -= amount
+        pool.current_liquidity += amount
+
+        db.session.commit()
+        return True

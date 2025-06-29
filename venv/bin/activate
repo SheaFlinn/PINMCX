@@ -64,3 +64,4 @@ fi
 if [ -n "${BASH:-}" -o -n "${ZSH_VERSION:-}" ] ; then
     hash -r 2> /dev/null
 fi
+export OPENAI_API_KEY=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

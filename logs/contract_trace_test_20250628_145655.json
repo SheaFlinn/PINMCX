@@ -1,0 +1,53 @@
+{
+  "timestamp": "20250628_145655",
+  "stage": "test",
+  "input": {
+    "refinements": [
+      {
+        "section": "Purpose",
+        "suggestions": [
+          "Consider specifying the anticipated outcomes or metrics for success related to the stormwater management projects to provide clarity on the objectives."
+        ]
+      },
+      {
+        "section": "Scope",
+        "suggestions": [
+          "Add a clause regarding stakeholder engagement or community input in the planning and execution of stormwater projects to ensure public transparency and accountability."
+        ]
+      },
+      {
+        "section": "Terms",
+        "suggestions": [
+          "Specify the conditions under which the interest rate may change or if there are penalties for late repayment to avoid ambiguity.",
+          "Include a provision for what happens in the event of a shortfall in property tax or utility fee collections to outline potential financial risks."
+        ]
+      }
+    ],
+    "confidence": 0.85,
+    "issues": [
+      "Lack of specific details regarding the financial management of bond proceeds and accountability measures.",
+      "No mention of mitigation strategies if projects do not meet outlined goals or if there are delays."
+    ],
+    "original_headline": "City Council approves M stormwater bond"
+  },
+  "output": {
+    "sections": [
+      {
+        "title": "Purpose",
+        "content": "[STUB] Contract purpose based on headline"
+      },
+      {
+        "title": "Scope",
+        "content": "[STUB] Contract scope and boundaries"
+      },
+      {
+        "title": "Terms",
+        "content": "[STUB] Key terms and conditions"
+      }
+    ],
+    "confidence": 0.5,
+    "issues": [
+      "API key not found"
+    ]
+  }
+}

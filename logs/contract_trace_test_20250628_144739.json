@@ -1,0 +1,50 @@
+{
+  "timestamp": "20250628_144739",
+  "stage": "test",
+  "input": {
+    "refinements": [
+      {
+        "section": "Terms",
+        "suggestions": [
+          "Include specific financial terms such as the exact bond amount, interest rates, and repayment terms.",
+          "Define project timelines to establish clear expectations and accountability.",
+          "Outline stakeholder engagement strategies to ensure all parties are informed and involved throughout the process."
+        ]
+      },
+      {
+        "section": "Scope",
+        "suggestions": [
+          "Clarify the roles and responsibilities of different city departments and stakeholders to avoid confusion.",
+          "Consider adding a section on compliance with environmental regulations and standards."
+        ]
+      }
+    ],
+    "confidence": 0.85,
+    "issues": [
+      "Lack of specific financial terms",
+      "No defined project timelines",
+      "Absence of stakeholder engagement details"
+    ],
+    "original_headline": "City Council approves M stormwater bond"
+  },
+  "output": {
+    "sections": [
+      {
+        "title": "Purpose",
+        "content": "[STUB] Contract purpose based on headline"
+      },
+      {
+        "title": "Scope",
+        "content": "[STUB] Contract scope and boundaries"
+      },
+      {
+        "title": "Terms",
+        "content": "[STUB] Key terms and conditions"
+      }
+    ],
+    "confidence": 0.5,
+    "issues": [
+      "API key not found"
+    ]
+  }
+}

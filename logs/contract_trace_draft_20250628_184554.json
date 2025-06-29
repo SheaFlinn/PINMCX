@@ -1,0 +1,28 @@
+{
+  "timestamp": "20250628_184554",
+  "stage": "draft",
+  "input": "Will the City Council vote to approve the downtown redevelopment ordinance by November?",
+  "output": {
+    "sections": [
+      {
+        "title": "Purpose",
+        "content": "The purpose of this document is to outline the process and implications of the City Council's upcoming vote regarding the approval of the downtown redevelopment ordinance, which aims to revitalize the downtown area and enhance economic growth."
+      },
+      {
+        "title": "Scope",
+        "content": "This ordinance pertains to the redevelopment of designated areas in the downtown district. It includes provisions for zoning changes, investment incentives, and community input mechanisms. The City Council will consider the ordinance with the goal of finalizing a decision by the end of November."
+      },
+      {
+        "title": "Terms",
+        "content": "The City Council will convene to discuss the ordinance on specified dates leading up to November. A majority vote is required for approval. The terms of the ordinance will include timelines for redevelopment, funding allocations, and a review process to assess the impact on the community."
+      }
+    ],
+    "confidence": 0.85,
+    "issues": [
+      "The exact date of the Council meeting is not specified.",
+      "The details of community input mechanisms are not outlined.",
+      "The funding sources for the redevelopment are not detailed."
+    ],
+    "headline": "Will the City Council vote to approve the downtown redevelopment ordinance by November?"
+  }
+}

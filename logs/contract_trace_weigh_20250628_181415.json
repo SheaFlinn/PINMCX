@@ -1,0 +1,65 @@
+{
+  "timestamp": "20250628_181415",
+  "stage": "weigh",
+  "input": {
+    "sections": [
+      {
+        "title": "Purpose",
+        "content": "The purpose of this contract is to outline the conditions under which the City Council will vote on the proposed downtown redevelopment ordinance and to establish a timeline for the approval process."
+      },
+      {
+        "title": "Scope",
+        "content": "This contract covers the procedures for the City Council's consideration of the downtown redevelopment ordinance, including public hearings, amendments, and the final vote scheduled for November. It includes provisions for community input and stakeholder engagement."
+      },
+      {
+        "title": "Terms",
+        "content": "The City Council agrees to review the downtown redevelopment ordinance and hold a vote by the end of November. If necessary, amendments may be proposed during public hearings. The Council commits to provide notice of the meetings and to consider all feedback before the final vote."
+      }
+    ],
+    "confidence": 0.85,
+    "issues": [
+      "Potential delays in the voting process",
+      "Public opposition to the ordinance",
+      "Need for additional community engagement"
+    ],
+    "headline": "Will the city council vote to approve the downtown redevelopment ordinance by november 30?",
+    "patched": true,
+    "patch_notes": [
+      "Rephrased 'approve' to 'vote to approve'",
+      "Clarified timeframe 'by\\s+november' to 'by November 30'",
+      "Deduplicated repeated phrases"
+    ]
+  },
+  "output": {
+    "refinements": [
+      {
+        "section": "Purpose",
+        "suggestions": [
+          "Include a definition of 'downtown redevelopment ordinance' for clarity.",
+          "Specify the significance of the ordinance in the context of city planning."
+        ]
+      },
+      {
+        "section": "Scope",
+        "suggestions": [
+          "Detail the specific methods for community input and stakeholder engagement.",
+          "Add a clause about how the City Council will address public opposition."
+        ]
+      },
+      {
+        "section": "Terms",
+        "suggestions": [
+          "Include consequences or actions if the Council fails to meet the voting deadline.",
+          "Clarify what 'considering all feedback' entails in terms of decision-making."
+        ]
+      }
+    ],
+    "confidence": 0.75,
+    "issues": [
+      "Potential delays in the voting process",
+      "Public opposition to the ordinance may not be adequately addressed",
+      "Community engagement strategies need to be more robust"
+    ],
+    "original_headline": "Will the city council vote to approve the downtown redevelopment ordinance by november 30?"
+  }
+}
