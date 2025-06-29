@@ -22,15 +22,17 @@ class TestMarketEvents(unittest.TestCase):
         self.market = Market(
             title='Test Market',
             description='Test market for events',
-            resolution_date=datetime.utcnow() + timedelta(days=1),
-            resolution_method='Test method'
+            deadline=datetime.utcnow() + timedelta(days=1),
+            creator_id=self.user.id,
+            platform_fee=0.05,
+            liquidity_fee=0.01,
+            status='open'
         )
         db.session.add(self.market)
         db.session.commit()
-        # Log market creation event
-        event = MarketEvent.log_market_creation(self.market, user_id=self.user.id)
-        db.session.add(event)
-        db.session.commit()
+        
+        # Log market creation event using the proper method
+        MarketEvent.log_market_creation(self.market, self.user.id)
 
     def tearDown(self):
         db.session.remove()
@@ -39,15 +41,28 @@ class TestMarketEvents(unittest.TestCase):
 
     def test_market_creation_event(self):
         """Test that market creation logs an event"""
-        # Create a new market using the new method
-        market, event = Market.create_with_event(
+        # Create a new market
+        market = Market(
             title='New Test Market',
             description='Created for testing events',
-            resolution_date=datetime.utcnow() + timedelta(days=1),
-            resolution_method='Test method'
+            deadline=datetime.utcnow() + timedelta(days=1),
+            creator_id=self.user.id,
+            platform_fee=0.05,
+            liquidity_fee=0.01,
+            status='open'
         )
+        db.session.add(market)
+        db.session.commit()
+        
+        # Log market creation event using the proper method
+        MarketEvent.log_market_creation(market, self.user.id)
+        db.session.commit()
         
         # Verify event was created
+        event = MarketEvent.query.filter_by(
+            market_id=market.id,
+            event_type='market_created'
+        ).first()
         self.assertIsNotNone(event)
         self.assertEqual(event.description, f'Market "{market.title}" created')
         self.assertIsNotNone(event.event_data)
@@ -55,16 +70,20 @@ class TestMarketEvents(unittest.TestCase):
         # Verify event data contains essential fields
         self.assertIn('title', event.event_data)
         self.assertIn('description', event.event_data)
-        self.assertIn('resolution_date', event.event_data)
+        self.assertIn('deadline', event.event_data)
+        self.assertIn('platform_fee', event.event_data)
+        self.assertIn('liquidity_fee', event.event_data)
 
     def test_market_resolution_event(self):
         """Test that market resolution logs an event"""
         # Create a prediction for the market
         prediction = Prediction(
-            market_id=self.market.id,
             user_id=self.user.id,
-            outcome=True,
-            shares=10
+            market_id=self.market.id,
+            outcome='YES',
+            stake=10.0,
+            confidence=1.0,
+            timestamp=datetime.utcnow()
         )
         db.session.add(prediction)
         db.session.commit()
@@ -79,7 +98,7 @@ class TestMarketEvents(unittest.TestCase):
             event_type='market_resolved'
         ).first()
         self.assertIsNotNone(event)
-        self.assertEqual(event.description, f'Market "{self.market.title}" resolved')
+        self.assertEqual(event.description, f'Market "{self.market.title}" resolved to YES')
         self.assertIsNotNone(event.event_data)
         
         # Verify event data contains resolution details
@@ -91,10 +110,12 @@ class TestMarketEvents(unittest.TestCase):
         """Test that predictions log events"""
         # Create a prediction
         prediction = Prediction(
-            market_id=self.market.id,
             user_id=self.user.id,
-            outcome=True,
-            shares=10
+            market_id=self.market.id,
+            outcome='YES',
+            stake=10.0,
+            confidence=1.0,
+            timestamp=datetime.utcnow()
         )
         db.session.add(prediction)
         db.session.commit()
@@ -102,17 +123,17 @@ class TestMarketEvents(unittest.TestCase):
         # Verify prediction event was created
         event = MarketEvent.query.filter_by(
             market_id=self.market.id,
-            event_type='prediction'
+            user_id=self.user.id,
+            event_type='prediction_created'
         ).first()
         self.assertIsNotNone(event)
-        self.assertEqual(event.description, f"Prediction made by user {self.user.id} on market {self.market.id}")
+        self.assertEqual(event.description, f'Prediction created for market "{self.market.title}"')
         self.assertIsNotNone(event.event_data)
         
         # Verify event data contains prediction details
-        self.assertIn('prediction_id', event.event_data)
-        self.assertIn('shares', event.event_data)
         self.assertIn('outcome', event.event_data)
-        self.assertIn('xp_awarded', event.event_data)
+        self.assertIn('stake', event.event_data)
+        self.assertIn('confidence', event.event_data)
 
 if __name__ == '__main__':
     unittest.main()

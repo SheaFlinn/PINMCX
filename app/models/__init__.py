@@ -1,3 +1,6 @@
+from app import db
+
+# Import all models
 from .user import User
 from .badge import Badge
 from .market import Market
@@ -14,8 +17,11 @@ from .league_member import LeagueMember
 from .liquidity_provider import LiquidityProvider
 from .market_event import MarketEvent
 from .user_badge import UserBadge
+from .user_ledger import UserLedger
 
+# Export all models and db
 __all__ = [
+    'db',
     'User',
     'Badge',
     'Market',
@@ -31,5 +37,6 @@ __all__ = [
     'LeagueMember',
     'LiquidityProvider',
     'MarketEvent',
-    'UserBadge'
+    'UserBadge',
+    'UserLedger'
 ]

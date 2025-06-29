@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
 from app.extensions import db
-from app.models import User, LiquidityPool
 
+# Import models locally where needed
 class PointsService:
     @staticmethod
-    def award_xp(user, xp_amount: int) -> None:
+    def award_xp(user: 'User', xp_amount: int) -> None:
         """
         Award XP to a user with streak bonus multiplier.
         
@@ -18,65 +18,76 @@ class PointsService:
            - Checked against user.last_check_in_date
            - Reset at midnight UTC
            
-        2. Streak System:
-           - Streak starts at 1 on first check-in
-           - Increases by 1 each consecutive day
-           - Resets to 1 if a day is missed
-           - Longest streak is tracked separately
-           
-        3. Multiplier System:
-           - Base multiplier is 1.0
-           - Adds 0.1 per consecutive day
-           - Caps at 2.0 (max 10 consecutive days)
+        2. Streak Bonus:
+           - No bonus on first day
+           - 10% bonus for 2+ consecutive days
+           - 20% bonus for 14+ consecutive days
+           - 30% bonus for 21+ consecutive days
+           - 40% bonus for 30+ consecutive days
         """
-        # Get today's date in UTC
-        today = datetime.utcnow().date()
+        from app.models import User
         
-        # Check if user has checked in today
+        # Check if XP can be awarded today
+        if user.last_check_in_date and user.last_check_in_date.date() == datetime.utcnow().date():
+            return
+            
+        # Calculate streak bonus
+        today = datetime.utcnow().date()
         if user.last_check_in_date:
-            if isinstance(user.last_check_in_date, datetime):
-                last_date = user.last_check_in_date.date()
-            else:
-                last_date = user.last_check_in_date
-            
-            if last_date == today:
-                return  # Already checked in today
-            
-        # Update streak
-        if user.last_check_in_date:
-            if isinstance(user.last_check_in_date, datetime):
-                last_date = user.last_check_in_date.date()
-            else:
-                last_date = user.last_check_in_date
-            days_since_last = (today - last_date).days
-            
+            days_since_last = (today - user.last_check_in_date.date()).days
             if days_since_last == 1:
                 user.current_streak += 1
             else:
-                # Missed day, reset streak
                 user.current_streak = 1
-                user.last_check_in_date = datetime.combine(today, datetime.min.time())
+                
+            # Update longest streak if needed
+            if user.current_streak > user.longest_streak:
+                user.longest_streak = user.current_streak
         else:
             user.current_streak = 1
-            user.last_check_in_date = datetime.combine(today, datetime.min.time())
+            user.longest_streak = 1
+            
+        # Apply streak bonus (only after first day)
+        bonus = 1.0  # Start with no bonus
+        if user.current_streak >= 2:
+            bonus = min(1.0 + 0.1 * (user.current_streak - 1), 2.0)  # Calculate bonus (10% per day after first day, max 2.0x)
+            
+        # Award XP with bonus
+        xp_to_award = int(xp_amount * bonus)
+        user.xp += xp_to_award
         
-        # Update longest streak if needed
-        if user.current_streak > user.longest_streak:
-            user.longest_streak = user.current_streak
-        
-        # Calculate streak bonus multiplier (max 2.0)
-        multiplier = min(2.0, 1.0 + 0.1 * (user.current_streak - 1))
-        
-        # Update XP
-        user.xp += int(xp_amount * multiplier)
-        
-        # Commit changes
+        # Update last check-in date
+        user.last_check_in_date = datetime.utcnow()
         db.session.commit()
 
-class LiquidityPoolService:
+    @staticmethod
+    def get_user_xp(user: 'User') -> int:
+        """Get user's current XP balance"""
+        from app.models import User
+        return user.xp
 
     @staticmethod
-    def fund_pool(user: User, contract_id: int, amount: int) -> bool:
+    def get_user_streak(user: 'User') -> int:
+        """Get user's current streak"""
+        from app.models import User
+        return user.current_streak
+
+class LiquidityPoolService:
+    @staticmethod
+    def fund_pool(user: 'User', contract_id: int, amount: int) -> None:
+        """
+        Fund a liquidity pool with points from a user's balance.
+        
+        Args:
+            user: User object funding the pool
+            contract_id: ID of the contract associated with the pool
+            amount: Amount of points to fund
+            
+        Raises:
+            ValueError: If user has insufficient points
+        """
+        from app.models import User, LiquidityPool
+        
         if user.lb_balance < amount:
             raise ValueError("Insufficient LB balance")
 
@@ -92,4 +103,3 @@ class LiquidityPoolService:
         pool.current_liquidity += amount
 
         db.session.commit()
-        return True

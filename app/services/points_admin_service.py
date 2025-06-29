@@ -1,6 +1,7 @@
 from typing import Optional
 from datetime import datetime
-from app.models import User, Market, Badge, UserBadge, db, generate_contract_hash
+from app.models import User, Market, Badge, UserBadge, db
+from app.models.utils import generate_contract_hash
 from app.services.points_ledger import PointsLedger
 from config import Config
 

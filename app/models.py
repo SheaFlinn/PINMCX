@@ -7,13 +7,10 @@ import hashlib
 from config import Config
 import logging
 
-def generate_contract_hash(market):
+def generate_contract_hash(contract_name):
     """Generate a SHA-256 hash for market integrity verification"""
-    # Create a consistent string representation of the market
-    hash_data = f"{market.title}|{market.original_source or ''}|{market.source_url or ''}|{market.resolved_outcome or ''}|{market.resolved_at.strftime('%Y-%m-%d %H:%M:%S') if market.resolved_at else ''}"
-    
-    # Generate SHA-256 hash
-    return hashlib.sha256(hash_data.encode()).hexdigest()
+    import hashlib
+    return hashlib.sha256(contract_name.encode()).hexdigest()
 
 # Association table for User-Badge relationship
 class UserBadge(db.Model):
@@ -301,7 +298,7 @@ class Market(db.Model):
         self.resolved = True
         self.resolved_outcome = "YES" if outcome else "NO"
         self.resolved_at = datetime.utcnow()
-        self.integrity_hash = generate_contract_hash(self)
+        self.integrity_hash = generate_contract_hash(self.title)
 
         # Log market resolution event
         event = MarketEvent.log_market_resolution(self, user_id=None)

@@ -1,9 +1,12 @@
 from typing import Optional
 from datetime import datetime
-from app.models import User, Market, Prediction, db, MarketEvent, PlatformWallet
+from app import db
 from app.services.points_ledger import PointsLedger
+from app.services.points_service import PointsService
+from app.models.market_event import MarketEvent
 from config import Config
 
+# Import models locally where needed
 class PointsPredictionEngine:
     """
     Central service for handling predictions, their evaluation, and XP awards.
@@ -11,7 +14,7 @@ class PointsPredictionEngine:
     """
 
     @staticmethod
-    def place_prediction(user: User, market: Market, shares: float, outcome: bool, use_liquidity_buffer: bool = False) -> Prediction:
+    def place_prediction(user: 'User', market: 'Market', shares: float, outcome: bool, use_liquidity_buffer: bool = False) -> 'Prediction':
         """
         Place a prediction on a market with platform fee deduction, optional liquidity buffer staking,
         and platform fee accumulation in PlatformWallet.
@@ -33,10 +36,11 @@ class PointsPredictionEngine:
             ValueError: If prediction is placed after market deadline
             ValueError: If using liquidity buffer and insufficient balance
         """
+        from app.models import User, Market, Prediction, PlatformWallet
         # Check prediction deadline
-        if market.resolved:
+        if market.status == 'resolved':
             raise ValueError(f"Market {market.id} is already resolved")
-        if datetime.utcnow() > market.prediction_deadline:
+        if datetime.utcnow() > market.deadline:
             raise ValueError(f"Prediction deadline for market {market.id} has passed")
 
         # If using liquidity buffer, check balance
@@ -54,17 +58,23 @@ class PointsPredictionEngine:
 
         # Create prediction
         prediction = Prediction(
-            user=user,
-            market=market,
-            shares=shares,  # Store original shares amount
-            platform_fee=platform_fee,
-            outcome=outcome,
-            used_liquidity_buffer=use_liquidity_buffer,
-            created_at=datetime.utcnow()
+            user_id=user.id,
+            market_id=market.id,
+            outcome='YES' if outcome else 'NO',
+            confidence=net_shares,
+            stake=shares,
+            timestamp=datetime.utcnow()
         )
         db.session.add(prediction)
-        db.session.commit()
-
+        
+        # Log prediction event
+        MarketEvent.log_prediction(
+            market=market,
+            user_id=user.id,
+            stake=shares,
+            outcome='YES' if outcome else 'NO'
+        )
+        
         # If using liquidity buffer, deduct from deposit
         if use_liquidity_buffer:
             user.liquidity_buffer_deposit -= shares
@@ -76,10 +86,12 @@ class PointsPredictionEngine:
             )
             db.session.commit()
 
+        db.session.commit()
+
         return prediction
 
     @staticmethod
-    def evaluate_prediction(prediction: Prediction, market: Market) -> bool:
+    def evaluate_prediction(prediction: 'Prediction', market: 'Market') -> bool:
         """
         Evaluate if a prediction was correct.
 
@@ -93,57 +105,90 @@ class PointsPredictionEngine:
         Raises:
             ValueError: If market is not resolved
         """
-        if not market.resolved:
+        from app.models import Prediction, Market
+        if market.status != 'resolved':
             raise ValueError(f"Market {market.id} is not resolved")
 
         # Prediction is correct if:
         # - Market resolved YES and prediction was YES
         # - Market resolved NO and prediction was NO
-        return market.resolved_outcome == ("YES" if prediction.outcome else "NO")
+        return market.outcome == prediction.outcome
 
     @staticmethod
-    def award_xp_for_predictions(market: Market) -> None:
+    def award_points_for_prediction(prediction: 'Prediction') -> None:
         """
-        Award XP to users with correct predictions based on gross shares.
-
+        Award points for a correct prediction based on gross shares.
+        
         Args:
-            market: Resolved market to evaluate predictions for
-
-        Raises:
-            ValueError: If market is not resolved
+            prediction: Prediction to award points for
         """
-        if not market.resolved:
-            raise ValueError(f"Market {market.id} is not resolved")
+        from app.models import Prediction
+        if prediction.points_awarded:
+            return
 
-        # Get all predictions for this market
-        predictions = Prediction.query.filter_by(market_id=market.id).all()
+        # Calculate points based on gross shares (no fee deduction)
+        points_awarded = int(prediction.stake)
+        
+        # Update user points
+        prediction.user.points += points_awarded
+        
+        # Log points award
+        PointsLedger.log_transaction(
+            user_id=prediction.user_id,
+            amount=points_awarded,
+            transaction_type="points_awarded",
+            description=f"Points awarded for correct prediction on market {prediction.market_id}"
+        )
 
-        for prediction in predictions:
-            # Skip if XP already awarded
-            if prediction.xp_awarded:
-                continue
+        # Mark points as awarded
+        prediction.points_awarded = True
+        db.session.commit()
 
-            # Check if prediction was correct
-            is_correct = PointsPredictionEngine.evaluate_prediction(prediction, market)
+    @staticmethod
+    def award_xp_for_prediction(prediction: 'Prediction') -> None:
+        """
+        Award XP for a prediction based on its outcome and stake.
+        
+        Args:
+            prediction: The Prediction object to award XP for
+        """
+        user = prediction.user
+        market = prediction.market
+        
+        # Only award XP if prediction hasn't been awarded XP before
+        if prediction.xp_awarded:
+            return
+            
+        # Only award XP for correct predictions
+        if not prediction.is_correct():
+            prediction.xp_awarded = True
+            db.session.commit()
+            return
+            
+        # Calculate XP based on stake
+        base_xp = 100  # Base XP amount
+        xp_award = int(base_xp * prediction.stake)
+        
+        # Award XP
+        prediction.user.xp += xp_award
+        prediction.xp_awarded = True
 
-            if is_correct:
-                # Calculate XP based on gross shares (no fee deduction)
-                xp_awarded = int(prediction.shares)
-                
-                # Update user XP
-                prediction.user.xp += xp_awarded
-                
-                # Log XP award in ledger
-                PointsLedger.log_transaction(
-                    user=prediction.user,
-                    amount=0,
-                    transaction_type="xp_awarded",
-                    description=f"XP awarded for correct prediction on market {market.id}"
-                )
-
-                # Mark XP as awarded
-                prediction.xp_awarded = True
-
+        # Log transaction
+        PointsLedger.log_transaction(
+            user_id=prediction.user_id,
+            amount=xp_award,
+            transaction_type='xp_awarded',
+            description=f'XP awarded for correct prediction on market {prediction.market_id}'
+        )
+        
+        # Log event with prediction details
+        MarketEvent.log_prediction(
+            market=market,
+            user_id=user.id,
+            stake=prediction.stake,
+            outcome=prediction.outcome
+        )
+        
         db.session.commit()
 
     @staticmethod
@@ -159,13 +204,14 @@ class PointsPredictionEngine:
         Raises:
             ValueError: If market is already resolved
         """
+        from app.models import Market, Prediction
         # Get market
         market = Market.query.get(market_id)
         if not market:
             raise ValueError(f"Market {market_id} not found")
 
         # Check if market is already resolved
-        if market.resolved:
+        if market.status == 'resolved':
             raise ValueError(f"Market {market_id} is already resolved")
 
         # Get all predictions for this market
@@ -174,49 +220,17 @@ class PointsPredictionEngine:
         # Process each prediction
         for prediction in predictions:
             # Skip if points already awarded
-            if prediction.xp_awarded:
+            if prediction.points_awarded:
                 continue
 
             # Check if prediction was correct
-            is_correct = prediction.outcome == correct_outcome
+            is_correct = prediction.outcome == ('YES' if correct_outcome else 'NO')
 
             if is_correct:
-                # Calculate points based on net shares (shares - platform_fee)
-                points_awarded = int(prediction.shares - (prediction.platform_fee or 0.0))
-                
-                # Update user points
-                prediction.user.points += points_awarded
-                
-                # Log points award
-                PointsLedger.log_transaction(
-                    user=prediction.user,
-                    amount=points_awarded,
-                    transaction_type="points_awarded",
-                    description=f"Points awarded for correct prediction on market {market_id}"
-                )
+                # Award points and XP
+                PointsPredictionEngine.award_points_for_prediction(prediction)
+                PointsPredictionEngine.award_xp_for_prediction(prediction)
 
-                # Award XP based on gross shares (no fee deduction)
-                xp_awarded = int(prediction.shares)
-                prediction.user.xp += xp_awarded
-
-                # Log XP award
-                PointsLedger.log_transaction(
-                    user=prediction.user,
-                    amount=0,
-                    transaction_type="xp_awarded",
-                    description=f"XP awarded for correct prediction on market {market_id}"
-                )
-
-                # Mark XP as awarded (also prevents double points)
-                prediction.xp_awarded = True
-
-        # Update market status
-        market.resolved = True
-        market.resolved_outcome = "YES" if correct_outcome else "NO"
-        market.resolved_at = datetime.utcnow()
-
-        # Log market resolution event
-        MarketEvent.log_market_resolution(market, correct_outcome)
-
-        # Commit all changes
+        # Resolve the market
+        market.resolve('YES' if correct_outcome else 'NO')
         db.session.commit()
