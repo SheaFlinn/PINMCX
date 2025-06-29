@@ -1,4 +1,5 @@
 from app import db
+
 from datetime import datetime
 
 class User(db.Model):
@@ -57,3 +58,9 @@ class User(db.Model):
     def check_password(self, password):
         """Check if provided password matches stored hash."""
         return self.password_hash == password
+
+
+class User(db.Model):
+    __tablename__ = "user"
+    id = db.Column(db.Integer, primary_key=True)
+ 932aef4 (LOCKED: All model stubs added, migrations clean through Badge/UserBadge)

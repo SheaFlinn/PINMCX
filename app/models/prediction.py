@@ -1,4 +1,5 @@
 from app import db
+
 from datetime import datetime
 from app.models.market_event import MarketEvent
 from app.models.market import Market
@@ -88,3 +89,9 @@ class Prediction(db.Model):
         ).order_by(MarketEvent.created_at.desc()).first()
         
         return prediction, event
+
+
+class Prediction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    dummy_field = db.Column(db.String(64), nullable=True)  # stub only
+ 932aef4 (LOCKED: All model stubs added, migrations clean through Badge/UserBadge)

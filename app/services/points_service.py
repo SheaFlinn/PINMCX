@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 from app.extensions import db
+from app.models import User, LiquidityPool
 
 # Import models locally where needed
 class PointsService:
@@ -27,6 +28,7 @@ class PointsService:
            - 30% bonus for 21+ consecutive days
            - 40% bonus for 30+ consecutive days
         """
+<<<<<<< HEAD
         from app.models import User
         
         # Check if XP can be awarded today
@@ -34,6 +36,9 @@ class PointsService:
             return
             
         # Calculate streak bonus
+=======
+        # Get today's date in UTC
+>>>>>>> 932aef4 (LOCKED: All model stubs added, migrations clean through Badge/UserBadge)
         today = datetime.utcnow().date()
         if user.last_check_in_date:
             days_since_last = (today - user.last_check_in_date.date()).days
@@ -62,6 +67,7 @@ class PointsService:
         user.last_check_in_date = datetime.utcnow()
         db.session.commit()
 
+<<<<<<< HEAD
     @staticmethod
     def get_user_xp(user: 'User') -> int:
         """Get user's current XP balance"""
@@ -90,6 +96,12 @@ class LiquidityPoolService:
         """
         from app.models import User, LiquidityPool
         
+=======
+class LiquidityPoolService:
+
+    @staticmethod
+    def fund_pool(user: User, contract_id: int, amount: int) -> bool:
+>>>>>>> 932aef4 (LOCKED: All model stubs added, migrations clean through Badge/UserBadge)
         if user.lb_balance < amount:
             raise ValueError("Insufficient LB balance")
 
@@ -105,6 +117,7 @@ class LiquidityPoolService:
         pool.current_liquidity += amount
 
         db.session.commit()
+<<<<<<< HEAD
 
 def award_xp_for_resolved_market(market_id):
     # Get the market
@@ -133,3 +146,6 @@ def get_total_points(user_id):
         raise ValueError("User not found")
             
     return user.points + user.lb_deposit
+=======
+        return True
+>>>>>>> 932aef4 (LOCKED: All model stubs added, migrations clean through Badge/UserBadge)

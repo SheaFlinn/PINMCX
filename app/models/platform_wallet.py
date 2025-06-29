@@ -7,6 +7,7 @@ class PlatformWallet(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     balance = db.Column(db.Integer, default=0)
+
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
     @property
@@ -31,3 +32,6 @@ class PlatformWallet(db.Model):
 
     def __repr__(self):
         return f'<PlatformWallet balance={self.balance}>'
+
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+ 932aef4 (LOCKED: All model stubs added, migrations clean through Badge/UserBadge)

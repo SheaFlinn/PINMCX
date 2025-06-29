@@ -11,8 +11,8 @@ class LiquidityPool(db.Model):
     cap = db.Column(db.Float, nullable=False)
     current_liquidity = db.Column(db.Float, nullable=False)
     max_liquidity = db.Column(db.Float, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
 
     # Relationships
     markets = db.relationship('Market', back_populates='liquidity_pool')

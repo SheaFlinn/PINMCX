@@ -1,6 +1,4 @@
 from app import db
-
-# Import all models
 from .user import User
 from .badge import Badge
 from .market import Market
@@ -19,7 +17,6 @@ from .market_event import MarketEvent
 from .user_badge import UserBadge
 from .user_ledger import UserLedger
 
-# Export all models and db
 __all__ = [
     'db',
     'User',
@@ -40,3 +37,4 @@ __all__ = [
     'UserBadge',
     'UserLedger'
 ]
+

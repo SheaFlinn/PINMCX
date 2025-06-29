@@ -1,4 +1,5 @@
 from app import db
+
 from datetime import datetime
 from app.models.market_event import MarketEvent
 import json
@@ -58,3 +59,11 @@ class Market(db.Model):
 
     def __repr__(self):
         return f'<Market {self.id} {self.title}>'
+
+
+class Market(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128), nullable=False)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
+ 932aef4 (LOCKED: All model stubs added, migrations clean through Badge/UserBadge)
