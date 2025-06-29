@@ -4,6 +4,7 @@ from typing import Dict, Any
 import openai
 from dotenv import load_dotenv
 import re
+import json
 
 DEFAULT_GPT_MODEL = os.getenv("OPENAI_DEFAULT_MODEL", "gpt-4o-mini")
 
@@ -96,13 +97,16 @@ class ContractAIService:
 
     def _parse_contract_response(self, response: str) -> Dict[str, Any]:
         try:
-            parsed = eval(response)
+            parsed = json.loads(response)
             if not isinstance(parsed, dict):
                 logger.error("Invalid response format: expected dict")
                 return STUB_CONTRACT
             return parsed
-        except Exception:
-            logger.error("Failed to parse contract response")
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse contract response: {str(e)}")
+            return STUB_CONTRACT
+        except Exception as e:
+            logger.error(f"Unexpected error parsing contract response: {str(e)}")
             return STUB_CONTRACT
 
     def generate_draft_contract(self, headline: str) -> Dict[str, Any]:

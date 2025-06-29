@@ -1,90 +1,43 @@
-from app import db
 from datetime import datetime
-from app.models.market_event import MarketEvent
-from app.models.market import Market
+from app.extensions import db
 
 class Prediction(db.Model):
-    __tablename__ = 'predictions'
-
+    """Prediction model."""
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     market_id = db.Column(db.Integer, db.ForeignKey('market.id'), nullable=False)
-    outcome = db.Column(db.String(10), nullable=False)
-    confidence = db.Column(db.Float, nullable=True)
-    stake = db.Column(db.Float, nullable=True)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    points_awarded = db.Column(db.Boolean, default=False)
+    shares = db.Column(db.Float, nullable=False)
+    platform_fee = db.Column(db.Float, nullable=True)  # 5% fee deducted from shares
+    outcome = db.Column(db.Boolean, nullable=False)
+    used_liquidity_buffer = db.Column(db.Boolean, default=False)  # Track if prediction used LB
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     xp_awarded = db.Column(db.Boolean, default=False)
 
+    # Relationships
     user = db.relationship('User', back_populates='predictions')
     market = db.relationship('Market', back_populates='predictions')
 
-    def __init__(self, user_id, market_id, outcome, confidence=None, stake=None, timestamp=None):
-        self.user_id = user_id
-        self.market_id = market_id
-        self.outcome = outcome
-        self.confidence = confidence
-        self.stake = stake
-        self.points_awarded = False
-        self.xp_awarded = False
-        if timestamp:
-            self.timestamp = timestamp
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        # Log prediction event after relationships are set
-        market = Market.query.get(market_id)
-        if not market:
-            raise ValueError(f"Market with ID {market_id} not found")
-        
-        event = MarketEvent(
-            market_id=market_id,
-            user_id=user_id,
-            event_type='prediction_created',
-            description=f'Prediction created for market "{market.title}"',
-            event_data={
-                'outcome': outcome,
-                'stake': stake,
-                'confidence': confidence
-            }
-        )
-        db.session.add(event)
-        db.session.commit()
+        # Handle market_id or market object
+        market_id = kwargs.get('market_id')
+        if not market_id and 'market' in kwargs and kwargs['market']:
+            market_id = kwargs['market'].id
+
+        # Handle user_id or user object
+        user_id = kwargs.get('user_id')
+        if not user_id and 'user' in kwargs and kwargs['user']:
+            user_id = kwargs['user'].id
+
+        # Log prediction if we have both market_id and user_id
+        if market_id and user_id:
+            from app.models.market_event import MarketEvent
+            market = db.session.get(kwargs['market'].__class__, market_id)
+            if market:
+                print(f"Prediction logged for market: {market.title}")
+                event = MarketEvent.log_prediction(market, user_id, self)
+                db.session.add(event)
 
     def __repr__(self):
-        return f'<Prediction {self.id}: {self.user_id} -> {self.market_id} ({self.outcome})>'
-
-    def get_outcome_str(self):
-        """Return outcome as string for display purposes"""
-        return self.outcome or "Pending"
-
-    def get_prediction_type(self):
-        """Return prediction type for compatibility with existing code"""
-        return 'YES' if self.outcome.upper() == 'YES' else 'NO'
-
-    def is_correct(self) -> bool:
-        """
-        Check if this prediction was correct based on the market outcome.
-        
-        Returns:
-            bool: True if prediction matches market outcome, False otherwise
-        """
-        market = Market.query.get(self.market_id)
-        if not market or not market.outcome:
-            return False
-            
-        return self.outcome == market.outcome
-
-    @classmethod
-    def create_with_event(cls, user_id, market_id, outcome, confidence=None, stake=None, timestamp=None):
-        """Create a prediction and return both the prediction and its event"""
-        prediction = cls(user_id, market_id, outcome, confidence, stake, timestamp)
-        db.session.add(prediction)
-        db.session.commit()
-        
-        # Get the event that was created
-        event = MarketEvent.query.filter_by(
-            market_id=market_id,
-            user_id=user_id,
-            event_type='prediction_created'
-        ).order_by(MarketEvent.created_at.desc()).first()
-        
-        return prediction, event
+        return f'<Prediction {self.id}: {self.shares} shares on Market {self.market_id}>'
