@@ -1,2 +1,69 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
 venv/
-liquidity_pool.json
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+.coverage
+.tox/
+.nox/
+.cache
+.pytest_cache/
+coverage.xml
+htmlcov/
+.junit/
+
+# Logs and local state
+*.log
+*.sqlite3
+*.db
+*.pid
+*.swp
+logs/
+
+# VS Code
+.vscode/
+
+# Environment variables
+.env
+.env.*
+
+# Migrations
+migrations/
+
+# Jupyter
+.ipynb_checkpoints
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Static build artifacts
+staticfiles/
+static_root/
+static/
+media/
+media_root/
