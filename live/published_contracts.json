@@ -10,13 +10,15 @@
     },
     "source_url": "https://dailymemphian.com/feed",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will the Liberty Stadium renovation in Memphis have completed fundraising by December 31, 2025?",
     "refined_title": "Will the Liberty Stadium renovation in Memphis have completed fundraising by December 31, 2025 by August 30?",
     "spread_type": "timing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the Liberty Stadium renovation in Memphis have completed fundraising by December 31, 2025 by August 30?"
+    "balanced_title": "Will the Liberty Stadium renovation in Memphis have completed fundraising by December 31, 2025 by August 30?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will the Mayor limit solitary confinement in Shelby County prisons by September 1?",
@@ -29,13 +31,15 @@
     },
     "source_url": "https://dailymemphian.com/feed",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "By September 1, will the Mayor have implemented limitations on solitary confinement in Shelby County prisons?",
     "refined_title": "By September 1, will the Mayor have implemented limitations on solitary confinement in Shelby County prisons exceeding $1 million in funding?",
     "spread_type": "margin",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "By September 1, will the Mayor have implemented limitations on solitary confinement in Shelby County prisons exceeding $1 million in funding?"
+    "balanced_title": "By September 1, will the Mayor have implemented limitations on solitary confinement in Shelby County prisons exceeding $1 million in funding?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will Mayor Harris propose a tax increase within 5 cents of the certified tax rate by July 31?",
@@ -48,13 +52,15 @@
     },
     "source_url": "https://dailymemphian.com/feed",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will Mayor Harris propose a tax increase that is within 5 cents of the certified tax rate by July 31?",
     "refined_title": "Will Mayor Harris propose a tax increase that is within 5 cents of the certified tax rate by July 31?",
     "spread_type": "none",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will Mayor Harris propose a tax increase that is within 5 cents of the certified tax rate by July 31?"
+    "balanced_title": "Will Mayor Harris propose a tax increase that is within 5 cents of the certified tax rate by July 31?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will the NAACP file a lawsuit against Musk's xAI over turbines by July 31, 2025?",
@@ -67,13 +73,15 @@
     },
     "source_url": "https://dailymemphian.com/feed",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will the NAACP have filed a lawsuit against Musk's xAI over turbines by July 31, 2025?",
     "refined_title": "Will the NAACP have filed a lawsuit against Musk's xAI over turbines by July 31, 2025 by October 1?",
     "spread_type": "timing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the NAACP have filed a lawsuit against Musk's xAI over turbines by July 31, 2025 by October 1?"
+    "balanced_title": "Will the NAACP have filed a lawsuit against Musk's xAI over turbines by July 31, 2025 by October 1?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will the SELC petition the EPA to declare the Memphis area in violation of ozone standards by July 6?",
@@ -86,13 +94,15 @@
     },
     "source_url": "https://mlk50.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will the SELC officially petition the EPA about the Memphis area's ozone standards violation by July 6?",
     "refined_title": "Will the SELC officially petition the EPA about the Memphis area's ozone standards violation by July 6 exceeding $1 million in funding?",
     "spread_type": "margin",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the SELC officially petition the EPA about the Memphis area's ozone standards violation by July 6 exceeding $1 million in funding?"
+    "balanced_title": "Will the SELC officially petition the EPA about the Memphis area's ozone standards violation by July 6 exceeding $1 million in funding?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will the proposed federal budget cuts to Medicaid be implemented by December 31, 2025?",
@@ -105,13 +115,15 @@
     },
     "source_url": "https://mlk50.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will the proposed federal budget cuts to Medicaid be officially enacted by December 31, 2025?",
     "refined_title": "Will the proposed federal budget cuts to Medicaid be officially enacted by December 31, 2025 by July 15?",
     "spread_type": "timing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the proposed federal budget cuts to Medicaid be officially enacted by December 31, 2025 by July 15?"
+    "balanced_title": "Will the proposed federal budget cuts to Medicaid be officially enacted by December 31, 2025 by July 15?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will the proposed Council legislation lead to the termination of public transit in Memphis by the end of 2025?",
@@ -124,13 +136,15 @@
     },
     "source_url": "https://mlk50.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will public transit in Memphis be terminated as a result of the proposed Council legislation by the end of 2025?",
     "refined_title": "Will public transit in Memphis be terminated as a result of the proposed Council legislation by the end of 2025 by July 15?",
     "spread_type": "timing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will public transit in Memphis be terminated as a result of the proposed Council legislation by the end of 2025 by July 15?"
+    "balanced_title": "Will public transit in Memphis be terminated as a result of the proposed Council legislation by the end of 2025 by July 15?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will April 2025 record the highest number of child deaths in Memphis history?",
@@ -143,13 +157,15 @@
     },
     "source_url": "https://mlk50.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will the number of child deaths in Memphis in April 2025 surpass the historical record for any single month?",
     "refined_title": "Will the District 3 representative support this: Will the number of child deaths in Memphis in April 2025 surpass the historical record for any single month?",
     "spread_type": "swing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the District 3 representative support this: Will the number of child deaths in Memphis in April 2025 surpass the historical record for any single month?"
+    "balanced_title": "Will the District 3 representative support this: Will the number of child deaths in Memphis in April 2025 surpass the historical record for any single month?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will 'His name was Tyr\u00e9 Nichols' occur by June 30?",
@@ -162,13 +178,15 @@
     },
     "source_url": "https://mlk50.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will the issue concerning 'His name was Tyr\u00e9 Nichols' be resolved by June 30?",
     "refined_title": "Will the Memphis mayor support this: Will the issue concerning 'His name was Tyr\u00e9 Nichols' be resolved by June 30?",
     "spread_type": "swing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the Memphis mayor support this: Will the issue concerning 'His name was Tyr\u00e9 Nichols' be resolved by June 30?"
+    "balanced_title": "Will the Memphis mayor support this: Will the issue concerning 'His name was Tyr\u00e9 Nichols' be resolved by June 30?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will a Memphis cancer clinic achieve record Black patient enrollment in clinical trials by December 2025?",
@@ -181,13 +199,15 @@
     },
     "source_url": "https://mlk50.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "By December 2025, will a Memphis cancer clinic set a new record for Black patient enrollment in clinical trials?",
     "refined_title": "By December 2025, will a Memphis cancer clinic set a new record for Black patient enrollment in clinical trials?",
     "spread_type": "none",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "By December 2025, will a Memphis cancer clinic set a new record for Black patient enrollment in clinical trials?"
+    "balanced_title": "By December 2025, will a Memphis cancer clinic set a new record for Black patient enrollment in clinical trials?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will the mayor allocate an additional $20M to MATA by June 30?",
@@ -200,13 +220,15 @@
     },
     "source_url": "https://mlk50.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will the mayor allocate an additional $20M to MATA by June 30th?",
     "refined_title": "Will the mayor allocate an additional $20M to MATA by June 30th by at least 5% over the target?",
     "spread_type": "margin",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the mayor allocate an additional $20M to MATA by June 30th by at least 5% over the target?"
+    "balanced_title": "Will the mayor allocate an additional $20M to MATA by June 30th by at least 5% over the target?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will Memphis see an increase in utility assistance program enrollments by June 1?",
@@ -219,13 +241,15 @@
     },
     "source_url": "https://mlk50.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "By June 1, will the number of enrollments in Memphis's utility assistance program increase?",
     "refined_title": "Will the Memphis mayor support this: By June 1, will the number of enrollments in Memphis's utility assistance program increase?",
     "spread_type": "swing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the Memphis mayor support this: By June 1, will the number of enrollments in Memphis's utility assistance program increase?"
+    "balanced_title": "Will the Memphis mayor support this: By June 1, will the number of enrollments in Memphis's utility assistance program increase?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will Southwest Memphians formally protest Elon Musk's xAI by May 31?",
@@ -238,13 +262,15 @@
     },
     "source_url": "https://mlk50.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will there be a formal protest against Elon Musk's xAI by Southwest Memphians before June 1?",
     "refined_title": "Will there be a formal protest against Elon Musk's xAI by Southwest Memphians before June 1?",
     "spread_type": "none",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will there be a formal protest against Elon Musk's xAI by Southwest Memphians before June 1?"
+    "balanced_title": "Will there be a formal protest against Elon Musk's xAI by Southwest Memphians before June 1?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will the city of Memphis officially respond to Stephen A. Smith's comments by July 1?",
@@ -257,13 +283,15 @@
     },
     "source_url": "https://wreg.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will the city of Memphis officially issue a response to Stephen A. Smith's comments before July 1?",
     "refined_title": "Will the city of Memphis officially issue a response to Stephen A. Smith's comments before July 1?",
     "spread_type": "none",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the city of Memphis officially issue a response to Stephen A. Smith's comments before July 1?"
+    "balanced_title": "Will the city of Memphis officially issue a response to Stephen A. Smith's comments before July 1?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will NBA players express negative views about Memphis due to crime by July 31?",
@@ -276,13 +304,15 @@
     },
     "source_url": "https://wreg.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "By July 31, will any NBA player publicly express negative views about crime in Memphis?",
     "refined_title": "Will Councilmember Robinson support this: By July 31, will any NBA player publicly express negative views about crime in Memphis?",
     "spread_type": "swing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will Councilmember Robinson support this: By July 31, will any NBA player publicly express negative views about crime in Memphis?"
+    "balanced_title": "Will Councilmember Robinson support this: By July 31, will any NBA player publicly express negative views about crime in Memphis?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will Barbara Neely, matriarch of Memphis BBQ empire, pass away by December 31, 2025?",
@@ -295,13 +325,15 @@
     },
     "source_url": "https://wreg.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will Barbara Neely, matriarch of the Memphis BBQ empire, still be alive on January 1, 2026?",
     "refined_title": "Will Barbara Neely, matriarch of the Memphis BBQ empire, still be alive on January 1, 2026 by October 1?",
     "spread_type": "timing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will Barbara Neely, matriarch of the Memphis BBQ empire, still be alive on January 1, 2026 by October 1?"
+    "balanced_title": "Will Barbara Neely, matriarch of the Memphis BBQ empire, still be alive on January 1, 2026 by October 1?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will there be another reported incident of truck theft in Memphis by July 31, 2025?",
@@ -314,13 +346,15 @@
     },
     "source_url": "https://wreg.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will there be a reported incident of truck theft in Memphis before August 1, 2025?",
     "refined_title": "Will there be a reported incident of truck theft in Memphis before August 1, 2025?",
     "spread_type": "none",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will there be a reported incident of truck theft in Memphis before August 1, 2025?"
+    "balanced_title": "Will there be a reported incident of truck theft in Memphis before August 1, 2025?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will the Memphis Police Department recover the stolen $20K in gold bars, baseball cards, and diamond ring by September 1?",
@@ -333,13 +367,15 @@
     },
     "source_url": "https://wreg.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will the Memphis Police Department recover all of the stolen $20K in gold bars, baseball cards, and diamond ring by September 1?",
     "refined_title": "Will the District 3 representative support this: Will the Memphis Police Department recover all of the stolen $20K in gold bars, baseball cards, and diamond ring by September 1?",
     "spread_type": "swing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the District 3 representative support this: Will the Memphis Police Department recover all of the stolen $20K in gold bars, baseball cards, and diamond ring by September 1?"
+    "balanced_title": "Will the District 3 representative support this: Will the Memphis Police Department recover all of the stolen $20K in gold bars, baseball cards, and diamond ring by September 1?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will Memphis Police find explosives and drugs in an East Memphis home by July 18?",
@@ -352,13 +388,15 @@
     },
     "source_url": "https://wreg.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will the Memphis Police discover both explosives and drugs in an East Memphis home before July 19th?",
     "refined_title": "Will the Memphis Police discover both explosives and drugs in an East Memphis home before July 19th?",
     "spread_type": "none",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the Memphis Police discover both explosives and drugs in an East Memphis home before July 19th?"
+    "balanced_title": "Will the Memphis Police discover both explosives and drugs in an East Memphis home before July 19th?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will WREG-TV volunteer at the Humane Society by July 31, 2025?",
@@ -371,13 +409,15 @@
     },
     "source_url": "https://wreg.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will WREG-TV have volunteered at the Humane Society by July 31, 2025?",
     "refined_title": "Will WREG-TV have volunteered at the Humane Society by July 31, 2025 exceeding $1 million in funding?",
     "spread_type": "margin",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will WREG-TV have volunteered at the Humane Society by July 31, 2025 exceeding $1 million in funding?"
+    "balanced_title": "Will WREG-TV have volunteered at the Humane Society by July 31, 2025 exceeding $1 million in funding?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will Memphis lawmakers enact new security measures for the mayor's home by August 1?",
@@ -390,13 +430,15 @@
     },
     "source_url": "https://wreg.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "By August 1, will Memphis lawmakers have enacted new security measures for the mayor's home?",
     "refined_title": "Will the city finance committee support this: By August 1, will Memphis lawmakers have enacted new security measures for the mayor's home?",
     "spread_type": "swing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the city finance committee support this: By August 1, will Memphis lawmakers have enacted new security measures for the mayor's home?"
+    "balanced_title": "Will the city finance committee support this: By August 1, will Memphis lawmakers have enacted new security measures for the mayor's home?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will Memphis experience strong storms on the night of Wednesday, June 19, 2025?",
@@ -409,13 +451,15 @@
     },
     "source_url": "https://wreg.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will there be strong storms in Memphis on the night of Wednesday, June 19, 2025?",
     "refined_title": "Will there be strong storms in Memphis on the night of Wednesday, June 19, 2025 by August 30?",
     "spread_type": "timing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will there be strong storms in Memphis on the night of Wednesday, June 19, 2025 by August 30?"
+    "balanced_title": "Will there be strong storms in Memphis on the night of Wednesday, June 19, 2025 by August 30?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will there be a fatal motorcycle crash involving a Shelby County firefighter by July 31?",
@@ -428,13 +472,15 @@
     },
     "source_url": "https://wreg.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will a Shelby County firefighter be fatally involved in a motorcycle crash by July 31?",
     "refined_title": "Will the Memphis mayor support this: Will a Shelby County firefighter be fatally involved in a motorcycle crash by July 31?",
     "spread_type": "swing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the Memphis mayor support this: Will a Shelby County firefighter be fatally involved in a motorcycle crash by July 31?"
+    "balanced_title": "Will the Memphis mayor support this: Will a Shelby County firefighter be fatally involved in a motorcycle crash by July 31?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will Mayor Lee Harris end solitary confinement in Memphis prisons by executive order before August 1?",
@@ -447,13 +493,15 @@
     },
     "source_url": "https://wreg.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will Mayor Lee Harris issue an executive order ending solitary confinement in Memphis prisons before August 1?",
     "refined_title": "Will Mayor Lee Harris issue an executive order ending solitary confinement in Memphis prisons before August 1?",
     "spread_type": "none",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will Mayor Lee Harris issue an executive order ending solitary confinement in Memphis prisons before August 1?"
+    "balanced_title": "Will Mayor Lee Harris issue an executive order ending solitary confinement in Memphis prisons before August 1?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will a warrant be issued for the 'armed and dangerous' father of the missing TN child by June 30?",
@@ -466,13 +514,15 @@
     },
     "source_url": "https://wreg.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will a warrant be issued for the 'armed and dangerous' father of the missing TN child by June 30?",
     "refined_title": "Will the Memphis mayor support this: Will a warrant be issued for the 'armed and dangerous' father of the missing TN child by June 30?",
     "spread_type": "swing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the Memphis mayor support this: Will a warrant be issued for the 'armed and dangerous' father of the missing TN child by June 30?"
+    "balanced_title": "Will the Memphis mayor support this: Will a warrant be issued for the 'armed and dangerous' father of the missing TN child by June 30?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will the TN Supreme Court rule that the convicted killer serves life sentences consecutively by July 31?",
@@ -485,13 +535,15 @@
     },
     "source_url": "https://wreg.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will the TN Supreme Court have made a ruling on whether the convicted killer serves life sentences consecutively by July 31?",
     "refined_title": "Will the city finance committee support this: Will the TN Supreme Court have made a ruling on whether the convicted killer serves life sentences consecutively by July 31?",
     "spread_type": "swing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the city finance committee support this: Will the TN Supreme Court have made a ruling on whether the convicted killer serves life sentences consecutively by July 31?"
+    "balanced_title": "Will the city finance committee support this: Will the TN Supreme Court have made a ruling on whether the convicted killer serves life sentences consecutively by July 31?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will the NAACP and SELC file a lawsuit against xAI over turbines by July 31?",
@@ -504,13 +556,15 @@
     },
     "source_url": "https://wreg.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "By July 31, will the NAACP and SELC have filed a lawsuit against xAI over turbines?",
     "refined_title": "By July 31, will the NAACP and SELC have filed a lawsuit against xAI over turbines with a 2/3 majority?",
     "spread_type": "margin",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "By July 31, will the NAACP and SELC have filed a lawsuit against xAI over turbines with a 2/3 majority?"
+    "balanced_title": "By July 31, will the NAACP and SELC have filed a lawsuit against xAI over turbines with a 2/3 majority?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will there be another shooting incident on I-240 within the next year?",
@@ -523,13 +577,15 @@
     },
     "source_url": "https://wreg.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will there be a reported shooting incident on I-240 before [one year from today's date]?",
     "refined_title": "Will there be a reported shooting incident on I-240 before [one year from today's date]?",
     "spread_type": "none",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will there be a reported shooting incident on I-240 before [one year from today's date]?"
+    "balanced_title": "Will there be a reported shooting incident on I-240 before [one year from today's date]?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will the war veteran with disability receive the MS smart home gift by July 31?",
@@ -542,13 +598,15 @@
     },
     "source_url": "https://wreg.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will the disabled war veteran have received the MS smart home gift by July 31?",
     "refined_title": "Will the disabled war veteran have received the MS smart home gift by July 31 by August 30?",
     "spread_type": "timing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the disabled war veteran have received the MS smart home gift by July 31 by August 30?"
+    "balanced_title": "Will the disabled war veteran have received the MS smart home gift by July 31 by August 30?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will the sentencing for two ex-officers in the Tyre Nichols case be delayed by the State?",
@@ -561,13 +619,15 @@
     },
     "source_url": "https://wreg.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will the sentencing for the two ex-officers in the Tyre Nichols case occur by [future date]?",
     "refined_title": "Will the sentencing for the two ex-officers in the Tyre Nichols case occur by [future date] exceeding $1 million in funding?",
     "spread_type": "margin",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the sentencing for the two ex-officers in the Tyre Nichols case occur by [future date] exceeding $1 million in funding?"
+    "balanced_title": "Will the sentencing for the two ex-officers in the Tyre Nichols case occur by [future date] exceeding $1 million in funding?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will the blocked lanes on I-55 in Memphis reopen by June 19?",
@@ -580,13 +640,15 @@
     },
     "source_url": "https://wreg.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will the blocked lanes on I-55 in Memphis be reopened by June 19?",
     "refined_title": "Will the District 3 representative support this: Will the blocked lanes on I-55 in Memphis be reopened by June 19?",
     "spread_type": "swing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the District 3 representative support this: Will the blocked lanes on I-55 in Memphis be reopened by June 19?"
+    "balanced_title": "Will the District 3 representative support this: Will the blocked lanes on I-55 in Memphis be reopened by June 19?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will a train derailment occur near an animal rescue in Tunica County by July 31?",
@@ -599,13 +661,15 @@
     },
     "source_url": "https://wreg.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will there be a train derailment near an animal rescue in Tunica County before August 1?",
     "refined_title": "Will there be a train derailment near an animal rescue in Tunica County before August 1?",
     "spread_type": "none",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will there be a train derailment near an animal rescue in Tunica County before August 1?"
+    "balanced_title": "Will there be a train derailment near an animal rescue in Tunica County before August 1?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will a report be published by December 31, 2025, proving taxpayer money for families ended up in criminals' hands?",
@@ -618,13 +682,15 @@
     },
     "source_url": "https://wreg.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "By December 31, 2025, will there be a published report providing evidence that taxpayer money intended for families was misappropriated by criminals?",
     "refined_title": "Will the city finance committee support this: By December 31, 2025, will there be a published report providing evidence that taxpayer money intended for families was misappropriated by criminals?",
     "spread_type": "swing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the city finance committee support this: By December 31, 2025, will there be a published report providing evidence that taxpayer money intended for families was misappropriated by criminals?"
+    "balanced_title": "Will the city finance committee support this: By December 31, 2025, will there be a published report providing evidence that taxpayer money intended for families was misappropriated by criminals?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will Sen. Cory Booker deliver a message of civic action in Memphis by July 17?",
@@ -637,13 +703,15 @@
     },
     "source_url": "https://tri-statedefender.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will Sen. Cory Booker deliver a message of civic action in Memphis by July 17, 2023?",
     "refined_title": "Will Sen. Cory Booker deliver a message of civic action in Memphis by July 17, 2023 by more than 3 votes?",
     "spread_type": "margin",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will Sen. Cory Booker deliver a message of civic action in Memphis by July 17, 2023 by more than 3 votes?"
+    "balanced_title": "Will Sen. Cory Booker deliver a message of civic action in Memphis by July 17, 2023 by more than 3 votes?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will the 'Overcoming Hateful Things' exhibit debut at MoSH by July 31?",
@@ -656,13 +724,15 @@
     },
     "source_url": "https://tri-statedefender.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will the 'Overcoming Hateful Things' exhibit be open to the public at MoSH by July 31?",
     "refined_title": "Will the 'Overcoming Hateful Things' exhibit be open to the public at MoSH by July 31 by October 1?",
     "spread_type": "timing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the 'Overcoming Hateful Things' exhibit be open to the public at MoSH by July 31 by October 1?"
+    "balanced_title": "Will the 'Overcoming Hateful Things' exhibit be open to the public at MoSH by July 31 by October 1?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will the Grizzlies trade Bane for Magic\u2019s Anthony, Caldwell-Pope and draft picks by July 31?",
@@ -675,13 +745,15 @@
     },
     "source_url": "https://tri-statedefender.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will the Grizzlies complete a trade involving Bane for Magic\u2019s Anthony, Caldwell-Pope and draft picks by July 31?",
     "refined_title": "Will the Grizzlies complete a trade involving Bane for Magic\u2019s Anthony, Caldwell-Pope and draft picks by July 31 exceeding $1 million in funding?",
     "spread_type": "margin",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the Grizzlies complete a trade involving Bane for Magic\u2019s Anthony, Caldwell-Pope and draft picks by July 31 exceeding $1 million in funding?"
+    "balanced_title": "Will the Grizzlies complete a trade involving Bane for Magic\u2019s Anthony, Caldwell-Pope and draft picks by July 31 exceeding $1 million in funding?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will Shelby County approve a $1B overhaul of the Aging 201 Poplar jail by December 31?",
@@ -694,13 +766,15 @@
     },
     "source_url": "https://tri-statedefender.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will Shelby County officially approve a $1B renovation plan for the Aging 201 Poplar jail by December 31?",
     "refined_title": "Will Shelby County officially approve a $1B renovation plan for the Aging 201 Poplar jail by December 31 by October 1?",
     "spread_type": "timing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will Shelby County officially approve a $1B renovation plan for the Aging 201 Poplar jail by December 31 by October 1?"
+    "balanced_title": "Will Shelby County officially approve a $1B renovation plan for the Aging 201 Poplar jail by December 31 by October 1?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will the AFIRM graduation and county commissioners' honor event for Memphis fathers occur by July 15?",
@@ -713,13 +787,15 @@
     },
     "source_url": "https://tri-statedefender.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will the AFIRM graduation and county commissioners' honor event for Memphis fathers take place by July 15?",
     "refined_title": "Will the Memphis mayor support this: Will the AFIRM graduation and county commissioners' honor event for Memphis fathers take place by July 15?",
     "spread_type": "swing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the Memphis mayor support this: Will the AFIRM graduation and county commissioners' honor event for Memphis fathers take place by July 15?"
+    "balanced_title": "Will the Memphis mayor support this: Will the AFIRM graduation and county commissioners' honor event for Memphis fathers take place by July 15?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will the Memphis City Council approve a raise for city employees and funding for MATA by July 31?",
@@ -732,13 +808,15 @@
     },
     "source_url": "https://tri-statedefender.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "By July 31, will the Memphis City Council have approved both a raise for city employees and funding for MATA?",
     "refined_title": "By July 31, will the Memphis City Council have approved both a raise for city employees and funding for MATA by October 1?",
     "spread_type": "timing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "By July 31, will the Memphis City Council have approved both a raise for city employees and funding for MATA by October 1?"
+    "balanced_title": "By July 31, will the Memphis City Council have approved both a raise for city employees and funding for MATA by October 1?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will the proposed federal budget cuts to SNAP and Medicaid in Tennessee be implemented by December 31, 2025?",
@@ -751,13 +829,15 @@
     },
     "source_url": "https://tri-statedefender.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will the proposed federal budget cuts to SNAP and Medicaid in Tennessee be enacted by December 31, 2025?",
     "refined_title": "Will the city finance committee support this: Will the proposed federal budget cuts to SNAP and Medicaid in Tennessee be enacted by December 31, 2025?",
     "spread_type": "swing",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will the city finance committee support this: Will the proposed federal budget cuts to SNAP and Medicaid in Tennessee be enacted by December 31, 2025?"
+    "balanced_title": "Will the city finance committee support this: Will the proposed federal budget cuts to SNAP and Medicaid in Tennessee be enacted by December 31, 2025?",
+    "total_yes": 100,
+    "total_no": 100
   },
   {
     "title": "Will Memphis hold a 'One Hour, United Voices' Juneteenth celebration by June 19?",
@@ -770,12 +850,14 @@
     },
     "source_url": "https://tri-statedefender.com/feed/",
     "city": "Memphis",
-    "status": "live",
+    "status": "draft",
     "patched_title": "Will Memphis host a 'One Hour, United Voices' Juneteenth celebration by June 19th?",
     "refined_title": "Will Memphis host a 'One Hour, United Voices' Juneteenth celebration by June 19th by at least 5% over the target?",
     "spread_type": "margin",
     "weight": "strong",
     "bias": false,
-    "balanced_title": "Will Memphis host a 'One Hour, United Voices' Juneteenth celebration by June 19th by at least 5% over the target?"
+    "balanced_title": "Will Memphis host a 'One Hour, United Voices' Juneteenth celebration by June 19th by at least 5% over the target?",
+    "total_yes": 100,
+    "total_no": 100
   }
 ]

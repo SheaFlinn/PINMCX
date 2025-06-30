@@ -18,7 +18,11 @@
     "bias": false,
     "balanced_title": "Will the Liberty Stadium renovation in Memphis have completed fundraising by December 31, 2025 by August 30?",
     "yes_price": 0.4962,
-    "no_price": 0.5038
+    "no_price": 0.5038,
+    "total_yes": 300,
+    "odds_yes": 0.0033,
+    "odds_no": 0.9967,
+    "total_no": 1
   },
   {
     "title": "Will the Mayor limit solitary confinement in Shelby County prisons by September 1?",
@@ -859,5 +863,14 @@
     "balanced_title": "Will Memphis host a 'One Hour, United Voices' Juneteenth celebration by June 19th by at least 5% over the target?",
     "yes_price": 0.5197,
     "no_price": 0.4803
+  },
+  {
+    "title": "Will the Memphis City Council approve a new zoning code?",
+    "total_yes": 100,
+    "total_no": 0,
+    "odds_yes": 0.5556,
+    "odds_no": 0.4444,
+    "created_at": "2025-06-29T23:31:53.912124",
+    "updated_at": "2025-06-29T23:31:53.912128"
   }
 ]

@@ -1,0 +1,50 @@
+{
+    "city": "Nashville",
+    "base_url": "https://www.nashville.gov/",
+    "agenda_url": "https://www.nashville.gov/Council-Meetings/Agendas.aspx",
+    "sources": [
+        {
+            "name": "Nashville Scene",
+            "url": "https://www.nashvillescene.com",
+            "selectors": {
+                "headline": "article h2.title",
+                "link": "article h2.title a",
+                "date": "article time"
+            }
+        },
+        {
+            "name": "Tennessean",
+            "url": "https://www.tennessean.com",
+            "selectors": {
+                "headline": "article h2.headline",
+                "link": "article h2.headline a",
+                "date": "article .date"
+            }
+        }
+    ],
+    "scraper_settings": {
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        "timeout": 15,
+        "retry_attempts": 3,
+        "retry_delay_seconds": 5
+    },
+    "contract_generation": {
+        "min_headline_length": 7,
+        "max_headline_length": 100,
+        "excluded_phrases": [
+            "His name was",
+            "Her name was",
+            "Their name was",
+            "Books to help",
+            "Why [org] is volunteering",
+            "In memory of",
+            "Remembering",
+            "Obituary",
+            "Historical",
+            "Past event",
+            "Recap",
+            "Review of",
+            "Summary of"
+        ]
+    }
+}
