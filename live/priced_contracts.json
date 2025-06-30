@@ -19,14 +19,20 @@
     "balanced_title": "Will the Liberty Stadium renovation in Memphis have completed fundraising by December 31, 2025 by August 30?",
     "yes_price": 0.4962,
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> e82d35c (🚧 WIP: Commit before rebase)
     "no_price": 0.5038,
     "total_yes": 300,
     "odds_yes": 0.0033,
     "odds_no": 0.9967,
     "total_no": 1
+<<<<<<< HEAD
 =======
     "no_price": 0.5038
 >>>>>>> ded967a (Finalize pricing layer: contracts now priced at launch odds)
+=======
+>>>>>>> e82d35c (🚧 WIP: Commit before rebase)
   },
   {
     "title": "Will the Mayor limit solitary confinement in Shelby County prisons by September 1?",
@@ -868,6 +874,9 @@
     "yes_price": 0.5197,
     "no_price": 0.4803
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> e82d35c (🚧 WIP: Commit before rebase)
   },
   {
     "title": "Will the Memphis City Council approve a new zoning code?",
@@ -877,7 +886,10 @@
     "odds_no": 0.4444,
     "created_at": "2025-06-29T23:31:53.912124",
     "updated_at": "2025-06-29T23:31:53.912128"
+<<<<<<< HEAD
 =======
 >>>>>>> ded967a (Finalize pricing layer: contracts now priced at launch odds)
+=======
+>>>>>>> e82d35c (🚧 WIP: Commit before rebase)
   }
 ]
