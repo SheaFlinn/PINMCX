@@ -1,6 +1,7 @@
 from app import db, create_app
 from app.models import Badge, League
 import json
+import os
 
 def seed_badges():
     """Seed the database with initial badges"""
@@ -121,6 +122,44 @@ def seed_leagues():
     db.session.commit()
     print(f"Created {len(leagues)} leagues")
 
+def create_test_contracts():
+    """Create test contract data for the trade engine."""
+    contracts = [
+        {
+            "id": "contract_123",
+            "title": "Test Contract 1",
+            "description": "A test contract for trading",
+            "total_yes": 0,
+            "total_no": 0,
+            "odds_yes": 0.5,
+            "odds_no": 0.5,
+            "status": "active"
+        },
+        {
+            "id": "contract_456",
+            "title": "Test Contract 2",
+            "description": "Another test contract",
+            "total_yes": 0,
+            "total_no": 0,
+            "odds_yes": 0.5,
+            "odds_no": 0.5,
+            "status": "active"
+        }
+    ]
+    
+    # Create directories if they don't exist
+    os.makedirs(os.path.dirname("live/priced_contracts.json"), exist_ok=True)
+    
+    # Save contracts
+    with open("live/priced_contracts.json", 'w') as f:
+        json.dump(contracts, f, indent=2)
+    
+    print("✅ Created test contracts:")
+    for contract in contracts:
+        print(f"- Contract ID: {contract['id']}")
+        print(f"  Title: {contract['title']}")
+        print(f"  Initial Odds: YES={contract['odds_yes']}, NO={contract['odds_no']}\n")
+
 def main():
     app = create_app()
     with app.app_context():
@@ -128,6 +167,7 @@ def main():
         seed_badges()
         seed_leagues()
         print("Database seeding complete!")
+        create_test_contracts()
 
 if __name__ == '__main__':
     main()
