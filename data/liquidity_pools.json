@@ -1,0 +1,17 @@
+{
+  "Will the fundraising for the Liberty Stadium renovation in Memphis be completed by December 31, 2025?": {
+    "cap": 250000,
+    "yes_liquidity": 124800.0,
+    "no_liquidity": 125000.0
+  },
+  "Will the sky turn purple?": {
+    "cap": 1000,
+    "yes_liquidity": 0.0,
+    "no_liquidity": 500.0
+  },
+  "Will the Memphis City Council approve a new zoning code?": {
+    "cap": 1000,
+    "yes_liquidity": 400.0,
+    "no_liquidity": 500.0
+  }
+}
