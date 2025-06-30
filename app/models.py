@@ -81,7 +81,7 @@ class User(UserMixin, db.Model):
         """Set user password with proper hashing.
         
         Args:
-            password (str): The plaintext password to hash and store
+            password (str): The plaintext password to hash
         """
         # Generate hash with consistent parameters
         password_hash = generate_password_hash(
@@ -170,31 +170,34 @@ class Badge(db.Model):
             'description': self.description,
             'icon': self.icon
         }
-    
+
     def assign_to_user(self, user):
         """Assign this badge to a user"""
-        user_badge = UserBadge(user=user, badge=self)
-        db.session.add(user_badge)
-        db.session.commit()
-        return user_badge
+        if not any(ub.badge.id == self.id for ub in user.user_badges):
+            user_badge = UserBadge(user=user, badge=self)
+            db.session.add(user_badge)
+            db.session.commit()
+            return user_badge
+        return None
 
 class Market(db.Model):
+    __tablename__ = 'market'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=False)
     resolution_date = db.Column(db.DateTime, nullable=False)
     resolution_method = db.Column(db.Text, nullable=False)
     source_url = db.Column(db.String(200))
-    domain = db.Column(db.String(50))  # Market domain category
-    parent_market_id = db.Column(db.Integer, db.ForeignKey('market.id'))  # Reference to parent market
-    original_source = db.Column(db.String(200))  # Original news source
-    original_headline = db.Column(db.String(200))  # Original headline
-    original_date = db.Column(db.DateTime)  # Original article date
-    scraped_at = db.Column(db.DateTime)  # When the market was scraped
-    refined_by = db.Column(db.Integer, db.ForeignKey('user.id'))  # User who refined the market
-    refined_at = db.Column(db.DateTime)  # When the market was refined
-    approved_at = db.Column(db.DateTime)  # When the market was approved
-    domain_tags = db.Column(db.JSON)  # Additional domain tags
+    domain = db.Column(db.String(50))
+    parent_market_id = db.Column(db.Integer, db.ForeignKey('market.id'))
+    original_source = db.Column(db.String(200))
+    original_headline = db.Column(db.String(200))
+    original_date = db.Column(db.DateTime)
+    scraped_at = db.Column(db.DateTime)
+    refined_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    refined_at = db.Column(db.DateTime)
+    approved_at = db.Column(db.DateTime)
+    domain_tags = db.Column(db.JSON)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     resolved = db.Column(db.Boolean, default=False)
     resolved_outcome = db.Column(db.String(3))
@@ -214,126 +217,122 @@ class Market(db.Model):
     predictions = db.relationship('Prediction', back_populates='market', lazy=True)
     events = db.relationship('MarketEvent', back_populates='market', lazy=True)
     
-    # Properties for lineage
-    @property
     def lineage(self):
         """Return a list of all parent markets in the lineage"""
-        lineage = []
-        current = self
-        while current.parent_market:
-            lineage.append(current.parent_market)
-            current = current.parent_market
-        return lineage
-    
-    @property
+        if not self.parent_market:
+            return []
+        return self.parent_market.lineage() + [self.parent_market]
+
     def lineage_chain(self):
         """Return a formatted string of the market lineage"""
         return ' → '.join([m.title for m in list(reversed(self.lineage)) + [self]])
-    
-    def __repr__(self):
-        return f'<Market {self.id}: {self.title}>'
-    
-    # Relationship for LP positions
-    liquidity_providers = db.relationship('LiquidityProvider', back_populates='market', lazy=True)
 
-    @property
-    def yes_price(self):
-        """Calculate YES share price using AMM formula"""
-        if self.no_pool == 0:
-            return 1.0
-        return self.yes_pool / self.no_pool
-    
-    @property
-    def no_price(self):
-        """Calculate NO share price using AMM formula"""
-        if self.yes_pool == 0:
-            return 1.0
-        return self.no_pool / self.yes_pool
-    
-    def trade(self, user, amount, outcome):
-        """
-        Execute a trade on this market.
+    def __repr__(self):
+        return f'<Market {self.title}>'
+
+    def resolve(self, outcome: bool):
+        """Resolve the market with a given outcome.
         
         Args:
-            user: User making the trade
-            amount: Amount of points to trade
-            outcome: True for YES trade, False for NO trade
-            
-        Returns:
-            Dict containing trade details:
-            - price: Price per share
-            - shares: Number of shares purchased
-            - outcome: 'YES' or 'NO'
-            
-        Raises:
-            ValueError: If trade amount is invalid
+            outcome (bool): True for YES, False for NO
         """
-        from app.services.points_trade_engine import PointsTradeEngine
+        if self.resolved:
+            raise ValueError('Market is already resolved')
+            
+        if outcome not in ['YES', 'NO']:
+            raise ValueError('Outcome must be either "YES" or "NO"')
+            
+        self.resolved = True
+        self.resolved_outcome = outcome
+        self.resolved_at = datetime.utcnow()
         
-        # Execute the trade through the trade engine
-        trade_result = PointsTradeEngine.execute_trade(user, self, amount, outcome)
+        # Calculate payouts for all predictions
+        for prediction in self.predictions:
+            if prediction.outcome == outcome:
+                # Calculate payout based on pool sizes
+                total_pool = self.yes_pool + self.no_pool
+                if outcome == 'YES':
+                    prediction.payout = prediction.shares * (total_pool / self.yes_pool)
+                else:
+                    prediction.payout = prediction.shares * (total_pool / self.no_pool)
+                
+                # Update user points
+                prediction.user.points += prediction.payout
+                
+                # Award XP for correct prediction
+                prediction.user.xp += 10
+                prediction.xp_awarded = True
+                
+                # Update reliability index
+                prediction.user.update_reliability(True)
+            else:
+                # Update reliability index for incorrect prediction
+                prediction.user.update_reliability(False)
         
-        # Log the trade event with values from trade result
+        # Log the resolution
         event = MarketEvent(
             market=self,
-            event_type='trade',
-            user=user,
-            description=f"User {user.username} traded {amount:.2f} points on {trade_result['outcome']} outcome",
+            event_type='market_resolved',
+            user_id=None,
+            description=f'Market "{self.title}" resolved with outcome {outcome}',
             event_data={
-                'amount': amount,
-                'price': trade_result['price'],
-                'shares': trade_result['shares'],
-                'outcome': trade_result['outcome']
+                'outcome': outcome,
+                'total_pool': self.yes_pool + self.no_pool,
+                'yes_pool': self.yes_pool,
+                'no_pool': self.no_pool,
+                'predictions': {
+                    'total': len(self.predictions),
+                    'correct': len([p for p in self.predictions if p.outcome == outcome])
+                }
             }
         )
         db.session.add(event)
         
-        return trade_result
-
-    def resolve(self, outcome: bool):
-        """Resolve the market with a given outcome"""
-        if self.resolved:
-            return
-            
-        self.resolved = True
-        self.resolved_outcome = "YES" if outcome else "NO"
-        self.resolved_at = datetime.utcnow()
-        self.integrity_hash = generate_contract_hash(self.title)
-
-        # Log market resolution event
-        event = MarketEvent.log_market_resolution(self, user_id=None)
-        db.session.add(event)
-
-        # Award XP for correct predictions
-        self.award_xp_for_predictions()
+        # Distribute liquidity rewards
+        self.distribute_liquidity_rewards()
         
-        # Calculate and award payouts for all predictions
-        for prediction in self.predictions:
-            if prediction.outcome == outcome:
-                total_pool = self.yes_pool + self.no_pool
-                if outcome:
-                    payout = prediction.shares * (total_pool / self.yes_pool)
-                else:
-                    payout = prediction.shares * (total_pool / self.no_pool)
-                
-                # Use payout engine to handle points
-                from app.services.points_payout_engine import PointsPayoutEngine
-                PointsPayoutEngine.award_resolution_payout(
-                    user=prediction.user,
-                    amount=payout,
-                    market_id=self.id
-                )
-                prediction.payout = payout
-        
+        db.session.commit()
         return True
 
-    def update_prices(self):
-        # Update prices
-        pass
-    
-    def distribute_liquidity_rewards(self, fee):
+    def award_xp_for_predictions(self, base_xp_per_share: int = 10):
+        """Award XP to users with correct predictions on this market.
+        
+        Args:
+            base_xp_per_share (int): Base XP to award per share (default: 10)
         """
-        Distribute liquidity rewards to all liquidity providers based on their share.
+        if not self.resolved:
+            raise ValueError('Market must be resolved to award XP')
+            
+        for prediction in self.predictions:
+            if prediction.outcome == self.resolved_outcome and not prediction.xp_awarded:
+                # Calculate XP based on shares
+                xp = base_xp_per_share * prediction.shares
+                
+                # Award XP to user
+                prediction.user.xp += xp
+                prediction.xp_awarded = True
+                
+                # Log the XP award
+                event = MarketEvent(
+                    market=self,
+                    event_type='xp_awarded',
+                    user=prediction.user,
+                    description=f'XP awarded for correct prediction on "{self.title}"',
+                    event_data={
+                        'shares': prediction.shares,
+                        'xp': xp,
+                        'total_xp': prediction.user.xp
+                    }
+                )
+                db.session.add(event)
+        
+        db.session.commit()
+
+    def distribute_liquidity_rewards(self, fee):
+        """Distribute liquidity rewards to all liquidity providers based on their share.
+        
+        Args:
+            fee (float): Total fee to distribute
         """
         if not self.liquidity_providers:
             return
@@ -366,128 +365,22 @@ class Market(db.Model):
             )
             db.session.add(event)
 
-    def award_xp_for_predictions(self, base_xp_per_share: int = 10):
-        """
-        Award XP to users with correct predictions on this market.
-        
-        Args:
-            base_xp_per_share: Base XP amount per share (default 10)
-            
-        XP Awarding Rules:
-        1. Market Resolution:
-           - XP can only be awarded if market is resolved
-           - Requires market.resolved = True and market.resolved_outcome != None
-           
-        2. Prediction Validity:
-           - Only correct predictions receive XP
-           - Prediction must match market.resolved_outcome (case-insensitive)
-           - XP amount = base_xp_per_share * prediction.shares
-           
-        3. Prevention of Re-Award:
-           - Each prediction has an xp_awarded flag
-           - XP is never awarded twice for the same prediction
-           - Flag is set to True after first XP award
-           - Applies regardless of prediction correctness
-           
-        4. PointsService Integration:
-           - Uses PointsPayoutEngine.award_resolution_payout() for actual XP awarding
-           - Handles streaks, daily limits, and multipliers
-           - XP is only awarded if user hasn't checked in today
-        
-        Returns:
-            None
-        """
-        from app.services.points_payout_engine import PointsPayoutEngine
-        from app.models import Prediction
-
-        if not self.resolved or not self.resolved_outcome:
-            return
-
-        predictions = Prediction.query.filter_by(market_id=self.id).all()
-        
-        for prediction in predictions:
-            # Skip if XP already awarded
-            if prediction.xp_awarded:
-                continue
-
-            # Only award XP for correct predictions
-            if prediction.outcome == (self.resolved_outcome == "YES"):
-                xp_amount = base_xp_per_share * prediction.shares
-                PointsPayoutEngine.award_resolution_payout(
-                    user=prediction.user,
-                    amount=xp_amount,
-                    market_id=self.id
-                )
-                
-            # Mark prediction as XP awarded (whether correct or not)
-            prediction.xp_awarded = True
-            db.session.add(prediction)
-
-        db.session.commit()
-
-    @classmethod
-    def create_with_event(cls, **kwargs):
-        """
-        Create a market and log its creation event.
-
-        Args:
-            user_id: ID of the user creating the market
-            **kwargs: Market creation arguments
-
-        Returns:
-            tuple: (Market instance, MarketEvent instance)
-        """
-        user_id = kwargs.pop('user_id', None)  # Extract user_id first
-
-        market = cls(**kwargs)
-        db.session.add(market)
-        db.session.commit()  # Ensure market.id is assigned
-
-        event = MarketEvent.log_market_creation(market, user_id)
-        db.session.add(event)
-        db.session.commit()
-
-        return market, event
-
 class Prediction(db.Model):
     """Prediction model."""
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     market_id = db.Column(db.Integer, db.ForeignKey('market.id'), nullable=False)
-    shares = db.Column(db.Float, nullable=False)
-    platform_fee = db.Column(db.Float, nullable=True)  # 5% fee deducted from shares
-    outcome = db.Column(db.Boolean, nullable=False)
-    used_liquidity_buffer = db.Column(db.Boolean, default=False)  # Track if prediction used LB
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    outcome = db.Column(db.String(3), nullable=False)  # 'YES' or 'NO'
+    amount = db.Column(db.Float, nullable=False)
+    shares = db.Column(db.Float, default=0.0)
+    average_price = db.Column(db.Float, default=0.0)
+    payout = db.Column(db.Float, default=0)
     xp_awarded = db.Column(db.Boolean, default=False)
+    used_liquidity_buffer = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relationships
     user = db.relationship('User', back_populates='predictions')
     market = db.relationship('Market', back_populates='predictions')
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # Handle market_id or market object
-        market_id = kwargs.get('market_id')
-        if not market_id and 'market' in kwargs and kwargs['market']:
-            market_id = kwargs['market'].id
-
-        # Handle user_id or user object
-        user_id = kwargs.get('user_id')
-        if not user_id and 'user' in kwargs and kwargs['user']:
-            user_id = kwargs['user'].id
-
-        # Log prediction if we have both market_id and user_id
-        if market_id and user_id:
-            market = Market.query.get(market_id)
-            if market:
-                print(f"Prediction logged for market: {market.title}")
-                event = MarketEvent.log_prediction(market, user_id, self)
-                db.session.add(event)
-
-    def __repr__(self):
-        return f'<Prediction {self.id}: {self.shares} shares on Market {self.market_id}>'
 
 class MarketEvent(db.Model):
     """Model to track important events in a market's lifecycle"""
@@ -498,51 +391,16 @@ class MarketEvent(db.Model):
     description = db.Column(db.String(200), nullable=False)
     event_data = db.Column(db.JSON, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    # Relationships
+    
     market = db.relationship('Market', back_populates='events')
-    user = db.relationship('User', back_populates='market_events')
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        db.session.add(self)
-
-    @staticmethod
-    def log_prediction(market: Market, user_id: int, prediction: Prediction) -> 'MarketEvent':
-        """
-        Log a new prediction event.
-        
-        Args:
-            market: Market object
-            user_id: ID of the user making the prediction
-            prediction: Prediction object
-            
-        Returns:
-            MarketEvent object
-        """
-        event_data = {
-            'prediction_id': prediction.id,
-            'shares': prediction.shares,
-            'outcome': prediction.outcome,
-            'xp_awarded': prediction.xp_awarded
-        }
-        
-        event = MarketEvent(
-            market_id=market.id,
-            user_id=user_id,
-            event_type='prediction',  # Add event_type
-            description=f"Prediction made by user {user_id} on market {market.id}",
-            event_data=event_data
-        )
-        
-        return event
-
+    user = db.relationship('User', back_populates='events')
+    
     @classmethod
     def log_market_creation(cls, market, user_id):
         """Log the creation of a new market"""
         return cls(
             market_id=market.id,
-            event_type='market_created',  # Add event_type
+            event_type='market_created',
             user_id=user_id,
             description=f'Market "{market.title}" created',
             event_data={
@@ -554,188 +412,80 @@ class MarketEvent(db.Model):
                 'lineage': market.lineage_chain
             }
         )
-    
+
+    @classmethod
+    def log_market_update(cls, market, user_id, changes):
+        """Log an update to an existing market"""
+        return cls(
+            market_id=market.id,
+            event_type='market_updated',
+            user_id=user_id,
+            description=f'Market "{market.title}" updated',
+            event_data={
+                'changes': changes,
+                'domain': market.domain,
+                'lineage': market.lineage_chain
+            }
+        )
+
+    @classmethod
+    def log_prediction(cls, market, user_id, prediction):
+        """Log a user's prediction on a market"""
+        return cls(
+            market_id=market.id,
+            event_type='prediction',
+            user_id=user_id,
+            description=f'Prediction made on market "{market.title}"',
+            event_data={
+                'prediction': prediction,
+                'domain': market.domain,
+                'lineage': market.lineage_chain
+            }
+        )
+
     @classmethod
     def log_market_resolution(cls, market, user_id):
         """Log market resolution"""
         return cls(
             market_id=market.id,
-            event_type='market_resolved',  # Add event_type
+            event_type='market_resolved',
             user_id=user_id,
             description=f'Market "{market.title}" resolved',
             event_data={
                 'outcome': market.resolved_outcome,
                 'resolved_at': datetime.utcnow().isoformat(),
+                'domain': market.domain,
                 'lineage': market.lineage_chain
             }
         )
-    
-    def __repr__(self):
-        return f'<MarketEvent {self.id}: {self.event_type} for Market {self.market_id}>'
 
-class LiquidityPool(db.Model):
-    __tablename__ = 'liquidity_pools'
-
-    id = db.Column(db.Integer, primary_key=True)
-    contract_id = db.Column(db.Integer, db.ForeignKey('contract.id'), nullable=False, unique=True)
-    max_liquidity = db.Column(db.Integer, nullable=False)  # cap funded from LB
-    current_liquidity = db.Column(db.Integer, nullable=False, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    contract = db.relationship('Contract', back_populates='liquidity_pool')
-
-class AMMMarket(db.Model):
-    __tablename__ = 'amm_markets'
-
-    id = db.Column(db.Integer, primary_key=True)
-    contract_id = db.Column(db.Integer, db.ForeignKey('contract.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    base_pool = db.Column(db.Float, default=1000.0)
-    quote_pool = db.Column(db.Float, default=1000.0)
-    total_shares_yes = db.Column(db.Float, default=0.0)
-    total_shares_no = db.Column(db.Float, default=0.0)
-
-    contract = db.relationship('Contract', back_populates='amm_market', lazy='joined')
-
-class Contract(db.Model):
-    __tablename__ = 'contract'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128), nullable=False)
-    headline = db.Column(db.String(500), nullable=False)
-    original_headline = db.Column(db.String(500))
-    confidence = db.Column(db.Float, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    liquidity_pool = db.relationship('LiquidityPool', uselist=False, back_populates='contract')
-    amm_market = db.relationship('AMMMarket', uselist=False, back_populates='contract', lazy='joined')
-
-class AnchoredHash(db.Model):
-    """Placeholder table for future blockchain anchoring"""
-    id = db.Column(db.Integer, primary_key=True)
-    hash = db.Column(db.String(64), nullable=False)  # SHA-256 hash
-    market_id = db.Column(db.Integer, db.ForeignKey('market.id'), nullable=False)
-    anchored_at = db.Column(db.DateTime, default=datetime.utcnow)
-    chain_name = db.Column(db.String(50))  # Placeholder for future chain name
-    tx_id = db.Column(db.String(100))  # Optional transaction ID
-    
-    market = db.relationship('Market', backref='anchor')
-
-class NewsSource(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    url = db.Column(db.String(200), nullable=False)
-    selector = db.Column(db.String(100), nullable=False)
-    date_selector = db.Column(db.String(100))
-    active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # New fields for domain and weight
-    domain_tag = db.Column(db.String(50))  # e.g., 'crime', 'infrastructure', 'weather'
-    source_weight = db.Column(db.Float, default=1.0)  # 0.0 to 1.0, default 1.0 means neutral
-    
-    # Relationship
-    headlines = db.relationship('NewsHeadline', back_populates='source', lazy=True)
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'url': self.url,
-            'selector': self.selector,
-            'date_selector': self.date_selector,
-            'active': self.active,
-            'domain_tag': self.domain_tag,
-            'source_weight': self.source_weight
-        }
-
-class NewsHeadline(db.Model):
-    __tablename__ = 'news_headline'
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(500), nullable=False)
-    url = db.Column(db.String(200))
-    source_id = db.Column(db.Integer, db.ForeignKey('news_source.id'), nullable=False)
-    date_added = db.Column(db.DateTime, default=datetime.utcnow)
-    date_published = db.Column(db.DateTime)
-    domain_tag = db.Column(db.String(50))
-    
-    # Relationship
-    source = db.relationship('NewsSource', back_populates='headlines')
-    
-    def __repr__(self):
-        return f'<NewsHeadline {self.id}: {self.title[:50]}>'
-
-class LiquidityProvider(db.Model):
-    """Model to track liquidity providers and their shares"""
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    market_id = db.Column(db.Integer, db.ForeignKey('market.id'), nullable=False)
-    shares = db.Column(db.Float, default=0.0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    market = db.relationship('Market', back_populates='liquidity_providers', lazy=True)
-    user = db.relationship('User', back_populates='liquidity_providers')
-
-class League(db.Model):
-    """Model to track user leagues and rankings"""
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # League configuration
-    update_interval = db.Column(db.Integer, default=7)  # Days between updates
-    min_points = db.Column(db.Integer, default=1000)    # Minimum points to join
-    max_members = db.Column(db.Integer, default=100)    # Maximum members
-    
-    # League members
-    members = db.relationship('LeagueMember', back_populates='league', lazy=True)
-
-    def __repr__(self):
-        return f'<League {self.name}>'
-
-class LeagueMember(db.Model):
-    """Model to track user membership in leagues"""
-    __tablename__ = 'league_member'
-    id = db.Column(db.Integer, primary_key=True)
-    league_id = db.Column(db.Integer, db.ForeignKey('league.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    joined_at = db.Column(db.DateTime, default=datetime.utcnow)
-    points = db.Column(db.Integer, default=0)
-    rank = db.Column(db.Integer)
-    __table_args__ = (db.UniqueConstraint('league_id', 'user_id', name='_league_user_uc'),)
-
-    # Relationships
-    league = db.relationship('League', back_populates='members')
-    user = db.relationship('User', back_populates='league_members')
-    
-    def update_rank(self):
-        """Update the member's rank based on points"""
-        members = LeagueMember.query.filter_by(league_id=self.league_id).order_by(LeagueMember.points.desc()).all()
-        for i, member in enumerate(members):
-            member.rank = i + 1
-        db.session.commit()
-
-    def __repr__(self):
-        return f'<LeagueMember {self.user.username} in {self.league.name}>'
+    @classmethod
+    def log_lineage_change(cls, market, user_id, parent_market_id):
+        """Log a change in market lineage"""
+        return cls(
+            market_id=market.id,
+            event_type='lineage_changed',
+            user_id=user_id,
+            description=f'Market "{market.title}" lineage updated',
+            event_data={
+                'old_parent': market.parent_market_id,
+                'new_parent': parent_market_id,
+                'domain': market.domain,
+                'lineage': market.lineage_chain
+            }
+        )
 
 class PlatformWallet(db.Model):
     """Platform wallet to track cumulative platform fees."""
     id = db.Column(db.Integer, primary_key=True)
     balance = db.Column(db.Float, default=0.0)
-
-    @property
-    def total_fees(self):
-        """Return the total accumulated fees."""
-        return self.balance
-
+    
     @classmethod
     def get_instance(cls):
-        """Get or create the singleton PlatformWallet instance."""
-        wallet = cls.query.get(1)
+        """Get or create the platform wallet instance."""
+        wallet = cls.query.first()
         if not wallet:
-            wallet = cls(id=1, balance=0.0)
+            wallet = cls()
             db.session.add(wallet)
             db.session.commit()
         return wallet

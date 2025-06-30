@@ -51,6 +51,12 @@ class PointsTradeEngine:
             market.yes_pool += amount
         else:
             market.no_pool += amount
+        
+        # Recalculate odds after pool updates
+        total = market.yes_pool + market.no_pool
+        market.odds_yes = market.yes_pool / total if total > 0 else 0.5
+        market.odds_no = market.no_pool / total if total > 0 else 0.5
+        
         market.update_prices()
 
         # Deduct points from user

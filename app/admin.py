@@ -9,6 +9,85 @@ from .forms import MarketForm, PredictionForm, NewsSourceForm, LBForm, LeagueFor
 from sqlalchemy import func
 import logging
 
+# Create admin blueprint
+bp = Blueprint('admin', __name__, url_prefix='/admin')
+
+class AdminModelView(ModelView):
+    """Base ModelView for admin interface"""
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.is_admin
+
+    def inaccessible_callback(self, name, **kwargs):
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('main.index'))
+
+class UserModelView(AdminModelView):
+    """Custom ModelView for User model"""
+    column_list = ('username', 'email', 'is_admin', 'points', 'lb_deposit', 'reliability_index', 'xp', 'current_streak', 'longest_streak', 'last_active')
+    column_searchable_list = ('username', 'email')
+    column_filters = ('is_admin', 'last_active')
+    form_columns = ('username', 'email', 'is_admin', 'points', 'lb_deposit', 'reliability_index', 'xp', 'current_streak')
+
+class MarketModelView(AdminModelView):
+    """Custom ModelView for Market model"""
+    column_list = ('title', 'description', 'resolution_date', 'resolution_method', 'domain', 'resolved', 'resolved_outcome', 'resolved_at', 'created_at')
+    column_searchable_list = ('title', 'description')
+    column_filters = ('resolved', 'resolution_date', 'created_at')
+    form_columns = ('title', 'description', 'resolution_date', 'resolution_method', 'domain', 'resolved', 'resolved_outcome')
+
+class PredictionModelView(AdminModelView):
+    """Custom ModelView for Prediction model"""
+    column_list = ('user', 'market', 'outcome', 'amount', 'created_at')
+    column_filters = ('outcome', 'created_at')
+    form_columns = ('user', 'market', 'outcome', 'amount')
+
+class MarketEventModelView(AdminModelView):
+    """Custom ModelView for MarketEvent model"""
+    column_list = ('market', 'event_type', 'description', 'created_at')
+    column_filters = ('event_type', 'created_at')
+    form_columns = ('market', 'event_type', 'description', 'event_data')
+
+class NewsSourceModelView(AdminModelView):
+    """Custom ModelView for NewsSource model"""
+    column_list = ('name', 'url', 'selector', 'domain_tag', 'source_weight', 'active')
+    column_searchable_list = ('name', 'url')
+    column_filters = ('active', 'domain_tag')
+    form_columns = ('name', 'url', 'selector', 'domain_tag', 'source_weight', 'active')
+
+class NewsHeadlineModelView(AdminModelView):
+    """Custom ModelView for NewsHeadline model"""
+    column_list = ('title', 'url', 'date_added', 'date_published', 'source_id')
+    column_searchable_list = ('title', 'url')
+    column_filters = ('date_added', 'date_published', 'source_id')
+    form_columns = ('title', 'url', 'date_added', 'date_published', 'source_id')
+
+class LeagueModelView(AdminModelView):
+    """Custom ModelView for League model"""
+    column_list = ('name', 'description', 'min_xp')
+    column_searchable_list = ('name', 'description')
+    form_columns = ('name', 'description', 'min_xp')
+
+# Admin index view with custom access control
+class MyAdminIndexView(AdminIndexView):
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.is_admin
+
+    def inaccessible_callback(self, name, **kwargs):
+        flash('You do not have permission to access this page.', 'error')
+        return redirect(url_for('main.index'))
+
+# Initialize admin with custom index view
+admin = Admin(name='Prediction Market Admin', template_mode='bootstrap4', index_view=MyAdminIndexView())
+
+# Register all custom ModelViews with admin
+admin.add_view(UserModelView(User, db.session))
+admin.add_view(MarketModelView(Market, db.session))
+admin.add_view(PredictionModelView(Prediction, db.session))
+admin.add_view(MarketEventModelView(MarketEvent, db.session))
+admin.add_view(NewsSourceModelView(NewsSource, db.session))
+admin.add_view(NewsHeadlineModelView(NewsHeadline, db.session))
+admin.add_view(LeagueModelView(League, db.session))
+
 def parse_reddit_drafts():
     drafts = []
     try:
@@ -64,8 +143,6 @@ def parse_reddit_drafts():
         logging.error(f"Error loading Reddit drafts: {e}")
         return []
 
-admin = Blueprint('admin', __name__)
-
 # Define available domain categories
 DOMAIN_CATEGORIES = [
     'infrastructure',
@@ -79,7 +156,7 @@ DOMAIN_CATEGORIES = [
     'other'
 ]
 
-@admin.route('/admin/drafts')
+@bp.route('/drafts')
 @login_required
 def drafts():
     if not current_user.is_admin:
@@ -159,7 +236,7 @@ def drafts():
         logging.error(f"Error loading drafts: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-@admin.route('/admin/approve_draft', methods=['POST'])
+@bp.route('/approve_draft', methods=['POST'])
 @login_required
 def approve_draft():
     if not current_user.is_admin:
@@ -229,7 +306,7 @@ def approve_draft():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@admin.route('/admin/reject_draft', methods=['POST'])
+@bp.route('/reject_draft', methods=['POST'])
 @login_required
 def reject_draft():
     if not current_user.is_admin:
@@ -279,7 +356,7 @@ def reject_draft():
             'success': False
         }), 500
 
-@admin.route('/admin/save_draft_field', methods=['POST'])
+@bp.route('/save_draft_field', methods=['POST'])
 @login_required
 def save_draft_field():
     """Save a field edit for a draft market"""
@@ -313,7 +390,7 @@ def save_draft_field():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@admin.route('/admin/resolve')
+@bp.route('/resolve')
 @login_required
 def resolve_markets():
     if not current_user.is_admin:
@@ -322,7 +399,7 @@ def resolve_markets():
     unresolved_markets = Market.query.filter_by(resolved=False).all()
     return render_template('admin/resolve_markets.html', markets=unresolved_markets)
 
-@admin.route('/admin/resolve/<int:market_id>', methods=['POST'])
+@bp.route('/resolve/<int:market_id>', methods=['POST'])
 @login_required
 def resolve_market(market_id):
     if not current_user.is_admin:
@@ -346,7 +423,7 @@ def resolve_market(market_id):
     flash('Market resolved successfully', 'success')
     return redirect(url_for('admin.resolve_markets'))
 
-@admin.route('/admin/resolve_market/<int:market_id>', methods=['POST'])
+@bp.route('/resolve_market/<int:market_id>', methods=['POST'])
 @login_required
 def resolve_market_with_domain(market_id):
     if not current_user.is_admin:
@@ -374,7 +451,7 @@ def resolve_market_with_domain(market_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@admin.route('/admin/change_lineage/<int:market_id>', methods=['POST'])
+@bp.route('/change_lineage/<int:market_id>', methods=['POST'])
 @login_required
 def change_lineage(market_id):
     if not current_user.is_admin:
@@ -398,7 +475,7 @@ def change_lineage(market_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@admin.route('/admin/create_league', methods=['GET', 'POST'])
+@bp.route('/create_league', methods=['GET', 'POST'])
 @login_required
 def create_league():
     """Create a new league"""
@@ -426,7 +503,7 @@ def create_league():
 
     return render_template('admin/create_league.html', form=form)
 
-@admin.route('/admin/analytics')
+@bp.route('/analytics')
 @login_required
 def analytics():
     """Display platform analytics dashboard"""
@@ -451,7 +528,7 @@ def analytics():
 
     return render_template('admin/analytics.html', stats=stats)
 
-@admin.route('/admin/refine_draft', methods=['POST'])
+@bp.route('/refine_draft', methods=['POST'])
 @login_required
 def refine_draft():
     if not current_user.is_admin:
@@ -500,7 +577,7 @@ def refine_draft():
         logging.error(f"Error refining draft: {e}")
         return jsonify({'error': str(e)}), 500
 
-@admin.route('/admin/save_refined_draft', methods=['POST'])
+@bp.route('/save_refined_draft', methods=['POST'])
 @login_required
 def save_refined_draft():
     if not current_user.is_admin:
