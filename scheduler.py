@@ -4,6 +4,7 @@ from datetime import datetime
 import os
 import sys
 import logging
+import time
 
 # Add the app directory to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -11,6 +12,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app import create_app
 from award_badges import award_badges
 from update_leagues import update_league_rankings
+from app.cascade.cascade_ingest_service import CascadeIngestService
 
 # Configure logging
 logging.basicConfig(
@@ -41,20 +43,52 @@ def create_scheduler():
     
     return scheduler
 
+def run_cascade_ingest():
+    """Run cascade ingestion for all cities."""
+    try:
+        service = CascadeIngestService()
+        processed = service.run_scheduled_ingest()
+        logger.info(f"Cascade ingest completed. Processed {processed} headlines.")
+    except Exception as e:
+        logger.error(f"Error in cascade ingest: {str(e)}")
+        raise
+
 def main():
     """Main function to start the scheduler"""
     try:
         # Create Flask app context
         app = create_app()
         with app.app_context():
-            # Create and start scheduler
-            scheduler = create_scheduler()
+            # Create scheduler
+            scheduler = BackgroundScheduler()
+            
+            # Add scheduled jobs
+            scheduler.add_job(
+                award_badges,
+                CronTrigger(hour=0, minute=0),  # Run daily at midnight
+                name="Award Badges"
+            )
+            
+            scheduler.add_job(
+                update_league_rankings,
+                CronTrigger(hour=1, minute=0),  # Run daily at 1am
+                name="Update League Rankings"
+            )
+            
+            # Add cascade ingest job
+            scheduler.add_job(
+                run_cascade_ingest,
+                CronTrigger(minute=0),  # Run hourly
+                name="Cascade Ingest"
+            )
+            
+            # Start scheduler
             scheduler.start()
             
-            # Keep the script running
             try:
+                # Keep the script running
                 while True:
-                    pass
+                    time.sleep(1)
             except (KeyboardInterrupt, SystemExit):
                 # Shutdown scheduler gracefully
                 scheduler.shutdown()
