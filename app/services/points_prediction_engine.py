@@ -3,6 +3,7 @@ from datetime import datetime
 from app import db
 from app.services.points_ledger import PointsLedger
 from app.services.points_service import PointsService
+from app.services.xp_service import XPService
 from app.models.market_event import MarketEvent
 from config import Config
 
@@ -145,53 +146,6 @@ class PointsPredictionEngine:
         db.session.commit()
 
     @staticmethod
-    def award_xp_for_prediction(prediction: 'Prediction') -> None:
-        """
-        Award XP for a prediction based on its outcome and stake.
-        
-        Args:
-            prediction: The Prediction object to award XP for
-        """
-        user = prediction.user
-        market = prediction.market
-        
-        # Only award XP if prediction hasn't been awarded XP before
-        if prediction.xp_awarded:
-            return
-            
-        # Only award XP for correct predictions
-        if not prediction.is_correct():
-            prediction.xp_awarded = True
-            db.session.commit()
-            return
-            
-        # Calculate XP based on stake
-        base_xp = 100  # Base XP amount
-        xp_award = int(base_xp * prediction.stake)
-        
-        # Award XP
-        prediction.user.xp += xp_award
-        prediction.xp_awarded = True
-
-        # Log transaction
-        PointsLedger.log_transaction(
-            user_id=prediction.user_id,
-            amount=xp_award,
-            transaction_type='xp_awarded',
-            description=f'XP awarded for correct prediction on market {prediction.market_id}'
-        )
-        
-        # Log event with prediction details
-        MarketEvent.log_prediction(
-            market=market,
-            user_id=user.id,
-            stake=prediction.stake,
-            outcome=prediction.outcome
-        )
-        
-        db.session.commit()
-
-    @staticmethod
     def resolve_market(market_id: int, correct_outcome: bool) -> None:
         """
         Resolve a market and award points/XP for correct predictions.
@@ -229,8 +183,10 @@ class PointsPredictionEngine:
             if is_correct:
                 # Award points and XP
                 PointsPredictionEngine.award_points_for_prediction(prediction)
-                PointsPredictionEngine.award_xp_for_prediction(prediction)
+                XPService.award_prediction_xp(prediction.user, success=True)
+                prediction.xp_awarded = True
 
         # Resolve the market
         market.resolve('YES' if correct_outcome else 'NO')
+        market.award_xp_for_predictions()
         db.session.commit()

@@ -1,5 +1,6 @@
 from datetime import datetime
 from app.extensions import db
+from app.models.market_event import MarketEvent
 
 class Market(db.Model):
     __tablename__ = 'market'
@@ -42,3 +43,78 @@ class Market(db.Model):
 
     def __repr__(self):
         return f'<Market {self.id}: {self.title}>'
+
+    def award_xp_for_predictions(self):
+        """
+        Award XP to users based on their predictions for this market.
+        Only awards XP once per prediction (tracks via xp_awarded flag).
+        """
+        from app.services.xp_service import XPService
+        from app.models.market_event import MarketEvent
+        
+        for prediction in self.predictions:
+            if prediction.xp_awarded:
+                continue  # Skip if XP already awarded
+            
+            # Determine if prediction was correct
+            success = (prediction.outcome == (self.resolved_outcome == 'YES'))
+            
+            # Award XP
+            XPService.award_prediction_xp(prediction.user, success=success)
+            
+            # Mark prediction as XP awarded
+            prediction.xp_awarded = True
+            
+            # Log the XP award event
+            event = MarketEvent(
+                market_id=self.id,
+                user_id=prediction.user_id,
+                event_type='xp_awarded',
+                description=f'XP awarded for prediction on market {self.title}',
+                event_data={
+                    'prediction_id': prediction.id,
+                    'success': success,
+                    'xp_awarded': True
+                }
+            )
+            db.session.add(event)
+            
+        # Commit XP awards and events
+        db.session.commit()
+
+    def resolve(self, outcome: str) -> None:
+        """
+        Resolve the market with the given outcome.
+        
+        Args:
+            outcome: 'YES' or 'NO'
+            
+        Raises:
+            ValueError: If market is already resolved or outcome is invalid
+        """
+        if self.resolved:
+            raise ValueError(f"Market {self.id} is already resolved")
+            
+        if outcome not in ['YES', 'NO']:
+            raise ValueError(f"Invalid outcome: {outcome}. Must be 'YES' or 'NO'")
+            
+        self.resolved = True
+        self.resolved_outcome = outcome
+        self.resolved_at = datetime.utcnow()
+        
+        # Award XP for all predictions
+        self.award_xp_for_predictions()
+        
+        # Log resolution event
+        event = MarketEvent(
+            market_id=self.id,
+            event_type='market_resolved',
+            description=f'Market "{self.title}" resolved with outcome {outcome}',
+            event_data={
+                'outcome': outcome,
+                'resolved_at': self.resolved_at.isoformat()
+            }
+        )
+        db.session.add(event)
+        
+        db.session.commit()
