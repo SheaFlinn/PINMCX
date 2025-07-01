@@ -24,6 +24,7 @@ class User(UserMixin, db.Model):
     longest_streak = db.Column(db.Integer, default=0)
     last_check_in_date = db.Column(db.DateTime)
     predictions_count = db.Column(db.Integer, default=0)
+    successful_predictions = db.Column(db.Integer, default=0)
 
     # Relationships
     predictions = db.relationship('Prediction', back_populates='user', lazy=True)
@@ -53,6 +54,17 @@ class User(UserMixin, db.Model):
         self.lb_deposit -= amount
         return True
 
+    def increment_successful_predictions(self):
+        self.successful_predictions += 1
+        db.session.commit()
+
+    def increment_predictions(self):
+        self.predictions_count += 1
+        db.session.commit()
+
     def get_lb_yield(self):
         total_lb = db.session.query(func.sum(User.lb_deposit)).scalar() or 0
         return 0 if total_lb == 0 else (self.lb_deposit * (6 / 365)) / 100  # 6% base yield
+
+    def __repr__(self):
+        return f'<User {self.username}>'

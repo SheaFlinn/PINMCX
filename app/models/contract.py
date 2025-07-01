@@ -2,6 +2,8 @@ from app import db
 from datetime import datetime
 
 class ContractDraft(db.Model):
+    __tablename__ = 'contract_drafts'
+    
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(300), nullable=False)
     purpose = db.Column(db.Text)

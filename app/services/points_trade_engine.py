@@ -1,6 +1,7 @@
 from typing import Dict, Optional
 from app.services.points_ledger import PointsLedger
 from app.models import Market, User
+from app.services.xp_service import XPService
 from config import Config
 
 class PointsTradeEngine:
@@ -69,6 +70,9 @@ class PointsTradeEngine:
             transaction_type="trade",
             description=f"Trade on market {market.id} - {'YES' if outcome else 'NO'} - {amount:.2f} points"
         )
+
+        # Award XP for successful trade
+        XPService.award_prediction_xp(user)
 
         # Return trade details
         return {

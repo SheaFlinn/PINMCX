@@ -37,7 +37,8 @@ class Market(db.Model):
     refiner = db.relationship('User', back_populates='refined_markets')
     predictions = db.relationship('Prediction', back_populates='market', lazy=True)
     events = db.relationship('MarketEvent', back_populates='market', lazy=True)
-    liquidity_providers = db.relationship('LiquidityProvider', back_populates='market', lazy=True)
+    liquidity_providers = db.relationship("LiquidityProvider", back_populates="market", lazy=True)
+    liquidity_pool = db.relationship('LiquidityPool', back_populates='market', uselist=False)
 
     def __repr__(self):
         return f'<Market {self.id}: {self.title}>'
