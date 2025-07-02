@@ -4,6 +4,7 @@ from app import db
 from app.services.points_ledger import PointsLedger
 from app.services.points_service import PointsService
 from app.services.xp_service import XPService
+from app.services.amm_service import AMMService
 from app.models.market_event import MarketEvent
 from config import Config
 
@@ -18,7 +19,7 @@ class PointsPredictionEngine:
     def place_prediction(user: 'User', market: 'Market', shares: float, outcome: bool, use_liquidity_buffer: bool = False) -> 'Prediction':
         """
         Place a prediction on a market with platform fee deduction, optional liquidity buffer staking,
-        and platform fee accumulation in PlatformWallet.
+        and platform fee accumulation in PlatformWallet. Uses AMM to determine share allocation and odds.
 
         Supports multiple predictions per user on the same market (re-betting). Each prediction is
         treated as a distinct unit of stake, allowing users to adjust their position over time.
@@ -36,13 +37,25 @@ class PointsPredictionEngine:
         Raises:
             ValueError: If prediction is placed after market deadline
             ValueError: If using liquidity buffer and insufficient balance
+            ValueError: If no liquidity pool exists for the market
+            ValueError: If stake exceeds max liquidity
         """
-        from app.models import User, Market, Prediction, PlatformWallet
+        from app.models import User, Market, Prediction, PlatformWallet, LiquidityPool
+        
         # Check prediction deadline
         if market.status == 'resolved':
             raise ValueError(f"Market {market.id} is already resolved")
         if datetime.utcnow() > market.deadline:
             raise ValueError(f"Prediction deadline for market {market.id} has passed")
+
+        # Get or create liquidity pool for market
+        pool = LiquidityPool.query.filter_by(market_id=market.id).first()
+        if not pool:
+            raise ValueError(f"No liquidity pool found for market {market.id}")
+
+        # Check max liquidity limit
+        if (pool.liquidity_yes + pool.liquidity_no + shares) > Config.MAX_MARKET_LIQUIDITY:
+            raise ValueError(f"Stake exceeds maximum market liquidity")
 
         # If using liquidity buffer, check balance
         if use_liquidity_buffer:
@@ -53,6 +66,13 @@ class PointsPredictionEngine:
         platform_fee = 0.05 * shares
         net_shares = shares - platform_fee
 
+        # Calculate share allocation using AMM
+        outcome_str = "YES" if outcome else "NO"
+        allocated_shares = AMMService.calculate_share_allocation(pool, net_shares, outcome_str)
+        
+        # Update pool odds
+        AMMService.update_odds(pool)
+
         # Add platform fee to wallet
         wallet = PlatformWallet.get_instance()
         wallet.add_fee(platform_fee)
@@ -61,19 +81,25 @@ class PointsPredictionEngine:
         prediction = Prediction(
             user_id=user.id,
             market_id=market.id,
-            outcome='YES' if outcome else 'NO',
-            confidence=net_shares,
+            outcome=outcome_str,
+            confidence=allocated_shares,  # Use allocated shares as confidence
             stake=shares,
             timestamp=datetime.utcnow()
         )
         db.session.add(prediction)
+        
+        # Update pool with new liquidity
+        if outcome:
+            pool.liquidity_yes += net_shares
+        else:
+            pool.liquidity_no += net_shares
         
         # Log prediction event
         MarketEvent.log_prediction(
             market=market,
             user_id=user.id,
             stake=shares,
-            outcome='YES' if outcome else 'NO'
+            outcome=outcome_str
         )
         
         # If using liquidity buffer, deduct from deposit
@@ -85,7 +111,6 @@ class PointsPredictionEngine:
                 transaction_type="liquidity_buffer_stake",
                 description=f"Stake placed from liquidity buffer for market {market.id}"
             )
-            db.session.commit()
 
         db.session.commit()
 
