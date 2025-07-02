@@ -13,6 +13,7 @@ from .prediction import Prediction
 from .news import NewsSource, NewsHeadline
 from .liquidity_pool import LiquidityPool
 from .liquidity_provider import LiquidityProvider
+from .user_ledger import UserLedger
 
 __all__ = [
     'User',
@@ -30,4 +31,5 @@ __all__ = [
     'NewsHeadline',
     'LiquidityPool',
     'LiquidityProvider',
+    'UserLedger'
 ]

@@ -33,6 +33,13 @@ class User(UserMixin, db.Model):
     events = db.relationship('MarketEvent', back_populates='user', lazy=True)
     liquidity_providers = db.relationship('LiquidityProvider', back_populates='user')
     league_members = db.relationship('LeagueMember', back_populates='user')
+    ledger_entries = db.relationship('UserLedger', back_populates='user', lazy='dynamic')
+
+    def __init__(self, username, email, password=None):
+        self.username = username
+        self.email = email
+        if password:
+            self.set_password(password)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password, method='pbkdf2:sha256', salt_length=16)

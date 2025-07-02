@@ -54,7 +54,7 @@ class PointsPredictionEngine:
             raise ValueError(f"No liquidity pool found for market {market.id}")
 
         # Check max liquidity limit
-        if (pool.liquidity_yes + pool.liquidity_no + shares) > Config.MAX_MARKET_LIQUIDITY:
+        if (pool.yes_liquidity + pool.no_liquidity + shares) > Config.MAX_MARKET_LIQUIDITY:
             raise ValueError(f"Stake exceeds maximum market liquidity")
 
         # If using liquidity buffer, check balance
@@ -68,7 +68,16 @@ class PointsPredictionEngine:
 
         # Calculate share allocation using AMM
         outcome_str = "YES" if outcome else "NO"
-        allocated_shares = AMMService.calculate_share_allocation(pool, net_shares, outcome_str)
+        amm_result = AMMService.calculate_share_allocation(
+            yes_liquidity=pool.yes_liquidity,
+            no_liquidity=pool.no_liquidity,
+            stake=net_shares,
+            outcome=outcome_str
+        )
+        
+        # Update pool liquidity with new values from AMM
+        pool.yes_liquidity = amm_result['yes_liquidity']
+        pool.no_liquidity = amm_result['no_liquidity']
         
         # Update pool odds
         AMMService.update_odds(pool)
@@ -82,17 +91,11 @@ class PointsPredictionEngine:
             user_id=user.id,
             market_id=market.id,
             outcome=outcome_str,
-            confidence=allocated_shares,  # Use allocated shares as confidence
+            confidence=amm_result['shares_purchased'],  # Use actual shares purchased as confidence
             stake=shares,
             timestamp=datetime.utcnow()
         )
         db.session.add(prediction)
-        
-        # Update pool with new liquidity
-        if outcome:
-            pool.liquidity_yes += net_shares
-        else:
-            pool.liquidity_no += net_shares
         
         # Log prediction event
         MarketEvent.log_prediction(
