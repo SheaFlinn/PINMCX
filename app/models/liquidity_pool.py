@@ -12,7 +12,7 @@ class LiquidityPool(db.Model):
     current_liquidity = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    market = db.relationship('Market', back_populates='liquidity_pool')
+    market = db.relationship('Market', back_populates='market_liquidity_pool')
 
     def __repr__(self):
         return f"<LiquidityPool MarketID={self.contract_id} Max={self.max_liquidity} Current={self.current_liquidity}>"

@@ -20,6 +20,9 @@ class PublishedContract(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    # Use string-based relationship to avoid circular import
+    amm_market = db.relationship('AMMMarket', back_populates='contract', uselist=False)
+
     def to_dict(self):
         return {
             "id": self.id,

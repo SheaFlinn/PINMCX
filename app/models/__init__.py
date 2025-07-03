@@ -1,3 +1,8 @@
+from flask_sqlalchemy import SQLAlchemy
+
+# Import db from extensions
+from app.extensions import db
+
 # Core models
 from .user import User
 from .league import League
@@ -14,6 +19,7 @@ from .news import NewsSource, NewsHeadline
 from .liquidity_pool import LiquidityPool
 from .liquidity_provider import LiquidityProvider
 from .user_ledger import UserLedger
+from .amm_market import AMMMarket
 
 __all__ = [
     'User',
@@ -31,5 +37,6 @@ __all__ = [
     'NewsHeadline',
     'LiquidityPool',
     'LiquidityProvider',
-    'UserLedger'
+    'UserLedger',
+    'AMMMarket'
 ]

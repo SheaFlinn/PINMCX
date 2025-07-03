@@ -4,12 +4,16 @@ from flask_migrate import Migrate
 from flask_cors import CORS
 from app.extensions import db, login_manager, migrate
 
-# Initialize extensions (moved to extensions.py)
-
-def create_app():
+def create_app(config=None):
     app = Flask(__name__)
+    
+    # Load default config
     app.config.from_object('config.Config')
-
+    
+    # Override with provided config if any
+    if config:
+        app.config.update(config)
+    
     # Initialize extensions with app
     db.init_app(app)
     login_manager.init_app(app)

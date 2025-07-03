@@ -11,8 +11,13 @@ class Prediction(db.Model):
     platform_fee = db.Column(db.Float, nullable=True)  # 5% fee deducted from shares
     outcome = db.Column(db.Boolean, nullable=False)
     used_liquidity_buffer = db.Column(db.Boolean, default=False)  # Track if prediction used LB
+    stake = db.Column(db.Float, nullable=False)  # Amount staked on prediction
+    price = db.Column(db.Float, nullable=False)  # Price per share at time of prediction
+    shares_purchased = db.Column(db.Float, nullable=False)  # Number of shares actually purchased
+    awarded_points = db.Column(db.Float, nullable=True)  # Points awarded if prediction is correct
+    awarded_xp = db.Column(db.Integer, nullable=True)  # XP awarded for prediction
+    resolved_at = db.Column(db.DateTime, nullable=True)  # When prediction was resolved
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    xp_awarded = db.Column(db.Boolean, default=False)
 
     # Relationships
     user = db.relationship('User', back_populates='predictions')
@@ -31,6 +36,10 @@ class Prediction(db.Model):
 
         # Initialize the object
         super().__init__(*args, **kwargs)
+
+        # Ensure user relationship is set
+        if 'user' in kwargs and kwargs['user']:
+            self.user = kwargs['user']
 
     def log_prediction_event(self):
         """Log prediction event after object has been flushed to session"""

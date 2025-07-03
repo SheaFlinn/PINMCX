@@ -64,5 +64,21 @@ class MarketEvent(db.Model):
             }
         )
 
+    @staticmethod
+    def log_prediction_resolution(prediction_id, market_id, user_id, outcome, points_awarded, xp_awarded):
+        """Log a prediction resolution event"""
+        return MarketEvent(
+            market_id=market_id,
+            user_id=user_id,
+            event_type='prediction_resolved',
+            description=f'Prediction {prediction_id} resolved with outcome {outcome}',
+            event_data={
+                'prediction_id': prediction_id,
+                'outcome': outcome,
+                'points_awarded': points_awarded,
+                'xp_awarded': xp_awarded
+            }
+        )
+
     def __repr__(self):
         return f'<MarketEvent {self.id}: {self.event_type} for Market {self.market_id}>'

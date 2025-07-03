@@ -87,7 +87,7 @@ class User(UserMixin, db.Model):
     def get_lb_yield(self):
         total_lb = db.session.query(func.sum(User.lb_deposit)).scalar() or 0
 <<<<<<< HEAD
-=======
+>>>>>>> 932aef4 (LOCKED: All model stubs added, migrations clean through Badge/UserBadge)
         if total_lb == 0:
             return 0
         
@@ -420,6 +420,8 @@ class Prediction(db.Model):
     used_liquidity_buffer = db.Column(db.Boolean, default=False)  # Track if prediction used LB
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     xp_awarded = db.Column(db.Boolean, default=False)
+    awarded_points = db.Column(db.Float, default=0.0)
+    awarded_xp = db.Column(db.Integer, default=0)
     
     # Relationships
     user = db.relationship('User', back_populates='predictions')
@@ -707,4 +709,3 @@ class PlatformWallet(db.Model):
 
     def __repr__(self):
         return f'<PlatformWallet id={self.id} balance={self.balance:.2f}>'
->>>>>>> 932aef4 (LOCKED: All model stubs added, migrations clean through Badge/UserBadge)

@@ -35,7 +35,7 @@ class AMMService:
         }
 
     @staticmethod
-    def calculate_share_allocation(yes_liquidity: float, no_liquidity: float, stake: float, outcome: str) -> Dict[str, Any]:
+    def calculate_share_allocation(yes_liquidity: float, no_liquidity: float, stake: float, outcome: bool) -> Dict[str, Any]:
         """
         Given a stake and outcome, calculate new liquidity values and shares allocated.
         Enforces the constant product invariant: x * y = k
@@ -44,54 +44,42 @@ class AMMService:
             yes_liquidity: Current YES pool liquidity
             no_liquidity: Current NO pool liquidity
             stake: Amount of stake to add
-            outcome: 'YES' or 'NO' position
+            outcome: True for YES position, False for NO position
             
         Returns:
             dict: Dictionary containing:
+                - shares: Number of shares allocated
                 - yes_liquidity: New YES pool liquidity
                 - no_liquidity: New NO pool liquidity
-                - shares_purchased: Number of shares allocated
-                - price: Price paid per share
-                - slippage: Percentage slippage from initial odds
-            
-        Raises:
-            ValueError: If outcome is not 'YES' or 'NO'
-            ZeroDivisionError: If liquidity is zero or negative
+                - price: Price per share
         """
-        if yes_liquidity <= 0 or no_liquidity <= 0:
-            raise ZeroDivisionError("Cannot calculate allocation with zero or negative liquidity")
+        if not isinstance(outcome, bool):
+            raise ValueError("Outcome must be a boolean value (True for YES, False for NO)")
 
-        k = yes_liquidity * no_liquidity
-        initial_odds = AMMService.get_current_odds(yes_liquidity, no_liquidity)
+        # Calculate the price based on liquidity ratios
+        total_liquidity = yes_liquidity + no_liquidity
+        if total_liquidity == 0:
+            raise ZeroDivisionError("Cannot calculate price with zero liquidity")
 
-        if outcome.upper() == "YES":
-            new_yes_liquidity = yes_liquidity + stake
-            new_no_liquidity = k / new_yes_liquidity
-            shares_purchased = no_liquidity - new_no_liquidity
-            price = stake / shares_purchased
-            
-        elif outcome.upper() == "NO":
+        # Calculate shares based on outcome
+        if outcome:  # YES position
+            shares = stake / (no_liquidity / total_liquidity)
             new_no_liquidity = no_liquidity + stake
-            new_yes_liquidity = k / new_no_liquidity
-            shares_purchased = yes_liquidity - new_yes_liquidity
-            price = stake / shares_purchased
-            
-        else:
-            raise ValueError("Invalid outcome. Must be 'YES' or 'NO'.")
+            new_yes_liquidity = yes_liquidity
+        else:  # NO position
+            shares = stake / (yes_liquidity / total_liquidity)
+            new_yes_liquidity = yes_liquidity + stake
+            new_no_liquidity = no_liquidity
 
-        # Calculate slippage
-        final_odds = AMMService.get_current_odds(new_yes_liquidity, new_no_liquidity)
-        if outcome.upper() == "YES":
-            slippage = ((final_odds['yes'] - initial_odds['yes']) / initial_odds['yes']) * 100
-        else:
-            slippage = ((final_odds['no'] - initial_odds['no']) / initial_odds['no']) * 100
+        # Calculate new price
+        new_total = new_yes_liquidity + new_no_liquidity
+        price = new_no_liquidity / new_total
 
         return {
+            'shares': shares,
             'yes_liquidity': new_yes_liquidity,
             'no_liquidity': new_no_liquidity,
-            'shares_purchased': shares_purchased,
-            'price': price,
-            'slippage': abs(slippage)
+            'price': price
         }
 
     @staticmethod
