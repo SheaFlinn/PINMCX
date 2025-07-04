@@ -1,7 +1,5 @@
 import pytest
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
-
 from app.services.liquidity_service import LiquidityService
 from app.models import User, MarketEvent
 
@@ -20,17 +18,14 @@ def mock_user():
 @pytest.fixture
 def mock_market_event():
     """Fixture for a mock MarketEvent."""
-    return MagicMock(spec=MarketEvent)
+    return MarketEvent()
 
 @pytest.fixture
 def mock_db_session():
     """Fixture for a mock SQLAlchemy session."""
-    return MagicMock()
+    return mock_db_session
 
-@patch('app.services.liquidity_service.datetime')
-@patch('app.services.liquidity_service.MarketEvent')
-@patch('app.services.liquidity_service.db')
-def test_deposit_success(mock_db, mock_market_event, mock_datetime, mock_user):
+def test_deposit_success(test_client, test_db):
     """
     Test successful liquidity deposit:
     - Updates buffer deposit
@@ -38,117 +33,221 @@ def test_deposit_success(mock_db, mock_market_event, mock_datetime, mock_user):
     - Logs event
     """
     amount = 100.0
-    mock_datetime.utcnow.return_value = datetime(2025, 7, 1)
-    
-    # Mock MarketEvent
-    mock_market_event.log_liquidity_deposit.return_value = None
+    user = create_test_user()
+    test_db.session.add(user)
+    test_db.session.commit()
     
     # Call deposit
-    LiquidityService.deposit(mock_user, amount)
+    LiquidityService.deposit(user, amount)
     
     # Verify state changes
-    assert mock_user.liquidity_buffer_deposit == amount
-    assert mock_user.liquidity_last_deposit_at == datetime(2025, 7, 1)
+    updated_user = test_db.session.get(User, user.id)
+    assert updated_user.liquidity_buffer_deposit == amount
+    assert updated_user.liquidity_last_deposit_at is not None
     
     # Verify logging
-    mock_market_event.log_liquidity_deposit.assert_called_once_with(
-        user_id=mock_user.id,
-        amount=amount
-    )
-    mock_db.session.add.assert_called_once()
-    mock_db.session.commit.assert_called_once()
+    event = test_db.session.query(MarketEvent).filter_by(
+        user_id=user.id,
+        event_type='liquidity_deposit'
+    ).first()
+    assert event is not None
+    assert event.event_data["amount"] == amount
 
-@patch('app.services.liquidity_service.datetime')
-@patch('app.services.liquidity_service.MarketEvent')
-@patch('app.services.liquidity_service.db')
-def test_withdraw_success(mock_db, mock_market_event, mock_datetime, mock_user):
+def test_withdraw_success(test_client, test_db):
     """
     Test successful liquidity withdrawal after lockout period:
     - Updates buffer deposit
     - Logs event
     """
     # Set up user with deposit 91 days ago
-    mock_user.liquidity_buffer_deposit = 200.0
-    mock_user.liquidity_last_deposit_at = datetime(2025, 4, 1)
+    user = create_test_user(liquidity_buffer_deposit=200.0, liquidity_last_deposit_at=datetime(2025, 4, 1))
+    test_db.session.add(user)
+    test_db.session.commit()
     
     amount = 100.0
-    mock_datetime.utcnow.return_value = datetime(2025, 7, 1)
-    
-    # Mock MarketEvent
-    mock_market_event.log_liquidity_withdraw.return_value = None
     
     # Call withdraw
-    LiquidityService.withdraw(mock_user, amount)
+    LiquidityService.withdraw(user, amount)
     
     # Verify state changes
-    assert mock_user.liquidity_buffer_deposit == 100.0
+    updated_user = test_db.session.get(User, user.id)
+    assert updated_user.liquidity_buffer_deposit == 100.0
     
     # Verify logging
-    mock_market_event.log_liquidity_withdraw.assert_called_once_with(
-        user_id=mock_user.id,
-        amount=amount
-    )
-    mock_db.session.add.assert_called_once()
-    mock_db.session.commit.assert_called_once()
+    event = test_db.session.query(MarketEvent).filter_by(
+        user_id=user.id,
+        event_type='liquidity_withdraw'
+    ).first()
+    assert event is not None
+    assert event.event_data["amount"] == amount
 
-@patch('app.services.liquidity_service.datetime')
-def test_withdraw_too_soon(mock_datetime, mock_user):
+def test_withdraw_too_soon(test_client, test_db):
     """
     Test withdrawal fails if less than 90 days since deposit
     """
     # Set up user with recent deposit
-    mock_user.liquidity_buffer_deposit = 200.0
-    mock_user.liquidity_last_deposit_at = datetime(2025, 6, 1)
-    
-    mock_datetime.utcnow.return_value = datetime(2025, 7, 1)
+    user = create_test_user(liquidity_buffer_deposit=200.0, liquidity_last_deposit_at=datetime(2025, 6, 1))
+    test_db.session.add(user)
+    test_db.session.commit()
     
     with pytest.raises(ValueError, match="Cannot withdraw liquidity within 90 days of last deposit"):
-        LiquidityService.withdraw(mock_user, 100.0)
+        LiquidityService.withdraw(user, 100.0)
 
-@patch('app.services.liquidity_service.datetime')
-def test_withdraw_insufficient_funds(mock_datetime, mock_user):
+def test_withdraw_insufficient_funds(test_client, test_db):
     """
     Test withdrawal fails if amount exceeds available balance
     """
     # Set up user with insufficient funds
-    mock_user.liquidity_buffer_deposit = 50.0
-    mock_user.liquidity_last_deposit_at = datetime(2025, 4, 1)
-    
-    mock_datetime.utcnow.return_value = datetime(2025, 7, 1)
+    user = create_test_user(liquidity_buffer_deposit=50.0, liquidity_last_deposit_at=datetime(2025, 4, 1))
+    test_db.session.add(user)
+    test_db.session.commit()
     
     with pytest.raises(ValueError, match="Insufficient liquidity buffer balance"):
-        LiquidityService.withdraw(mock_user, 100.0)
+        LiquidityService.withdraw(user, 100.0)
 
-@patch('app.services.liquidity_service.datetime')
-def test_withdraw_no_deposit(mock_datetime, mock_user):
+def test_withdraw_no_deposit(test_client, test_db):
     """
     Test withdrawal fails if no deposit has been made
     """
     # Set up user with no deposit
-    mock_user.liquidity_buffer_deposit = 0.0
-    mock_user.liquidity_last_deposit_at = None
-    
-    mock_datetime.utcnow.return_value = datetime(2025, 7, 1)
+    user = create_test_user()
+    test_db.session.add(user)
+    test_db.session.commit()
     
     with pytest.raises(ValueError, match="Cannot withdraw liquidity without a deposit"):
-        LiquidityService.withdraw(mock_user, 100.0)
+        LiquidityService.withdraw(user, 100.0)
 
-@patch('app.services.liquidity_service.datetime')
-def test_deposit_zero_amount(mock_datetime, mock_user):
+def test_deposit_zero_amount(test_client, test_db):
     """
     Test deposit fails with zero amount
     """
-    mock_datetime.utcnow.return_value = datetime(2025, 7, 1)
+    user = create_test_user()
+    test_db.session.add(user)
+    test_db.session.commit()
     
     with pytest.raises(ValueError, match="Deposit amount must be positive"):
-        LiquidityService.deposit(mock_user, 0.0)
+        LiquidityService.deposit(user, 0.0)
 
-@patch('app.services.liquidity_service.datetime')
-def test_deposit_negative_amount(mock_datetime, mock_user):
+def test_deposit_negative_amount(test_client, test_db):
     """
     Test deposit fails with negative amount
     """
-    mock_datetime.utcnow.return_value = datetime(2025, 7, 1)
+    user = create_test_user()
+    test_db.session.add(user)
+    test_db.session.commit()
     
     with pytest.raises(ValueError, match="Deposit amount must be positive"):
-        LiquidityService.deposit(mock_user, -100.0)
+        LiquidityService.deposit(user, -100.0)
+
+def test_deposit_to_lb_success(test_client, test_db):
+    """
+    Test successful liquidity buffer deposit:
+    - User exists
+    - Sufficient points
+    - Correct balance updates
+    - Event logged
+    """
+    # Create test user
+    user = User(username="testuser", email="test@example.com")
+    user.points = 100
+    user.lb_deposit = 0
+    test_db.session.add(user)
+    test_db.session.commit()
+    
+    # Call deposit_to_lb
+    result = LiquidityService.deposit_to_lb(user.id, 50)
+    
+    # Verify result
+    assert result is not None
+    assert result["user_id"] == user.id
+    assert result["new_lb_balance"] == 50
+    assert result["remaining_points"] == 50
+    
+    # Verify database state
+    updated_user = test_db.session.get(User, user.id)
+    assert updated_user.lb_deposit == 50
+    assert updated_user.points == 50
+    
+    # Verify event was created
+    event = test_db.session.query(MarketEvent).filter_by(
+        user_id=user.id,
+        event_type='liquidity_deposit'
+    ).first()
+    assert event is not None
+    assert event.event_data["amount"] == 50
+
+def test_deposit_to_lb_insufficient_points(test_client, test_db):
+    """
+    Test deposit fails when user has insufficient points
+    """
+    # Create test user
+    user = User(username="testuser", email="test@example.com")
+    user.points = 40
+    user.lb_deposit = 0
+    test_db.session.add(user)
+    test_db.session.commit()
+    
+    # Call deposit_to_lb with amount greater than points
+    result = LiquidityService.deposit_to_lb(user.id, 50)
+    
+    # Verify result is None
+    assert result is None
+    
+    # Verify database state unchanged
+    updated_user = test_db.session.get(User, user.id)
+    assert updated_user.lb_deposit == 0
+    assert updated_user.points == 40
+
+def test_deposit_to_lb_nonexistent_user(test_client, test_db):
+    """
+    Test deposit fails when user does not exist
+    """
+    # Call deposit_to_lb with non-existent user
+    result = LiquidityService.deposit_to_lb(999999, 50)
+    
+    # Verify result is None
+    assert result is None
+
+def test_deposit_to_lb_zero_amount(test_client, test_db):
+    """
+    Test deposit fails with zero amount
+    """
+    # Create test user
+    user = User(username="testuser", email="test@example.com")
+    user.points = 100
+    user.lb_deposit = 0
+    test_db.session.add(user)
+    test_db.session.commit()
+    
+    # Call deposit_to_lb with zero amount
+    result = LiquidityService.deposit_to_lb(user.id, 0)
+    
+    # Verify result is None
+    assert result is None
+    
+    # Verify database state unchanged
+    updated_user = test_db.session.get(User, user.id)
+    assert updated_user.lb_deposit == 0
+    assert updated_user.points == 100
+
+def test_deposit_to_lb_negative_amount(test_client, test_db):
+    """
+    Test deposit fails with negative amount
+    """
+    # Create test user
+    user = User(username="testuser", email="test@example.com")
+    user.points = 100
+    user.lb_deposit = 0
+    test_db.session.add(user)
+    test_db.session.commit()
+    
+    # Call deposit_to_lb with negative amount
+    result = LiquidityService.deposit_to_lb(user.id, -50)
+    
+    # Verify result is None
+    assert result is None
+    
+    # Verify database state unchanged
+    updated_user = test_db.session.get(User, user.id)
+    assert updated_user.lb_deposit == 0
+    assert updated_user.points == 100

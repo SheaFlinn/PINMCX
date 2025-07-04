@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from app.models import User, MarketEvent
 from app import db
+from typing import Optional, Dict
 
 class LiquidityService:
     """
@@ -28,10 +29,11 @@ class LiquidityService:
         user.liquidity_last_deposit_at = datetime.utcnow()
         
         # Log the deposit
-        MarketEvent.log_liquidity_deposit(
+        event = MarketEvent.log_liquidity_deposit(
             user_id=user.id,
             amount=amount
         )
+        db.session.add(event)
         
         # Commit changes
         db.session.add(user)
@@ -70,11 +72,60 @@ class LiquidityService:
         user.liquidity_buffer_deposit -= amount
         
         # Log the withdrawal
-        MarketEvent.log_liquidity_withdraw(
+        event = MarketEvent.log_liquidity_withdraw(
             user_id=user.id,
             amount=amount
         )
+        db.session.add(event)
         
         # Commit changes
         db.session.add(user)
         db.session.commit()
+
+    @classmethod
+    def deposit_to_lb(cls, user_id: int, amount: int) -> Optional[Dict]:
+        """
+        Deposit points into a user's liquidity buffer.
+        
+        Args:
+            user_id: ID of the user making the deposit
+            amount: Amount of points to deposit (must be positive)
+            
+        Returns:
+            dict: {
+                "user_id": int,
+                "new_lb_balance": float,
+                "remaining_points": int
+            } or None if operation fails
+        """
+        from app.models import User
+        
+        # Get user
+        user = db.session.get(User, user_id)
+        if not user or amount <= 0:
+            return None
+            
+        # Check if user has enough points
+        if user.points < amount:
+            return None
+            
+        # Perform deposit
+        user.points -= amount
+        user.lb_deposit += amount
+        
+        # Log the deposit
+        event = MarketEvent.log_liquidity_deposit(
+            user_id=user.id,
+            amount=amount
+        )
+        db.session.add(event)
+        
+        # Commit changes
+        db.session.add(user)
+        db.session.commit()
+        
+        return {
+            "user_id": user.id,
+            "new_lb_balance": user.lb_deposit,
+            "remaining_points": user.points
+        }
