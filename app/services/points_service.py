@@ -58,6 +58,41 @@ class PointsService:
             return None
         return user.points + user.lb_deposit
 
+    @classmethod
+    def award_points(cls, user_id: int, amount: int) -> Optional[int]:
+        """
+        Award points to a user.
+        
+        Args:
+            user_id: ID of the user to award points to
+            amount: Amount of points to award (must be positive)
+            
+        Returns:
+            int: New points total if successful, None if operation fails
+        """
+        from app.models import User, MarketEvent
+        
+        # Get user
+        user = db.session.get(User, user_id)
+        if not user or amount <= 0:
+            return None
+            
+        # Update points
+        user.points = (user.points or 0) + amount
+        
+        # Log the points award
+        event = MarketEvent.log_liquidity_deposit(
+            user_id=user.id,
+            amount=amount
+        )
+        db.session.add(event)
+        
+        # Commit changes
+        db.session.add(user)
+        db.session.commit()
+        
+        return user.points
+
     @staticmethod
     def predict(user_id: int, market_id: int, choice: str, stake_amount: int) -> Optional[dict]:
         """Create a new prediction for a user

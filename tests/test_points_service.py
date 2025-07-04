@@ -160,11 +160,11 @@ def test_resolve_market(test_client, test_db):
     assert user.id in result["winners"]
 
     # Check user's points (50 staked, 100 total before, +100 rewarded)
-    updated_user = User.query.get(user.id)
+    updated_user = db.session.get(User, user.id)
     assert updated_user.points == 150
 
     # Check market resolved
-    updated_market = Market.query.get(market.id)
+    updated_market = db.session.get(Market, market.id)
     assert updated_market.resolved is True
     assert updated_market.resolved_outcome == "YES"
 
@@ -220,17 +220,17 @@ def test_resolve_market(test_client, test_db):
     assert user.id in result["winners"]
 
     # Verify points were awarded to YES predictor
-    updated_user = User.query.get(user.id)
+    updated_user = db.session.get(User, user.id)
     assert updated_user.points == 100 + (10 * 2)  # Original points + reward
 
     # Verify market is resolved
-    updated_market = Market.query.get(market.id)
+    updated_market = db.session.get(Market, market.id)
     assert updated_market.resolved
     assert updated_market.resolved_outcome == "YES"
     assert updated_market.resolved_at is not None
 
     # Verify prediction event was created
-    event = MarketEvent.query.filter_by(
+    event = db.session.query(MarketEvent).filter_by(
         market_id=market.id,
         user_id=user.id,
         event_type='prediction_resolved'
@@ -238,3 +238,56 @@ def test_resolve_market(test_client, test_db):
     assert event is not None
     assert event.event_data["points_awarded"] == 20
     assert event.event_data["outcome"] == "YES"
+
+
+def test_award_points(app):
+    """
+    Test awarding points to a user:
+    - User exists
+    - Valid amount
+    - Points are updated
+    - Event is logged
+    """
+    with app.app_context():
+        # Create test user
+        user = User(username="pointsuser", email="points@example.com")
+        db.session.add(user)
+        db.session.commit()
+        
+        ps = PointsService()
+        
+        # Test awarding points to user with no initial points
+        result = ps.award_points(user.id, 50)
+        assert result == 50
+        
+        # Verify database state
+        updated_user = db.session.get(User, user.id)
+        assert updated_user.points == 50
+        
+        # Verify event was created
+        event = db.session.query(MarketEvent).filter_by(
+            user_id=user.id,
+            event_type='liquidity_deposit'
+        ).first()
+        assert event is not None
+        assert event.event_data["amount"] == 50
+        
+        # Test awarding more points
+        result = ps.award_points(user.id, 25)
+        assert result == 75
+        
+        # Verify database state
+        updated_user = db.session.get(User, user.id)
+        assert updated_user.points == 75
+        
+        # Test invalid amount (zero)
+        result = ps.award_points(user.id, 0)
+        assert result is None
+        
+        # Test invalid amount (negative)
+        result = ps.award_points(user.id, -10)
+        assert result is None
+        
+        # Test non-existent user
+        result = ps.award_points(999999, 50)
+        assert result is None
