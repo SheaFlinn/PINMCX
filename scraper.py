@@ -1,127 +1,60 @@
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
-import dateutil.parser
-from app import create_app, db
-from app.models import Market, NewsSource
-import json
-import os
-import contextlib
 import logging
+from scraper_config_loader import load_scraper_config
 
-# Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Create application context
-@contextlib.contextmanager
-def create_app_context():
-    app = create_app()
-    with app.app_context():
-        yield app
+def scrape_headlines(city: str) -> list[str]:
+    """
+    Scrape headlines for a city using API or HTML fallback as per config.
+    """
+    try:
+        config = load_scraper_config(city)
+    except Exception as e:
+        logging.error(f"Could not load config for city '{city}': {e}")
+        raise ValueError(f"Could not load config for city '{city}': {e}")
 
-# Use context manager to ensure app context is active
-def get_active_sources():
-    with create_app_context() as app:
-        sources = []
-        logging.info("Fetching active news sources from the database...")
-        db_sources = NewsSource.query.filter_by(active=True).all()
-        logging.info(f"Found {len(db_sources)} active source(s).")
-        for source in db_sources:
-            logging.info(f"  -> Processing source: {source.name} (URL: {source.url})")
-            sources.append({
-                'name': source.name,
-                'url': source.url,
-                'selector': source.selector,
-                'date_selector': source.date_selector
-            })
-        return sources
+    typ = config.get('type')
+    url = config.get('url')
+    headers = config.get('headers', {})
+    selector = config.get('selector')
 
-class NewsScraper:
-    def __init__(self):
-        # Get active sources from the database
-        logging.info("Initializing NewsScraper...")
-        self.sources = self.get_active_sources()
-        logging.info(f"NewsScraper initialized with {len(self.sources)} source(s).")
-        
-        # Initialize filtering rules
-        self.MIN_HEADLINE_LENGTH = 7
-        self.NON_ACTIONABLE_PHRASES = [
-            "His name was", "Her name was", "Their name was",
-            "Books to help", "Why [org] is volunteering",
-            "In memory of", "Remembering", "Obituary",
-            "Historical", "Past event", "Recap",
-            "Review of", "Summary of"
-        ]
-        
-        # Initialize language processing tools
-        self.neutral_phrases = [
-            "Will there be a significant change in",
-            "Is it likely that",
-            "Will there be a notable impact on",
-            "Will we see a meaningful shift in",
-            "Is it probable that"
-        ]
-        self.balance_factors = {
-            'default': {
-                'bias_threshold': 0.5,
-                'phrase_weight': 0.7,
-                'context_weight': 0.3
-            }
-        }
-        
-        # Initialize relevance keywords and weights
-        self.relevance_keywords = {
-            'civic': ['zoning', 'permit', 'development', 'real estate', 'infrastructure', 
-                     'housing', 'tax', 'budget', 'bond', 'city council', 'mayor', 'business',
-                     'city', 'municipal', 'local government', 'ordinance', 'public works',
-                     'transportation', 'utilities', 'planning', 'commission', 'board',
-                     'election', 'campaign', 'voter', 'referendum', 'proposal'],
-            
-            'infrastructure': ['road', 'bridge', 'transit', 'water', 'sewer', 'electricity',
-                             'utilities', 'public works', 'construction', 'maintenance',
-                             'repair', 'improvement', 'expansion'],
-            
-            'finance': ['budget', 'tax', 'bond', 'funding', 'appropriation', 'spending',
-                      'revenue', 'expense', 'audit', 'finance', 'economic', 'development'],
-            
-            'housing': ['affordable', 'homelessness', 'rent', 'eviction', 'housing',
-                      'development', 'zoning', 'permit', 'construction', 'building'],
-            
-            'governance': ['city council', 'mayor', 'commissioner', 'board', 'election',
-                         'campaign', 'referendum', 'ordinance', 'policy', 'regulation']
-        }
-        
-        self.relevance_weights = {
-            'civic': 1.0,
-            'infrastructure': 0.8,
-            'finance': 0.8,
-            'housing': 0.7,
-            'governance': 0.9
-        }
-        
-        # Initialize draft contracts list
-        self.draft_contracts = []
-        self.session = requests.Session()
-        self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Accept-Language': 'en-US,en;q=0.9'
-        })
+    if not typ or not url:
+        raise ValueError(f"Malformed config for city '{city}': missing 'type' or 'url'")
 
-    def calculate_balance_score(self, question):
-        """Calculate how balanced a question is (0-1, where 0.5 is perfectly balanced)"""
-        # Simple heuristic: count positive vs negative words
-        positive_words = ['will', 'likely', 'expected', 'planned']
-        negative_words = ['might', 'may', 'could', 'potential']
-        
-        words = question.lower().split()
-        pos_count = sum(1 for word in words if word in positive_words)
-        neg_count = sum(1 for word in words if word in negative_words)
-        
-        if pos_count + neg_count == 0:
-            return 0.5  # Perfectly balanced if no bias words
-            
-        return abs(pos_count - neg_count) / (pos_count + neg_count)
+    try:
+        if typ == 'api':
+            logging.info(f"[scraper] Using API mode for city '{city}' at {url}")
+            resp = requests.get(url, headers=headers)
+            resp.raise_for_status()
+            data = resp.json()
+            # TODO: Implement city-specific API parsing logic
+            headlines = _parse_api_headlines(city, data)
+            return headlines
+        elif typ == 'html':
+            logging.info(f"[scraper] Using HTML mode for city '{city}' at {url} with selector '{selector}'")
+            resp = requests.get(url, headers=headers)
+            resp.raise_for_status()
+            soup = BeautifulSoup(resp.text, 'html.parser')
+            if not selector:
+                raise ValueError(f"No CSS selector provided for HTML scraping in city '{city}' config")
+            elements = soup.select(selector)
+            headlines = [el.get_text(strip=True) for el in elements if el.get_text(strip=True)]
+            return headlines
+        else:
+            raise ValueError(f"Unknown scraper type '{typ}' in config for city '{city}'")
+    except Exception as e:
+        logging.error(f"Error during scraping/parsing for city '{city}': {e}")
+        return []
 
+def _parse_api_headlines(city: str, data) -> list[str]:
+    """
+    Stub for city-specific API headline extraction. Extend as needed.
+    """
+    # TODO: Implement real parsing logic per city/API format
+    # Example: return data['headlines'] if 'headlines' in data else []
+    return data.get('headlines', []) if isinstance(data, dict) else []
     def extract_market_title(self, headline, source_config=None):
         """Convert news headline into a market prediction format with balanced odds"""
         # Clean and format the headline
@@ -489,14 +422,3 @@ class NewsScraper:
             logging.error(f"Error saving draft contracts: {str(e)}")
             raise
 
-class DateTimeEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        return super().default(obj)
-
-# Example usage
-if __name__ == '__main__':
-    scraper = NewsScraper()
-    scraper.scrape_sources()
-    scraper.save_drafts()
