@@ -68,3 +68,101 @@ class PointsService:
         if not user:
             return None
         return user.points + user.lb_deposit
+
+    @staticmethod
+    def predict(user_id: int, market_id: int, choice: str, stake_amount: int) -> Optional[dict]:
+        """Create a new prediction for a user
+        
+        Args:
+            user_id: ID of the user making the prediction
+            market_id: ID of the market being predicted on
+            choice: Prediction choice ('YES' or 'NO')
+            stake_amount: Amount of points to stake
+            
+        Returns:
+            dict: {
+                "success": bool,
+                "prediction_id": int,
+                "remaining_points": int,
+                "message": str
+            } or None if validation fails
+        """
+        from app.models import User, Market, Prediction
+        from app.extensions import db
+        from datetime import datetime
+
+        # Validate choice
+        if choice not in ['YES', 'NO']:
+            return {
+                "success": False,
+                "message": "Invalid choice. Must be 'YES' or 'NO'"
+            }
+
+        # Fetch user
+        user = User.query.get(user_id)
+        if not user:
+            return {
+                "success": False,
+                "message": "User not found"
+            }
+
+        # Fetch market
+        market = Market.query.get(market_id)
+        if not market:
+            return {
+                "success": False,
+                "message": "Market not found"
+            }
+
+        # Validate market state
+        if market.resolved:
+            return {
+                "success": False,
+                "message": "Market is resolved and cannot accept new predictions"
+            }
+
+        # Validate points
+        if user.points < stake_amount:
+            return {
+                "success": False,
+                "message": "Insufficient points",
+                "required_points": stake_amount,
+                "available_points": user.points
+            }
+
+        # Deduct points
+        user.points -= stake_amount
+
+        # Calculate price based on market state
+        if choice == 'YES':
+            # For YES predictions, price is stake amount (simplified for now)
+            price = stake_amount
+        else:
+            # For NO predictions, price is negative stake amount
+            price = -stake_amount
+
+        # Create prediction
+        prediction = Prediction(
+            user_id=user_id,
+            market_id=market_id,
+            outcome=True if choice == 'YES' else False,
+            shares=stake_amount,
+            shares_purchased=stake_amount,
+            stake=stake_amount,
+            price=price,
+            created_at=datetime.utcnow()
+        )
+
+        db.session.add(prediction)
+        db.session.commit()
+
+        # Log prediction event
+        prediction.log_prediction_event()
+
+        return {
+            "success": True,
+            "prediction_id": prediction.id,
+            "remaining_points": user.points,
+            "message": "Prediction created successfully",
+            "price": price
+        }
