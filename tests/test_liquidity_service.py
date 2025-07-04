@@ -251,3 +251,95 @@ def test_deposit_to_lb_negative_amount(test_client, test_db):
     updated_user = test_db.session.get(User, user.id)
     assert updated_user.lb_deposit == 0
     assert updated_user.points == 100
+
+def test_withdraw_from_lb_success(test_client, test_db):
+    """
+    Test successful withdrawal from liquidity buffer:
+    - User exists
+    - Sufficient liquidity buffer
+    - Correct balance updates
+    - Event logged
+    """
+    # Create test user with points and liquidity buffer
+    user = User(username="testuser", email="test@example.com")
+    user.points = 50
+    user.lb_deposit = 100
+    test_db.session.add(user)
+    test_db.session.commit()
+    
+    # Call withdraw_from_lb
+    result = LiquidityService.withdraw_from_lb(user.id, 50)
+    
+    # Verify result
+    assert result is not None
+    assert result["user_id"] == user.id
+    assert result["withdrawn"] == 50
+    assert result["remaining_lb"] == 50
+    assert result["updated_points"] == 100
+    
+    # Verify database state
+    updated_user = test_db.session.get(User, user.id)
+    assert updated_user.lb_deposit == 50
+    assert updated_user.points == 100
+    
+    # Verify event was created
+    event = test_db.session.query(MarketEvent).filter_by(
+        user_id=user.id,
+        event_type='liquidity_withdraw'
+    ).first()
+    assert event is not None
+    assert event.event_data["amount"] == 50
+
+def test_withdraw_from_lb_insufficient_balance(test_client, test_db):
+    """
+    Test withdrawal fails when user has insufficient liquidity buffer
+    """
+    # Create test user with points and insufficient liquidity buffer
+    user = User(username="testuser", email="test@example.com")
+    user.points = 50
+    user.lb_deposit = 40
+    test_db.session.add(user)
+    test_db.session.commit()
+    
+    # Call withdraw_from_lb with amount greater than balance
+    result = LiquidityService.withdraw_from_lb(user.id, 50)
+    
+    # Verify result is None
+    assert result is None
+    
+    # Verify database state unchanged
+    updated_user = test_db.session.get(User, user.id)
+    assert updated_user.lb_deposit == 40
+    assert updated_user.points == 50
+
+def test_withdraw_from_lb_zero_amount(test_client, test_db):
+    """
+    Test withdrawal fails with zero amount
+    """
+    # Create test user with points and liquidity buffer
+    user = User(username="testuser", email="test@example.com")
+    user.points = 50
+    user.lb_deposit = 100
+    test_db.session.add(user)
+    test_db.session.commit()
+    
+    # Call withdraw_from_lb with zero amount
+    result = LiquidityService.withdraw_from_lb(user.id, 0)
+    
+    # Verify result is None
+    assert result is None
+    
+    # Verify database state unchanged
+    updated_user = test_db.session.get(User, user.id)
+    assert updated_user.lb_deposit == 100
+    assert updated_user.points == 50
+
+def test_withdraw_from_lb_nonexistent_user(test_client, test_db):
+    """
+    Test withdrawal fails for non-existent user
+    """
+    # Call withdraw_from_lb with non-existent user ID
+    result = LiquidityService.withdraw_from_lb(9999, 50)
+    
+    # Verify result is None
+    assert result is None

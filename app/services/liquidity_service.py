@@ -129,3 +129,53 @@ class LiquidityService:
             "new_lb_balance": user.lb_deposit,
             "remaining_points": user.points
         }
+
+    @classmethod
+    def withdraw_from_lb(cls, user_id: int, amount: int) -> Optional[Dict]:
+        """
+        Withdraw points from a user's liquidity buffer.
+        
+        Args:
+            user_id: ID of the user making the withdrawal
+            amount: Amount of points to withdraw (must be positive)
+            
+        Returns:
+            dict: {
+                "user_id": int,
+                "withdrawn": int,
+                "remaining_lb": float,
+                "updated_points": int
+            } or None if operation fails
+        """
+        from app.models import User
+        
+        # Get user
+        user = db.session.get(User, user_id)
+        if not user or amount <= 0:
+            return None
+            
+        # Check if user has enough liquidity buffer
+        if user.lb_deposit is None or user.lb_deposit < amount:
+            return None
+            
+        # Perform withdrawal
+        user.lb_deposit -= amount
+        user.points += amount
+        
+        # Log the withdrawal
+        event = MarketEvent.log_liquidity_withdraw(
+            user_id=user.id,
+            amount=amount
+        )
+        db.session.add(event)
+        
+        # Commit changes
+        db.session.add(user)
+        db.session.commit()
+        
+        return {
+            "user_id": user.id,
+            "withdrawn": amount,
+            "remaining_lb": user.lb_deposit,
+            "updated_points": user.points
+        }
