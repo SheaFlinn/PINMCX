@@ -127,11 +127,18 @@ def validate_contract(contract: dict) -> bool:
     draft['validation_errors'] = []  # Placeholder: assume valid
     return draft
 
-def publish_contract(draft: Dict[str, Any]) -> Dict[str, Any]:
+def publish_contract(contract: dict) -> dict:
     """
-    Store as Draft or Published in DB.
-    TODO: Implement publishing logic.
+    Add status and contract_id to a validated contract and mock publish it as a draft.
     """
+    import logging
+    import uuid
+    contract = contract.copy()  # Avoid mutating input
+    contract_id = str(uuid.uuid4())
+    contract["status"] = "draft"
+    contract["contract_id"] = contract_id
+    logging.info(f"Contract {contract_id} published as draft")
+    return contract
     logging.info(f"[7] Publishing contract draft: {draft}")
     draft['published'] = True  # Placeholder
     return draft

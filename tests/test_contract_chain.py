@@ -108,4 +108,27 @@ def test_validate_contract_success_and_failure():
     invalid_outcomes_contract2["outcomes"] = "Yes"
     assert validate_contract(invalid_outcomes_contract2) is False
 
+def test_publish_contract_adds_status_and_id():
+    from contract_chain import publish_contract
+    from datetime import datetime
+    # Mock contract with all required fields
+    contract = {
+        "question": "Will the City Council approve $8M for stormwater bonds?",
+        "outcomes": ["Yes", "No"],
+        "resolution_criteria": "Public vote results",
+        "deadline": "2024-08-30",
+        "city": "memphis",
+        "xp_weight": 1.0,
+        "initial_odds": 0.5,
+        "liquidity_cap": 1000,
+        "created_at": datetime.utcnow().isoformat(),
+        "source": "auto"
+    }
+    published = publish_contract(contract)
+    assert "status" in published and published["status"] == "draft"
+    assert "contract_id" in published and isinstance(published["contract_id"], str)
+    # All original fields preserved
+    for key in contract:
+        assert key in published and published[key] == contract[key]
+
 # Space for future integration tests with DB/models
