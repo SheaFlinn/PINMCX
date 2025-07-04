@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from app.extensions import db
-from app.models import User
+from app.models import User, Market, Prediction, MarketEvent
 from typing import Union, Optional
 
 class PointsService:
@@ -10,16 +10,13 @@ class PointsService:
         if isinstance(user_id_or_obj, User):
             return user_id_or_obj
         elif isinstance(user_id_or_obj, int):
-            return User.query.get(user_id_or_obj)
+            return db.session.get(User, user_id_or_obj)
         raise ValueError("Input must be a User object or user ID")
 
     @staticmethod
     def award_xp(user_id: int, amount: int) -> Optional[int]:
         """Add XP to user by ID"""
-        from app.models import User
-        from app.extensions import db
-
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if user:
             user.xp = (user.xp or 0) + amount
             db.session.commit()
@@ -27,17 +24,10 @@ class PointsService:
         return None
 
     @staticmethod
-    def get_user_xp(user_id):
+    def get_user_xp(user_id: int) -> Optional[int]:
         """Get user's XP points by ID"""
-        from app.models import User
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         return user.xp if user else None
-
-    @staticmethod
-    def get_user_streak(user_id_or_obj: Union[User, int]) -> Optional[int]:
-        """Get user's current streak"""
-        user = PointsService._get_user(user_id_or_obj)
-        return user.current_streak if user else None
 
     @staticmethod
     def get_user_streak(user_id: int) -> Optional[dict]:
@@ -51,8 +41,7 @@ class PointsService:
             }
             None: if user not found
         """
-        from app.models import User
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if user:
             return {
                 "current_streak": user.current_streak,
@@ -87,10 +76,6 @@ class PointsService:
                 "message": str
             } or None if validation fails
         """
-        from app.models import User, Market, Prediction
-        from app.extensions import db
-        from datetime import datetime
-
         # Validate choice
         if choice not in ['YES', 'NO']:
             return {
@@ -99,7 +84,7 @@ class PointsService:
             }
 
         # Fetch user
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user:
             return {
                 "success": False,
@@ -107,7 +92,7 @@ class PointsService:
             }
 
         # Fetch market
-        market = Market.query.get(market_id)
+        market = db.session.get(Market, market_id)
         if not market:
             return {
                 "success": False,
@@ -183,15 +168,12 @@ class PointsService:
                 "winners": list[int]
             } or None if market is invalid or already resolved
         """
-        from app.models import Market, Prediction, User, MarketEvent
-        from app.extensions import db
-
         # Validate winning choice
         if winning_choice not in ['YES', 'NO']:
             return None
 
         # Get market
-        market = Market.query.get(market_id)
+        market = db.session.get(Market, market_id)
         if not market:
             return None
 
@@ -205,14 +187,14 @@ class PointsService:
         market.resolved_at = datetime.utcnow()
 
         # Get all predictions for this market
-        predictions = Prediction.query.filter_by(market_id=market_id).all()
+        predictions = db.session.query(Prediction).filter_by(market_id=market_id).all()
         winners = []
 
         # Process each prediction
         for prediction in predictions:
             # Only award points for correct predictions
             if (prediction.outcome and winning_choice == 'YES') or (not prediction.outcome and winning_choice == 'NO'):
-                user = User.query.get(prediction.user_id)
+                user = db.session.get(User, prediction.user_id)
                 if user:
                     # Double the stake amount as reward
                     reward = prediction.stake * 2
