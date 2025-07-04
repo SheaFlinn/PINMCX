@@ -166,3 +166,79 @@ class PointsService:
             "message": "Prediction created successfully",
             "price": price
         }
+
+    @staticmethod
+    def resolve_market(market_id: int, winning_choice: str) -> Optional[dict]:
+        """
+        Resolve a market and award points to winners.
+        
+        Args:
+            market_id: ID of the market to resolve
+            winning_choice: 'YES' or 'NO'
+        
+        Returns:
+            dict: {
+                "market_id": int,
+                "winning_choice": str,
+                "winners": list[int]
+            } or None if market is invalid or already resolved
+        """
+        from app.models import Market, Prediction, User, MarketEvent
+        from app.extensions import db
+
+        # Validate winning choice
+        if winning_choice not in ['YES', 'NO']:
+            return None
+
+        # Get market
+        market = Market.query.get(market_id)
+        if not market:
+            return None
+
+        # Check if market is already resolved
+        if market.resolved:
+            return None
+
+        # Resolve market
+        market.resolved = True
+        market.resolved_outcome = winning_choice
+        market.resolved_at = datetime.utcnow()
+
+        # Get all predictions for this market
+        predictions = Prediction.query.filter_by(market_id=market_id).all()
+        winners = []
+
+        # Process each prediction
+        for prediction in predictions:
+            # Only award points for correct predictions
+            if (prediction.outcome and winning_choice == 'YES') or (not prediction.outcome and winning_choice == 'NO'):
+                user = User.query.get(prediction.user_id)
+                if user:
+                    # Double the stake amount as reward
+                    reward = prediction.stake * 2
+                    user.points += reward
+                    winners.append(user.id)
+
+                    # Create prediction resolution event
+                    event = MarketEvent(
+                        market_id=market_id,
+                        user_id=user.id,
+                        event_type='prediction_resolved',
+                        description=f'Prediction {prediction.id} resolved correctly with outcome {winning_choice}',
+                        event_data={
+                            'prediction_id': prediction.id,
+                            'outcome': winning_choice,
+                            'points_awarded': reward,
+                            'xp_awarded': False  # XP is awarded separately through market.award_xp_for_predictions()
+                        }
+                    )
+                    db.session.add(event)
+
+        # Commit changes
+        db.session.commit()
+
+        return {
+            "market_id": market_id,
+            "winning_choice": winning_choice,
+            "winners": winners
+        }
