@@ -129,15 +129,51 @@ def validate_contract(contract: dict) -> bool:
 
 def publish_contract(contract: dict) -> dict:
     """
-    Add status and contract_id to a validated contract and mock publish it as a draft.
+    Insert a validated contract into the DraftContract table and return the contract dict.
     """
     import logging
-    import uuid
-    contract = contract.copy()  # Avoid mutating input
-    contract_id = str(uuid.uuid4())
+    from models.draft_contract import DraftContract
+    from app.extensions import db
+
+    # Ensure contract_id and status are set
+    contract = contract.copy()
+    if "contract_id" not in contract or not contract["contract_id"]:
+        import uuid
+        contract["contract_id"] = str(uuid.uuid4())
     contract["status"] = "draft"
-    contract["contract_id"] = contract_id
-    logging.info(f"Contract {contract_id} published as draft")
+
+    # Convert datetimes if needed
+    from datetime import datetime
+    deadline = contract.get("deadline")
+    if isinstance(deadline, str):
+        try:
+            deadline = datetime.fromisoformat(deadline)
+        except Exception:
+            deadline = None
+    created_at = contract.get("created_at")
+    if isinstance(created_at, str):
+        try:
+            created_at = datetime.fromisoformat(created_at)
+        except Exception:
+            created_at = datetime.utcnow()
+
+    draft = DraftContract(
+        contract_id=contract.get("contract_id"),
+        question=contract.get("question"),
+        outcomes=contract.get("outcomes"),
+        resolution_criteria=contract.get("resolution_criteria"),
+        deadline=deadline,
+        city=contract.get("city"),
+        xp_weight=contract.get("xp_weight"),
+        initial_odds=contract.get("initial_odds"),
+        liquidity_cap=contract.get("liquidity_cap"),
+        source=contract.get("source"),
+        created_at=created_at,
+        status="draft"
+    )
+    db.session.add(draft)
+    db.session.commit()
+    logging.info(f"Contract {draft.contract_id} published as draft (DB insert)")
     return contract
     logging.info(f"[7] Publishing contract draft: {draft}")
     draft['published'] = True  # Placeholder

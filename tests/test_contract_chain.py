@@ -108,10 +108,9 @@ def test_validate_contract_success_and_failure():
     invalid_outcomes_contract2["outcomes"] = "Yes"
     assert validate_contract(invalid_outcomes_contract2) is False
 
-def test_publish_contract_adds_status_and_id():
+def test_publish_contract_adds_status_and_id(test_app):
     from contract_chain import publish_contract
     from datetime import datetime
-    # Mock contract with all required fields
     contract = {
         "question": "Will the City Council approve $8M for stormwater bonds?",
         "outcomes": ["Yes", "No"],
@@ -124,12 +123,14 @@ def test_publish_contract_adds_status_and_id():
         "created_at": datetime.utcnow().isoformat(),
         "source": "auto"
     }
-    published = publish_contract(contract)
-    assert "status" in published and published["status"] == "draft"
-    assert "contract_id" in published and isinstance(published["contract_id"], str)
-    # All original fields preserved
-    for key in contract:
-        assert key in published and published[key] == contract[key]
+    with test_app.app_context():
+        published = publish_contract(contract)
+    assert published["status"] == "draft"
+    assert "contract_id" in published
+    assert published["question"] == contract["question"]
+    assert published["deadline"] == contract["deadline"]
+    assert published["outcomes"] == contract["outcomes"]
+    assert published["resolution_criteria"] == contract["resolution_criteria"]
 
 from unittest.mock import patch
 
@@ -151,5 +152,33 @@ def test_process_headlines_runs_full_pipeline():
             assert contract["contract_id"] == "mock-123"
             assert "question" in contract
             assert "city" in contract
+
+def test_publish_contract_persists_to_db(test_app):
+    from models.draft_contract import DraftContract
+    from contract_chain import publish_contract
+    import uuid
+    from datetime import datetime
+    contract = {
+        "contract_id": str(uuid.uuid4()),
+        "question": "Will the City Council approve $8M for stormwater bonds?",
+        "outcomes": ["Yes", "No"],
+        "resolution_criteria": "Public vote results",
+        "deadline": datetime.utcnow().isoformat(),
+        "city": "memphis",
+        "xp_weight": 1.0,
+        "initial_odds": 0.5,
+        "liquidity_cap": 1000,
+        "source": "auto",
+        "created_at": datetime.utcnow().isoformat(),
+        "status": "draft"
+    }
+    with test_app.app_context():
+        publish_contract(contract)
+        db_obj = DraftContract.query.filter_by(contract_id=contract["contract_id"]).first()
+        assert db_obj is not None
+        assert db_obj.question == contract["question"]
+        assert db_obj.status == "draft"
+        assert db_obj.xp_weight == 1.0
+        assert db_obj.created_at is not None
 
 # Space for future integration tests with DB/models

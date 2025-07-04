@@ -1,6 +1,7 @@
 import pytest
 from app import create_app, db
 from app.models import user, market, prediction, market_event, platform_wallet, news, liquidity_pool, liquidity_provider, user_ledger, amm_market
+from models.draft_contract import DraftContract
 
 @pytest.fixture(scope="function")
 def app():
@@ -29,7 +30,8 @@ def app():
             liquidity_pool.LiquidityPool,
             liquidity_provider.LiquidityProvider,
             user_ledger.UserLedger,
-            amm_market.AMMMarket
+            amm_market.AMMMarket,
+            DraftContract
         ]
         print(f"Registered tables after init_app: {dict([(model.__tablename__, model.__tablename__) for model in models])}")
         
