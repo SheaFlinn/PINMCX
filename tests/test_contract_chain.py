@@ -131,4 +131,25 @@ def test_publish_contract_adds_status_and_id():
     for key in contract:
         assert key in published and published[key] == contract[key]
 
+from unittest.mock import patch
+
+def test_process_headlines_runs_full_pipeline():
+    from contract_chain import process_headlines
+    # Patch all pipeline steps
+    with patch('contract_chain.scrape_headlines', return_value=["Test headline 1", "Test headline 2"]), \
+         patch('contract_chain.filter_headlines', side_effect=lambda x: x), \
+         patch('contract_chain.reframe_headlines', side_effect=lambda hs: [f"Will {h.lower()}?" for h in hs]), \
+         patch('contract_chain.refine_spread', side_effect=lambda q: {"question": q, "outcomes": ["Yes", "No"], "resolution_criteria": "Test", "deadline": "2024-09-01"}), \
+         patch('contract_chain.patch_contract', side_effect=lambda c: {**c, "city": "testcity", "xp_weight": 1.0, "initial_odds": 0.5, "liquidity_cap": 1000, "created_at": "2024-07-04T20:00:00", "source": "auto"}), \
+         patch('contract_chain.validate_contract', return_value=True), \
+         patch('contract_chain.publish_contract', side_effect=lambda c: {**c, "status": "draft", "contract_id": "mock-123"}):
+        contracts = process_headlines("testcity")
+        assert isinstance(contracts, list)
+        assert len(contracts) == 2
+        for contract in contracts:
+            assert contract["status"] == "draft"
+            assert contract["contract_id"] == "mock-123"
+            assert "question" in contract
+            assert "city" in contract
+
 # Space for future integration tests with DB/models

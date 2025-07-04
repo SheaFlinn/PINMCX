@@ -189,27 +189,43 @@ def notify_admin_or_feed(draft: Dict[str, Any]) -> Dict[str, Any]:
     draft['notified'] = True  # Placeholder
     return draft
 
-def process_headlines(city: str):
+def process_headlines(city: str) -> list[dict]:
     """
-    Main pipeline: process scraped headlines into contracts, passing through all stages.
+    Orchestrate the full contract pipeline for a city: scrape, filter, reframe, refine, patch, validate, publish.
+    Returns a list of fully processed, published contract dicts.
     """
-    logging.info(f"Starting contract processing pipeline for city: {city}")
-    headlines = scrape_headlines(city)
-    filtered = filter_headlines(headlines)
-    questions = reframe_headlines(filtered)
-    drafts = []
-    for q in questions:
-        draft = refine_spread(q)
-        draft = patch_contract(draft)
-        draft = validate_contract(draft)
-        draft = publish_contract(draft)
-        draft = weigh_contract(draft)
-        draft = balance_liquidity(draft)
-        draft = retest_if_invalid(draft)
-        draft = finalize_post(draft)
-        draft = notify_admin_or_feed(draft)
-        drafts.append(draft)
-    logging.info(f"Pipeline complete. {len(drafts)} contracts processed.")
-    return drafts
+    import logging
+    results = []
+    try:
+        headlines = scrape_headlines(city)
+        logging.info(f"[process_headlines] Scraped {len(headlines)} headlines for {city}")
+    except Exception as e:
+        logging.error(f"[process_headlines] Failed to scrape headlines for {city}: {e}")
+        return results
+    try:
+        filtered = filter_headlines(headlines)
+        logging.info(f"[process_headlines] Filtered to {len(filtered)} headlines for {city}")
+    except Exception as e:
+        logging.error(f"[process_headlines] Failed to filter headlines: {e}")
+        return results
+    for headline in filtered:
+        try:
+            reframed = reframe_headlines([headline])
+            if not reframed:
+                logging.warning(f"[process_headlines] No reframed question for headline: {headline}")
+                continue
+            question = reframed[0]
+            contract = refine_spread(question)
+            contract = patch_contract(contract)
+            if not validate_contract(contract):
+                logging.warning(f"[process_headlines] Contract failed validation: {contract}")
+                continue
+            published = publish_contract(contract)
+            results.append(published)
+            logging.info(f"[process_headlines] Contract published: {published.get('contract_id')}")
+        except Exception as e:
+            logging.error(f"[process_headlines] Pipeline failed for headline '{headline}': {e}")
+            continue
+    return results
 
 # Ready for unit testing and extension
