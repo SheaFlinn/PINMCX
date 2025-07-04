@@ -42,22 +42,87 @@ def refine_spread(question: str) -> dict:
     return contract
 
 
-def patch_contract(draft: Dict[str, Any]) -> Dict[str, Any]:
+def patch_contract(contract: dict) -> dict:
     """
-    Inject XP weight, AMM starting odds, metadata.
-    TODO: Implement patching logic.
+    Inject system-generated metadata into a civic contract draft.
     """
-    logging.info(f"[5] Patching contract draft: {draft}")
-    draft['xp_weight'] = 1  # Placeholder
-    draft['amm_odds'] = 0.5  # Placeholder
-    draft['metadata'] = {'source': 'scraper'}
-    return draft
+    import logging
+    from datetime import datetime
+    required_fields = ["question", "outcomes", "resolution_criteria", "deadline"]
+    for field in required_fields:
+        if field not in contract:
+            logging.error(f"[patch_contract] Missing required field: {field}")
+            raise ValueError(f"Missing required contract field: {field}")
+    # Inject system fields
+    contract["city"] = "memphis"  # Placeholder or inferred
+    logging.info("[patch_contract] Injected field: city = memphis")
+    contract["xp_weight"] = 1.0
+    logging.info("[patch_contract] Injected field: xp_weight = 1.0")
+    contract["initial_odds"] = 0.5
+    logging.info("[patch_contract] Injected field: initial_odds = 0.5")
+    contract["liquidity_cap"] = 1000
+    logging.info("[patch_contract] Injected field: liquidity_cap = 1000")
+    contract["created_at"] = datetime.utcnow().isoformat()
+    logging.info(f"[patch_contract] Injected field: created_at = {contract['created_at']}")
+    contract["source"] = contract.get("question", "auto")
+    logging.info(f"[patch_contract] Injected field: source = {contract['source']}")
+    return contract
 
-def validate_contract(draft: Dict[str, Any]) -> Dict[str, Any]:
+def validate_contract(contract: dict) -> bool:
     """
-    Enforce schema, return errors if invalid.
-    TODO: Implement validation logic.
+    Check that a civic contract draft contains all required fields and valid data formats.
+    Return True if valid, False otherwise. Log each validation step.
     """
+    import logging
+    from datetime import datetime
+    required_fields = [
+        "question", "outcomes", "resolution_criteria", "deadline",
+        "city", "xp_weight", "initial_odds", "liquidity_cap", "created_at", "source"
+    ]
+    # Check presence and non-empty
+    for field in required_fields:
+        if field not in contract or contract[field] in (None, "", [], {}):
+            logging.warning(f"[validate_contract] Missing or empty field: {field}")
+            return False
+    # Check types and formats
+    if not isinstance(contract["question"], str):
+        logging.warning("[validate_contract] 'question' is not a string")
+        return False
+    if not (isinstance(contract["outcomes"], list) and len(contract["outcomes"]) == 2 and all(isinstance(x, str) for x in contract["outcomes"])):
+        logging.warning("[validate_contract] 'outcomes' is not a list of 2 strings")
+        return False
+    if not isinstance(contract["resolution_criteria"], str):
+        logging.warning("[validate_contract] 'resolution_criteria' is not a string")
+        return False
+    # Deadline must be valid ISO date
+    try:
+        datetime.fromisoformat(contract["deadline"])
+    except Exception:
+        logging.warning("[validate_contract] 'deadline' is not a valid ISO date string")
+        return False
+    if not isinstance(contract["city"], str):
+        logging.warning("[validate_contract] 'city' is not a string")
+        return False
+    if not (isinstance(contract["xp_weight"], float) or isinstance(contract["xp_weight"], int)):
+        logging.warning("[validate_contract] 'xp_weight' is not a float or int")
+        return False
+    if not (isinstance(contract["initial_odds"], float) and 0 <= contract["initial_odds"] <= 1):
+        logging.warning("[validate_contract] 'initial_odds' is not a float in [0,1]")
+        return False
+    if not (isinstance(contract["liquidity_cap"], int) and contract["liquidity_cap"] > 0):
+        logging.warning("[validate_contract] 'liquidity_cap' is not a positive int")
+        return False
+    # created_at must be ISO 8601 timestamp
+    try:
+        datetime.fromisoformat(contract["created_at"])
+    except Exception:
+        logging.warning("[validate_contract] 'created_at' is not a valid ISO 8601 timestamp")
+        return False
+    if not isinstance(contract["source"], str):
+        logging.warning("[validate_contract] 'source' is not a string")
+        return False
+    logging.info("[validate_contract] Contract is valid.")
+    return True
     logging.info(f"[6] Validating contract draft: {draft}")
     draft['validation_errors'] = []  # Placeholder: assume valid
     return draft
