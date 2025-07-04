@@ -40,6 +40,28 @@ class PointsService:
         return user.current_streak if user else None
 
     @staticmethod
+    def get_user_streak(user_id: int) -> Optional[dict]:
+        """Get user's streak information
+        
+        Returns:
+            dict: {
+                "current_streak": int,
+                "longest_streak": int,
+                "last_check_in": datetime
+            }
+            None: if user not found
+        """
+        from app.models import User
+        user = User.query.get(user_id)
+        if user:
+            return {
+                "current_streak": user.current_streak,
+                "longest_streak": user.longest_streak,
+                "last_check_in": user.last_check_in_date
+            }
+        return None
+
+    @staticmethod
     def get_total_points(user_id_or_obj: Union[User, int]) -> Optional[int]:
         """Get user's total points (regular points + liquidity buffer)"""
         user = PointsService._get_user(user_id_or_obj)
