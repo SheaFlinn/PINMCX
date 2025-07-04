@@ -1,51 +1,48 @@
 from datetime import datetime, timedelta
 from app.extensions import db
 from app.models import User
+from typing import Union, Optional
 
 class PointsService:
     @staticmethod
-    def award_xp(user: User, xp_amount: int) -> None:
-        """
-        Award XP to a user with streak bonus multiplier.
-        Applies daily check-in logic and boosts for streaks.
-        """
-        today = datetime.utcnow().date()
-
-        # Skip if XP already awarded today
-        if user.last_check_in_date and user.last_check_in_date.date() == today:
-            return
-
-        # Determine streak
-        if user.last_check_in_date:
-            delta = (today - user.last_check_in_date.date()).days
-            if delta == 1:
-                user.current_streak += 1
-            else:
-                user.current_streak = 1
-        else:
-            user.current_streak = 1
-
-        user.last_check_in_date = datetime.utcnow()
-        user.longest_streak = max(user.longest_streak, user.current_streak)
-
-        # Streak multiplier (max 2x)
-        bonus_multiplier = min(1.0 + 0.1 * (user.current_streak - 1), 2.0)
-        final_xp = int(xp_amount * bonus_multiplier)
-
-        user.xp += final_xp
-        db.session.commit()
+    def _get_user(user_id_or_obj):
+        """Helper method to get user from either ID or User object"""
+        if isinstance(user_id_or_obj, User):
+            return user_id_or_obj
+        elif isinstance(user_id_or_obj, int):
+            return User.query.get(user_id_or_obj)
+        raise ValueError("Input must be a User object or user ID")
 
     @staticmethod
-    def get_user_xp(user: User) -> int:
-        return user.xp
+    def award_xp(user_id: int, amount: int) -> Optional[int]:
+        """Add XP to user by ID"""
+        from app.models import User
+        from app.extensions import db
 
-    @staticmethod
-    def get_user_streak(user: User) -> int:
-        return user.current_streak
-
-    @staticmethod
-    def get_total_points(user_id: int) -> int:
         user = User.query.get(user_id)
+        if user:
+            user.xp = (user.xp or 0) + amount
+            db.session.commit()
+            return user.xp
+        return None
+
+    @staticmethod
+    def get_user_xp(user_id):
+        """Get user's XP points by ID"""
+        from app.models import User
+        user = User.query.get(user_id)
+        return user.xp if user else None
+
+    @staticmethod
+    def get_user_streak(user_id_or_obj: Union[User, int]) -> Optional[int]:
+        """Get user's current streak"""
+        user = PointsService._get_user(user_id_or_obj)
+        return user.current_streak if user else None
+
+    @staticmethod
+    def get_total_points(user_id_or_obj: Union[User, int]) -> Optional[int]:
+        """Get user's total points (regular points + liquidity buffer)"""
+        user = PointsService._get_user(user_id_or_obj)
         if not user:
-            raise ValueError("User not found")
+            return None
         return user.points + user.lb_deposit
