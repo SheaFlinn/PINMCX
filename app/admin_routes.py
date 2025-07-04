@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
-from app.models import ContractDraft, NewsSource
+from app.models.draft_contract import DraftContract
+from app.models import NewsSource
 from app import db
 
 admin = Blueprint('admin', __name__)

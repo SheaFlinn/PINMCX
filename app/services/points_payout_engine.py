@@ -1,4 +1,4 @@
-from app import db
+from app.extensions import db
 from .points_ledger import PointsLedger
 
 class PointsPayoutEngine:

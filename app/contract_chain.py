@@ -132,7 +132,7 @@ def publish_contract(contract: dict) -> dict:
     Insert a validated contract into the DraftContract table and return the contract dict.
     """
     import logging
-    from models.draft_contract import DraftContract
+    from app.models.draft_contract import DraftContract
     from app.extensions import db
 
     # Ensure contract_id and status are set
@@ -157,10 +157,17 @@ def publish_contract(contract: dict) -> dict:
         except Exception:
             created_at = datetime.utcnow()
 
+    # Patch: Ensure outcomes is a list of strings
+    outcomes = contract.get("outcomes")
+    if isinstance(outcomes, memoryview):
+        outcomes = list(outcomes)
+    elif not (isinstance(outcomes, list) and all(isinstance(x, str) for x in outcomes)):
+        outcomes = [str(x) for x in outcomes] if isinstance(outcomes, (list, tuple)) else ["Yes", "No"]
+
     draft = DraftContract(
         contract_id=contract.get("contract_id"),
         question=contract.get("question"),
-        outcomes=contract.get("outcomes"),
+        outcomes=outcomes,
         resolution_criteria=contract.get("resolution_criteria"),
         deadline=deadline,
         city=contract.get("city"),
@@ -256,12 +263,13 @@ def process_headlines(city: str) -> list[dict]:
             if not validate_contract(contract):
                 logging.warning(f"[process_headlines] Contract failed validation: {contract}")
                 continue
-            published = publish_contract(contract)
-            results.append(published)
-            logging.info(f"[process_headlines] Contract published: {published.get('contract_id')}")
+            publish_contract(contract)
+            logging.info(f"[process_headlines] Contract published to DB: {contract.get('contract_id')}")
         except Exception as e:
             logging.error(f"[process_headlines] Pipeline failed for headline '{headline}': {e}")
             continue
     return results
 
 # Ready for unit testing and extension
+
+__all__ = ["process_headlines"]

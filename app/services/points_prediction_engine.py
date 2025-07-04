@@ -1,6 +1,6 @@
 from typing import Optional
 from datetime import datetime
-from app import db
+from app.extensions import db
 from app.services.points_ledger import PointsLedger
 from app.services.points_service import PointsService
 from app.services.xp_service import XPService

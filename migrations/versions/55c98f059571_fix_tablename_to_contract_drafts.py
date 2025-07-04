@@ -1,8 +1,8 @@
-"""Add DraftContract model
+"""Fix tablename to contract_drafts
 
-Revision ID: b7bf0e68fb1f
-Revises: 88825c9760ed
-Create Date: 2025-07-04 13:47:17.988293
+Revision ID: 55c98f059571
+Revises: 
+Create Date: 2025-07-04 15:27:33.923506
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'b7bf0e68fb1f'
-down_revision = '88825c9760ed'
+revision = '55c98f059571'
+down_revision = None
 branch_labels = None
 depends_on = None
 
@@ -26,14 +26,20 @@ def upgrade():
     )
     op.create_table('contract_drafts',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('title', sa.String(length=300), nullable=False),
-    sa.Column('purpose', sa.Text(), nullable=True),
-    sa.Column('scope', sa.Text(), nullable=True),
-    sa.Column('terms', sa.JSON(), nullable=True),
-    sa.Column('status', sa.String(length=50), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.PrimaryKeyConstraint('id')
+    sa.Column('contract_id', sa.String(length=64), nullable=False),
+    sa.Column('question', sa.String(length=256), nullable=False),
+    sa.Column('outcomes', sa.PickleType(), nullable=False),
+    sa.Column('resolution_criteria', sa.String(length=256), nullable=False),
+    sa.Column('deadline', sa.DateTime(), nullable=False),
+    sa.Column('city', sa.String(length=64), nullable=False),
+    sa.Column('xp_weight', sa.Float(), nullable=False),
+    sa.Column('initial_odds', sa.Float(), nullable=False),
+    sa.Column('liquidity_cap', sa.Integer(), nullable=False),
+    sa.Column('source', sa.String(length=256), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('status', sa.String(length=64), nullable=False),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('contract_id')
     )
     op.create_table('leagues',
     sa.Column('id', sa.Integer(), nullable=False),

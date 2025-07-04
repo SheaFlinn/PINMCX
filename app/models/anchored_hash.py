@@ -1,5 +1,5 @@
 # Placeholder model to resolve import error
-from app import db
+from app.extensions import db
 
 class AnchoredHash(db.Model):
     __tablename__ = 'anchored_hashes'

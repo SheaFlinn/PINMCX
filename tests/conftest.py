@@ -1,7 +1,7 @@
 import pytest
 from app import create_app, db
 from app.models import user, market, prediction, market_event, platform_wallet, news, liquidity_pool, liquidity_provider, user_ledger, amm_market
-from models.draft_contract import DraftContract
+from app.models.draft_contract import DraftContract
 
 @pytest.fixture(scope="function")
 def app():

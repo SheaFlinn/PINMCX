@@ -4,7 +4,7 @@ from typing import Optional
 from app.models import User, Market, Prediction, MarketEvent
 from app.services.amm_service import AMMService
 from app.services.xp_service import XPService
-from app import db
+from app.extensions import db
 
 class PredictionService:
     """
