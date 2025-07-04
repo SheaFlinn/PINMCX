@@ -25,13 +25,22 @@ def reframe_headlines(headlines: List[str]) -> List[str]:
     logging.info(f"[3] Reframing headlines: {headlines}")
     return [f"Will {h.lower()}?" for h in headlines]  # Placeholder
 
-def refine_spread(questions: List[str]) -> List[str]:
+def refine_spread(question: str) -> dict:
     """
-    Normalize into yes/no binary phrasing.
-    TODO: Implement normalization logic.
+    Transform a civic question into a binary Yes/No contract draft.
     """
-    logging.info(f"[4] Refining questions: {questions}")
-    return [q.replace('?', ' (Yes/No)?') for q in questions]  # Placeholder
+    logging.info(f"[refine_spread] Original question: {question}")
+    from datetime import datetime, timedelta
+    deadline = (datetime.utcnow() + timedelta(days=30)).date().isoformat()
+    contract = {
+        "question": question.strip(),
+        "outcomes": ["Yes", "No"],
+        "resolution_criteria": "Official city council or mayoral action, verified via public records.",
+        "deadline": deadline
+    }
+    logging.info(f"[refine_spread] Constructed contract: {contract}")
+    return contract
+
 
 def patch_contract(draft: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -116,10 +125,9 @@ def process_headlines(city: str):
     headlines = scrape_headlines(city)
     filtered = filter_headlines(headlines)
     questions = reframe_headlines(filtered)
-    refined = refine_spread(questions)
     drafts = []
-    for q in refined:
-        draft = {'question': q}
+    for q in questions:
+        draft = refine_spread(q)
         draft = patch_contract(draft)
         draft = validate_contract(draft)
         draft = publish_contract(draft)

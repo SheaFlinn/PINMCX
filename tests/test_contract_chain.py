@@ -37,4 +37,14 @@ def test_reframe_headlines_formats_questions():
     assert any(q.endswith('?') for q in reframed)
     # TODO: Integration test with real question logic
 
+# 4. refine_spread
+from contract_chain import refine_spread
+
+def test_refine_spread_generates_contract():
+    contract = refine_spread("Will the City approve the budget?")
+    assert isinstance(contract, dict)
+    assert contract["outcomes"] == ["Yes", "No"]
+    assert "council" in contract["resolution_criteria"].lower()
+    assert contract["deadline"]
+
 # Space for future integration tests with DB/models
