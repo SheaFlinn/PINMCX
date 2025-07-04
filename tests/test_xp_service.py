@@ -1,9 +1,9 @@
 import pytest
-from datetime import datetime, timedelta
-from app import create_app
 from app.extensions import db
+from app.models import User
+from app import create_app
 from app.services.xp_service import XPService
-from app.models import *
+from datetime import datetime, timedelta
 
 @pytest.fixture(scope="function")
 def test_app():
@@ -21,21 +21,35 @@ def app_context(test_app):
         db.drop_all()
 
 @pytest.fixture
-def session(app_context):
-    return db.session
+def session(test_app):
+    """Provide a clean database session for each test."""
+    with test_app.app_context():
+        db.create_all()
+        try:
+            yield db.session
+        finally:
+            db.session.remove()
+            db.drop_all()
 
 @pytest.fixture
-def user(session):
+def user(session) -> User:
+    """Create a test user."""
     user = User(username="test", email="test@example.com")
     session.add(user)
     session.commit()
+    session.refresh(user)
     return user
 
 @pytest.fixture
-def user_with_xp(session):
-    user = User(username="test", email="test@example.com", xp=50, predictions_count=2, successful_predictions=1)
+def user_with_xp(session) -> User:
+    """Create a test user with XP and predictions."""
+    user = User(username="test", email="test@example.com")
+    user.xp = 50
+    user.predictions_count = 2
+    user.successful_predictions = 1
     session.add(user)
     session.commit()
+    session.refresh(user)
     return user
 
 def test_award_prediction_xp_success(user, session):

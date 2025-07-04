@@ -12,12 +12,14 @@ class XPService:
     def award_prediction_xp(user: User, success: bool = True):
         base_xp = 10
         bonus = 5 if success else 0
-        user.xp += base_xp + bonus
+        xp_awarded = base_xp + bonus
+        user.xp += xp_awarded
         user.increment_predictions()
         if success:
             user.increment_successful_predictions()
         XPService._update_reliability(user)
         db.session.commit()
+        return xp_awarded
 
     @staticmethod
     def check_in(user: User):

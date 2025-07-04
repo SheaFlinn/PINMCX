@@ -228,7 +228,7 @@ class PointsService:
         # Process each prediction
         for prediction in predictions:
             # Only award points for correct predictions
-            if (prediction.outcome and winning_choice == 'YES') or (not prediction.outcome and winning_choice == 'NO'):
+            if (prediction.outcome is True and winning_choice == 'YES') or (prediction.outcome is False and winning_choice == 'NO'):
                 user = db.session.get(User, prediction.user_id)
                 if user:
                     # Double the stake amount as reward

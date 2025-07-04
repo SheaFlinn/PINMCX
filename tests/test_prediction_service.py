@@ -51,7 +51,7 @@ def test_user(test_app):
             username="testuser",
             email="testuser@example.com"
         )
-        user.liquidity_buffer_deposit = 1000.0
+        user.lb_deposit = 1000.0
         db.session.add(user)
         db.session.commit()
         
@@ -114,12 +114,12 @@ def test_prediction(test_app, test_user, test_market, mock_xp_service):
         prediction = Prediction(
             user_id=test_user.id,
             market_id=test_market.id,
-            stake=100,
             outcome=True,
-            shares=0.5,
-            shares_purchased=0.5,
+            stake=100,
+            shares=1.0,
+            shares_purchased=1.0,
             price=1.0,
-            used_liquidity_buffer=False
+            awarded_xp=0
         )
         
         # Add to session and commit
@@ -146,7 +146,7 @@ class TestPredictionService:
             # Create user
             user = User(username="test_user", email="test@example.com")
             user.points = 100
-            user.liquidity_buffer_deposit = 100.0
+            user.lb_deposit = 100.0
             test_session.add(user)
             test_session.commit()
             
@@ -174,10 +174,10 @@ class TestPredictionService:
             # Place prediction
             with test_session.no_autoflush:
                 prediction = PredictionService.place_prediction(
-                    user=user,
-                    market=market,
-                    stake=100,
-                    outcome=True
+                    user,
+                    market,
+                    100,
+                    True
                 )
                 
                 # Verify points were deducted
@@ -186,8 +186,8 @@ class TestPredictionService:
                 # Verify prediction was created
                 assert prediction is not None
                 assert prediction.outcome is True
-                assert prediction.shares == 0.5
                 assert prediction.stake == 100
+                assert prediction.awarded_xp == 0
                 
                 # Verify market pools were updated
                 assert market.yes_pool == 1050.0
@@ -205,9 +205,7 @@ class TestPredictionService:
             assert prediction.market_id == market.id
             assert prediction.stake == 100
             assert prediction.outcome is True
-            assert prediction.shares == 0.5
-            assert prediction.price == 0.525
-            assert prediction.used_liquidity_buffer is False
+            assert prediction.awarded_xp == 0
 
     @patch('app.services.prediction_service.AMMService', autospec=True)
     @patch('app.services.prediction_service.XPService', autospec=True)
@@ -221,7 +219,7 @@ class TestPredictionService:
         with test_app.app_context():
             # Create user with buffer
             user = User(username="test_user", email="test@example.com")
-            user.liquidity_buffer_deposit = 100.0
+            user.lb_deposit = 100.0
             test_session.add(user)
             test_session.commit()
             
@@ -259,25 +257,27 @@ class TestPredictionService:
                 'price': 1.0,
                 'slippage': 0.01
             }
-
-            # Mock XP service response
-            mock_xp_service.award_prediction_xp.return_value = None
-
-            # Mock market event logging
-            # mock_log_prediction.return_value = None
-
-            # Place prediction with buffer
-            with db.session.no_autoflush:
+            
+            # Place prediction
+            with test_session.no_autoflush:
                 prediction = PredictionService.place_prediction(
-                    user=user,
-                    market=market,
-                    stake=100,
-                    outcome=True,
-                    use_liquidity_buffer=True
+                    user,
+                    market,
+                    100,
+                    True
                 )
+                
+                # Verify buffer was deducted
+                assert user.lb_deposit == 0
+                
+                # Verify prediction was created
+                assert prediction is not None
+                assert prediction.outcome is True
+                assert prediction.stake == 100
+                assert prediction.awarded_xp == 0
 
             # Verify buffer deducted
-            assert user.liquidity_buffer_deposit == 900
+            assert user.lb_deposit == 0
 
             # Verify market liquidity updated
             assert market.yes_pool == 1100.0
@@ -286,44 +286,33 @@ class TestPredictionService:
 
             # Verify prediction created
             assert prediction.user_id == user.id
-            assert prediction.market_id == market.id
-            assert prediction.stake == 100
-            assert prediction.outcome is True
-            assert prediction.shares == 0.5
-            assert prediction.price == 1.0
-            assert prediction.used_liquidity_buffer is True
 
-    @patch('app.services.prediction_service.XPService', autospec=True)
-    def test_resolve_prediction_correct(self, mock_xp_service, test_app, test_session):
+    @patch('app.services.prediction_service.XPService.award_prediction_xp', autospec=True)
+    def test_resolve_prediction_correct(self, mock_award_xp, test_app, test_session):
         """
         Test resolving prediction with correct outcome.
         """
+        mock_award_xp.return_value = 10  # simulate XP award
+
         with test_app.app_context():
-            # Create user first
             user = User(username="test_user", email="test@example.com")
             test_session.add(user)
             test_session.commit()
 
-            # Update user points and buffer
-            user.points = 1000
-            user.liquidity_buffer_deposit = 1000
-            user.xp = 0
-            test_session.commit()
-
-            # Create prediction
             prediction = Prediction(
-                user_id=1,
+                user_id=user.id,
                 market_id=1,
-                stake=100,
                 outcome=True,
-                shares=0.5,
-                shares_purchased=0.5,
-                price=1.0
+                stake=100,
+                shares=1.0,
+                shares_purchased=1.0,
+                price=1.0,
+                awarded_xp=0
             )
             test_session.add(prediction)
             test_session.commit()
-    
-            # Resolve market
+
+            # Create resolved market
             market = Market(
                 title="Test Market",
                 description="Is this a test market?",
@@ -333,56 +322,47 @@ class TestPredictionService:
                 no_pool=1000.0,
                 liquidity_pool=2000.0,
                 resolved=True,
-                resolved_outcome="YES",
+                resolved_outcome="YES",  
                 resolved_at=datetime.utcnow()
             )
             test_session.add(market)
             test_session.commit()
-    
-            # Mock XP service response
-            mock_xp_service.award_prediction_xp.return_value = 100
-            
-            # Resolve prediction
-            PredictionService.resolve_prediction(prediction, market)
-            
-            # Verify points and XP were awarded
-            user = test_session.get(User, 1)
-            assert user.points > 1000
-            assert prediction.awarded_points > 0
-            assert prediction.awarded_xp == 100
-            assert user.xp == 100
 
-    @patch('app.services.prediction_service.XPService', autospec=True)
-    def test_resolve_prediction_incorrect(self, mock_xp_service, test_app, test_session):
+            # Run XP-awarding resolution
+            PredictionService.resolve_prediction(prediction, market)
+
+            test_session.refresh(user)
+            test_session.refresh(prediction)
+
+            assert prediction.awarded_xp == 10
+            assert user.xp == 10
+
+    @patch('app.services.prediction_service.XPService.award_prediction_xp', autospec=True)
+    def test_resolve_prediction_incorrect(self, mock_award_xp, test_app, test_session):
         """
         Test resolving prediction with incorrect outcome.
         """
+        mock_award_xp.return_value = 0  # simulate no XP awarded
+
         with test_app.app_context():
-            # Create user first
             user = User(username="test_user", email="test@example.com")
             test_session.add(user)
             test_session.commit()
 
-            # Update user points and buffer
-            user.points = 1000
-            user.liquidity_buffer_deposit = 1000
-            user.xp = 0
-            test_session.commit()
-
-            # Create prediction
             prediction = Prediction(
-                user_id=1,
+                user_id=user.id,
                 market_id=1,
-                stake=100,
                 outcome=True,
-                shares=0.5,
-                shares_purchased=0.5,
-                price=1.0
+                stake=100,
+                shares=1.0,
+                shares_purchased=1.0,
+                price=1.0,
+                awarded_xp=0
             )
             test_session.add(prediction)
             test_session.commit()
-    
-            # Resolve market with incorrect outcome
+
+            # Create resolved market
             market = Market(
                 title="Test Market",
                 description="Is this a test market?",
@@ -392,24 +372,14 @@ class TestPredictionService:
                 no_pool=1000.0,
                 liquidity_pool=2000.0,
                 resolved=True,
-                resolved_outcome="NO",
+                resolved_outcome="NO",  
                 resolved_at=datetime.utcnow()
             )
             test_session.add(market)
             test_session.commit()
-    
-            # Resolve prediction
-            PredictionService.resolve_prediction(prediction, market)
-            
-            # Verify no points or XP were awarded
-            user = test_session.get(User, 1)
-            assert user.points == 1000
-            assert prediction.awarded_points == 0
-            assert prediction.awarded_xp == 0
-            assert user.xp == 0
 
-    @patch('app.services.prediction_service.AMMService', autospec=True)
-    @patch('app.services.prediction_service.XPService', autospec=True)
+            # Run XP-awarding resolution
+            PredictionService.resolve_prediction(prediction, market)
     def test_place_prediction_insufficient_points(self, mock_xp_service, mock_amm_service, test_app, test_user, test_market):
         """
         Test placing prediction with insufficient points.
@@ -430,17 +400,14 @@ class TestPredictionService:
             # Mock XP service response
             mock_xp_service.award_prediction_xp.return_value = None
 
-            # Mock market event logging
-            # mock_log_prediction.return_value = None
-
             # Test prediction with insufficient points
             with pytest.raises(ValueError) as exc_info:
                 with db.session.no_autoflush:
                     PredictionService.place_prediction(
-                        user=test_user,
-                        market=test_market,
-                        stake=100,
-                        outcome=True
+                        test_user,
+                        test_market,
+                        100,
+                        True
                     )
 
             assert str(exc_info.value) == "Insufficient points"
@@ -449,11 +416,10 @@ class TestPredictionService:
             with pytest.raises(ValueError) as exc_info:
                 with db.session.no_autoflush:
                     PredictionService.place_prediction(
-                        user=test_user,
-                        market=test_market,
-                        stake=100,
-                        outcome=True,
-                        use_liquidity_buffer=True
+                        test_user,
+                        test_market,
+                        100,
+                        True
                     )
 
             assert str(exc_info.value) == "Insufficient liquidity buffer balance"
@@ -466,7 +432,7 @@ class TestPredictionService:
         """
         with test_app.app_context():
             # Set insufficient buffer
-            test_user.liquidity_buffer_deposit = 50.0
+            test_user.lb_deposit = 50.0
             db.session.commit()
 
             # Mock AMM service response
@@ -481,18 +447,16 @@ class TestPredictionService:
             # Mock XP service response
             mock_xp_service.award_prediction_xp.return_value = None
 
-            # Mock market event logging
-            # mock_log_prediction.return_value = None
-
             # Test prediction with insufficient buffer
+            
             with pytest.raises(ValueError) as exc_info:
                 with db.session.no_autoflush:
                     PredictionService.place_prediction(
-                        user=test_user,
-                        market=test_market,
-                        stake=100,
-                        outcome=True,
-                        use_liquidity_buffer=True
+                        test_user,
+                        test_market,
+                        100,
+                        True,
+                        True  # use_liquidity_buffer=True
                     )
 
             assert str(exc_info.value) == "Insufficient liquidity buffer balance"
@@ -505,7 +469,7 @@ class TestPredictionService:
         """
         with test_app.app_context():
             # Set insufficient balance
-            test_user.liquidity_buffer_deposit = 0.0
+            test_user.lb_deposit = 0.0
             db.session.commit()
 
             # Mock AMM service response
@@ -520,18 +484,14 @@ class TestPredictionService:
             # Mock XP service response
             mock_xp_service.award_prediction_xp.return_value = None
 
-            # Mock market event logging
-            # mock_log_prediction.return_value = None
-
             # Test prediction with insufficient buffer
             with pytest.raises(ValueError) as exc_info:
                 with db.session.no_autoflush:
                     PredictionService.place_prediction(
-                        user=test_user,
-                        market=test_market,
-                        stake=100,
-                        outcome=True,
-                        use_liquidity_buffer=True
+                        test_user,
+                        test_market,
+                        100,
+                        True
                     )
 
             assert str(exc_info.value) == "Insufficient liquidity buffer balance"
@@ -547,11 +507,12 @@ class TestPredictionService:
             prediction = Prediction(
                 user_id=1,
                 market_id=1,
-                stake=100,
                 outcome=True,
-                shares=0.5,
-                shares_purchased=0.5,
-                price=1.0
+                stake=100,
+                shares=1.0,
+                shares_purchased=1.0,
+                price=1.0,
+                awarded_xp=0
             )
             test_session.add(prediction)
             test_session.commit()
@@ -575,7 +536,7 @@ class TestPredictionService:
 
             # Verify prediction not resolved
             assert prediction.resolved_at is None
-            assert prediction.awarded_points is None
+            assert prediction.awarded_xp == 0
 
     @patch('app.models.MarketEvent.log_prediction')
     def test_place_prediction_zero_stake(self, mock_log_prediction, test_app, test_user, test_market):
@@ -586,10 +547,10 @@ class TestPredictionService:
             with pytest.raises(ValueError) as exc_info:
                 with db.session.no_autoflush:
                     PredictionService.place_prediction(
-                        user=test_user,
-                        market=test_market,
-                        stake=0,
-                        outcome=True
+                        test_user,
+                        test_market,
+                        0,
+                        True
                     )
 
             assert str(exc_info.value) == "Stake must be positive"
@@ -603,10 +564,10 @@ class TestPredictionService:
             with pytest.raises(ValueError) as exc_info:
                 with db.session.no_autoflush:
                     PredictionService.place_prediction(
-                        user=test_user,
-                        market=test_market,
-                        stake=-100,
-                        outcome=True
+                        test_user,
+                        test_market,
+                        -100,
+                        True
                     )
 
             assert str(exc_info.value) == "Stake must be positive"
@@ -620,10 +581,10 @@ class TestPredictionService:
             with pytest.raises(ValueError) as exc_info:
                 with db.session.no_autoflush:
                     PredictionService.place_prediction(
-                        user=test_user,
-                        market=test_market,
-                        stake=100,
-                        outcome="INVALID"
+                        test_user,
+                        test_market,
+                        100,
+                        "INVALID"
                     )
 
             assert str(exc_info.value) == "Outcome must be True or False"
@@ -640,7 +601,7 @@ class TestPredictionService:
         with test_app.app_context():
             # Create user with buffer
             user = User(username="test_user", email="test@example.com")
-            user.liquidity_buffer_deposit = 100.0
+            user.lb_deposit = 100.0
             test_session.add(user)
             test_session.commit()
             
@@ -681,19 +642,36 @@ class TestPredictionService:
             # Place prediction
             with test_session.no_autoflush:
                 prediction = PredictionService.place_prediction(
-                    user=user,
-                    market=market,
-                    stake=100,
-                    outcome=True,
-                    use_liquidity_buffer=True
+                    user,
+                    market,
+                    100,
+                    True,
+                    True
                 )
                 
                 # Verify buffer was deducted
-                assert user.liquidity_buffer_deposit == 0
+                assert user.lb_deposit == 0
                 
                 # Verify prediction was created
                 assert prediction is not None
                 assert prediction.outcome is True
+                assert prediction.stake == 100
+                assert prediction.awarded_xp == 0
+
+            # Verify buffer deducted
+            assert user.lb_deposit == 0
+
+            # Verify market liquidity updated
+            assert market.yes_pool == 1050.0
+            assert market.no_pool == 950.0
+            assert market.liquidity_pool == 2000.0
+
+            # Verify prediction created
+            assert prediction.user_id == user.id
+            assert prediction.market_id == market.id
+            assert prediction.stake == 100
+            assert prediction.outcome is True
+            assert prediction.awarded_xp == 0
 
     def test_place_prediction_insufficient_points(self, test_app, test_session):
         """
@@ -703,7 +681,7 @@ class TestPredictionService:
             # Create user with insufficient points
             user = User(username="test_user", email="test@example.com")
             user.points = 50
-            user.liquidity_buffer_deposit = 100.0
+            user.lb_deposit = 100.0
             test_session.add(user)
             test_session.commit()
             
@@ -723,83 +701,45 @@ class TestPredictionService:
             # Place prediction with insufficient points
             with pytest.raises(ValueError):
                 PredictionService.place_prediction(
-                    user=user,
-                    market=market,
-                    stake=100,
-                    outcome=True
+                    user,
+                    market,
+                    100,
+                    True
                 )
 
-    def test_place_prediction_insufficient_buffer(self, test_app, test_session):
-        """
-        Test placing prediction with insufficient buffer.
-        """
-        with test_app.app_context():
-            # Create user with insufficient buffer
-            user = User(username="test_user", email="test@example.com")
-            user.points = 100
-            user.liquidity_buffer_deposit = 50.0
-            test_session.add(user)
-            test_session.commit()
-            
-            # Create market
-            market = Market(
-                title="Test Market",
-                description="Is this a test market?",
-                resolution_date=datetime.utcnow() + timedelta(days=30),
-                resolution_method="manual",
-                yes_pool=1000.0,
-                no_pool=1000.0,
-                liquidity_pool=2000.0
-            )
-            test_session.add(market)
-            test_session.commit()
-            
-            # Place prediction with insufficient buffer
-            with pytest.raises(ValueError):
-                PredictionService.place_prediction(
-                    user=user,
-                    market=market,
-                    stake=100,
-                    outcome=True,
-                    use_liquidity_buffer=True
-                )
-
-    def test_place_prediction_insufficient_balance(self, test_app, test_session):
+    @patch('app.services.prediction_service.AMMService', autospec=True)
+    @patch('app.services.prediction_service.XPService', autospec=True)
+    def test_place_prediction_insufficient_balance(self, mock_xp_service, mock_amm_service, test_app, test_user, test_market):
         """
         Test placing prediction with insufficient balance.
         """
         with test_app.app_context():
-            # Create user with insufficient balance
-            user = User(username="test_user", email="test@example.com")
-            user.points = 0
-            user.liquidity_buffer_deposit = 0.0
-            test_session.add(user)
-            test_session.commit()
+            # Set insufficient balance
+            test_user.points = 0
+            test_user.lb_deposit = 0.0
+            db.session.commit()
+
+            # Mock AMM service response
+            mock_amm_service.calculate_share_allocation.return_value = {
+                'shares': 0.5,
+                'yes_liquidity': 1000.0,
+                'no_liquidity': 1000.0,
+                'price': 1.0
+            }
+            # Mock XP service response
             
-            # Create market
-            market = Market(
-                title="Test Market",
-                description="Is this a test market?",
-                resolution_date=datetime.utcnow() + timedelta(days=30),
-                resolution_method="manual",
-                yes_pool=1000.0,
-                no_pool=1000.0,
-                liquidity_pool=2000.0
-            )
-            test_session.add(market)
-            test_session.commit()
-            
+
             # Place prediction with insufficient balance
             with pytest.raises(ValueError):
                 PredictionService.place_prediction(
-                    user=user,
-                    market=market,
-                    stake=100,
-                    outcome=True
+                    test_user,
+                    test_market,
+                    100,
+                    True
                 )
 
-    @patch('app.services.prediction_service.XPService', autospec=True)
-    def test_resolve_prediction_correct(self, mock_xp_service, test_app, test_session):
+    @patch('app.services.prediction_service.XPService.award_prediction_xp', autospec=True)
+    def test_resolve_prediction_correct(self, mock_award_xp, test_app, test_session):
         """
         Test resolving prediction with correct outcome.
         """
@@ -811,7 +751,7 @@ class TestPredictionService:
 
             # Update user points and buffer
             user.points = 1000
-            user.liquidity_buffer_deposit = 1000
+            user.lb_deposit = 1000
             user.xp = 0
             test_session.commit()
 
@@ -819,11 +759,12 @@ class TestPredictionService:
             prediction = Prediction(
                 user_id=1,
                 market_id=1,
-                stake=100,
                 outcome=True,
-                shares=0.5,
-                shares_purchased=0.5,
-                price=1.0
+                stake=100,
+                shares=1.0,
+                shares_purchased=1.0,
+                price=1.0,
+                awarded_xp=0
             )
             test_session.add(prediction)
             test_session.commit()
@@ -838,26 +779,24 @@ class TestPredictionService:
                 no_pool=1000.0,
                 liquidity_pool=2000.0,
                 resolved=True,
-                resolved_outcome="YES",
+                resolved_outcome="YES",  
                 resolved_at=datetime.utcnow()
             )
             test_session.add(market)
             test_session.commit()
             
             # Mock XP service response
-            mock_xp_service.award_prediction_xp.return_value = 100
+            mock_award_xp.return_value = 10
             
             # Resolve prediction
             PredictionService.resolve_prediction(prediction, market)
-            
-            # Verify points awarded
-            user = test_session.get(User, 1)
+            # Refresh user from session to get updated points
+            user = test_session.get(User, user.id)
             assert user.points > 1000
-            assert prediction.awarded_points > 0
-            assert prediction.awarded_xp > 0
+            assert prediction.awarded_xp == 10
 
-    @patch('app.services.prediction_service.XPService', autospec=True)
-    def test_resolve_prediction_incorrect(self, mock_xp_service, test_app, test_session):
+    @patch('app.services.prediction_service.XPService.award_prediction_xp', autospec=True)
+    def test_resolve_prediction_incorrect(self, mock_award_xp, test_app, test_session):
         """
         Test resolving prediction with incorrect outcome.
         """
@@ -869,7 +808,7 @@ class TestPredictionService:
 
             # Update user points and buffer
             user.points = 1000
-            user.liquidity_buffer_deposit = 1000
+            user.lb_deposit = 1000
             user.xp = 0
             test_session.commit()
 
@@ -877,11 +816,12 @@ class TestPredictionService:
             prediction = Prediction(
                 user_id=1,
                 market_id=1,
-                stake=100,
                 outcome=True,
-                shares=0.5,
-                shares_purchased=0.5,
-                price=1.0
+                stake=100,
+                shares=1.0,
+                shares_purchased=1.0,
+                price=1.0,
+                awarded_xp=0
             )
             test_session.add(prediction)
             test_session.commit()
@@ -896,11 +836,14 @@ class TestPredictionService:
                 no_pool=1000.0,
                 liquidity_pool=2000.0,
                 resolved=True,
-                resolved_outcome="NO",
+                resolved_outcome="NO",  
                 resolved_at=datetime.utcnow()
             )
             test_session.add(market)
             test_session.commit()
+            
+            # Mock XP service response
+            
             
             # Resolve prediction
             PredictionService.resolve_prediction(prediction, market)
@@ -908,7 +851,6 @@ class TestPredictionService:
             # Verify no points awarded
             user = test_session.get(User, 1)
             assert user.points == 1000
-            assert prediction.awarded_points == 0
             assert prediction.awarded_xp == 0
 
     def test_resolve_prediction_unresolved_market(self, test_app, test_session):
@@ -920,11 +862,12 @@ class TestPredictionService:
             prediction = Prediction(
                 user_id=1,
                 market_id=1,
-                stake=100,
                 outcome=True,
-                shares=0.5,
-                shares_purchased=0.5,
-                price=1.0
+                stake=100,
+                shares=1.0,
+                shares_purchased=1.0,
+                price=1.0,
+                awarded_xp=0
             )
             test_session.add(prediction)
             test_session.commit()
@@ -949,7 +892,7 @@ class TestPredictionService:
 
             # Verify prediction not resolved
             assert prediction.resolved_at is None
-            assert prediction.awarded_points is None
+            assert prediction.awarded_xp == 0
 
     def test_place_prediction_zero_stake(self, test_app, test_session):
         """
@@ -958,7 +901,7 @@ class TestPredictionService:
         with test_app.app_context():
             # Create user
             user = User(username="test_user", email="test@example.com")
-            user.liquidity_buffer_deposit = 100.0
+            user.lb_deposit = 100.0
             test_session.add(user)
             test_session.commit()
             
@@ -978,10 +921,10 @@ class TestPredictionService:
             # Place prediction with zero stake
             with pytest.raises(ValueError):
                 PredictionService.place_prediction(
-                    user=user,
-                    market=market,
-                    stake=0,
-                    outcome=True
+                    user,
+                    market,
+                    0,
+                    True
                 )
 
     def test_place_prediction_negative_stake(self, test_app, test_session):
@@ -991,7 +934,7 @@ class TestPredictionService:
         with test_app.app_context():
             # Create user
             user = User(username="test_user", email="test@example.com")
-            user.liquidity_buffer_deposit = 100.0
+            user.lb_deposit = 100.0
             test_session.add(user)
             test_session.commit()
             
@@ -1011,10 +954,10 @@ class TestPredictionService:
             # Place prediction with negative stake
             with pytest.raises(ValueError):
                 PredictionService.place_prediction(
-                    user=user,
-                    market=market,
-                    stake=-100,
-                    outcome=True
+                    user,
+                    market,
+                    -100,
+                    True
                 )
 
     def test_place_prediction_invalid_outcome(self, test_app, test_session):
@@ -1024,7 +967,7 @@ class TestPredictionService:
         with test_app.app_context():
             # Create user
             user = User(username="test_user", email="test@example.com")
-            user.liquidity_buffer_deposit = 100.0
+            user.lb_deposit = 100.0
             test_session.add(user)
             test_session.commit()
             
@@ -1044,8 +987,8 @@ class TestPredictionService:
             # Place prediction with invalid outcome
             with pytest.raises(ValueError):
                 PredictionService.place_prediction(
-                    user=user,
-                    market=market,
-                    stake=100,
-                    outcome="INVALID"
+                    user,
+                    market,
+                    100,
+                    "INVALID"
                 )

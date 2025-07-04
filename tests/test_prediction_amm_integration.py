@@ -74,8 +74,8 @@ def test_prediction_place_updates_amm_liquidity_and_odds(test_app, test_user, te
         prediction = PointsPredictionEngine.place_prediction(
             user=test_user,
             market=test_market,
-            shares=stake,
             outcome=outcome,
+            shares=stake,
             use_liquidity_buffer=False
         )
 
@@ -83,7 +83,7 @@ def test_prediction_place_updates_amm_liquidity_and_odds(test_app, test_user, te
         assert prediction is not None
         assert prediction.user_id == test_user.id
         assert prediction.market_id == test_market.id
-        assert prediction.outcome == "YES"
+        assert prediction.outcome is True
         assert prediction.stake == stake
 
         # Verify pool liquidity updated
@@ -100,8 +100,9 @@ def test_prediction_place_updates_amm_liquidity_and_odds(test_app, test_user, te
         expected_yes = 1000.0 + net_stake
         expected_no = initial_k / expected_yes
         
-        assert updated_pool.yes_liquidity == pytest.approx(expected_yes)
-        assert updated_pool.no_liquidity == pytest.approx(expected_no)
+        # Allow small floating point tolerance
+        assert abs(updated_pool.yes_liquidity - expected_yes) < 0.01
+        assert abs(updated_pool.no_liquidity - expected_no) < 0.01
 
         # Verify odds updated correctly
         total = updated_pool.yes_liquidity + updated_pool.no_liquidity

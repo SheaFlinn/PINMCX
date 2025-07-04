@@ -80,31 +80,56 @@ def test_predict(app):
         ps = PointsService()
 
         # Test successful prediction
-        result = ps.predict(user.id, market.id, 'YES', 50)
+        result = ps.predict(
+            user_id=user.id,
+            market_id=market.id,
+            choice='YES',
+            stake_amount=50
+        )
         assert result["success"]
         assert result["prediction_id"] > 0
         assert result["remaining_points"] == 50
         assert "Prediction created successfully" in result["message"]
 
         # Test invalid choice
-        result = ps.predict(user.id, market.id, 'MAYBE', 50)
+        result = ps.predict(
+            user_id=user.id,
+            market_id=market.id,
+            choice='MAYBE',
+            stake_amount=50
+        )
         assert not result["success"]
         assert "Invalid choice" in result["message"]
 
         # Test insufficient points
-        result = ps.predict(user.id, market.id, 'YES', 1000)
+        result = ps.predict(
+            user_id=user.id,
+            market_id=market.id,
+            choice='YES',
+            stake_amount=1000
+        )
         assert not result["success"]
         assert "Insufficient points" in result["message"]
         assert result["required_points"] == 1000
         assert result["available_points"] == 50
 
         # Test non-existent market
-        result = ps.predict(user.id, 999999, 'YES', 50)
+        result = ps.predict(
+            user_id=user.id,
+            market_id=999999,
+            choice='YES',
+            stake_amount=50
+        )
         assert not result["success"]
         assert "Market not found" in result["message"]
 
         # Test non-existent user
-        result = ps.predict(999999, market.id, 'YES', 50)
+        result = ps.predict(
+            user_id=999999,
+            market_id=market.id,
+            choice='YES',
+            stake_amount=50
+        )
         assert not result["success"]
         assert "User not found" in result["message"]
 

@@ -67,12 +67,10 @@ class PointsPredictionEngine:
         net_shares = shares - platform_fee
 
         # Calculate share allocation using AMM
-        outcome_str = "YES" if outcome else "NO"
         amm_result = AMMService.calculate_share_allocation(
-            yes_liquidity=pool.yes_liquidity,
-            no_liquidity=pool.no_liquidity,
-            stake=net_shares,
-            outcome=outcome_str
+            market_id=market.id,
+            outcome=outcome,
+            amount=net_shares
         )
         
         # Update pool liquidity with new values from AMM
@@ -90,7 +88,7 @@ class PointsPredictionEngine:
         prediction = Prediction(
             user_id=user.id,
             market_id=market.id,
-            outcome=outcome_str,
+            outcome=outcome,
             confidence=amm_result['shares_purchased'],  # Use actual shares purchased as confidence
             stake=shares,
             timestamp=datetime.utcnow()
@@ -102,7 +100,7 @@ class PointsPredictionEngine:
             market=market,
             user_id=user.id,
             stake=shares,
-            outcome=outcome_str
+            outcome=outcome
         )
         
         # If using liquidity buffer, deduct from deposit
@@ -206,7 +204,7 @@ class PointsPredictionEngine:
                 continue
 
             # Check if prediction was correct
-            is_correct = prediction.outcome == ('YES' if correct_outcome else 'NO')
+            is_correct = prediction.outcome is True if correct_outcome else prediction.outcome is False
 
             if is_correct:
                 # Award points and XP

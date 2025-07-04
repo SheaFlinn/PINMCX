@@ -55,9 +55,9 @@ class PredictionService:
             
         # Deduct points or liquidity buffer
         if use_liquidity_buffer:
-            if user.liquidity_buffer_deposit < stake:
+            if user.lb_deposit < stake:
                 raise ValueError("Insufficient liquidity buffer balance")
-            user.liquidity_buffer_deposit -= stake
+            user.lb_deposit -= stake
         else:
             if user.points < stake:
                 raise ValueError("Insufficient points")
@@ -65,10 +65,9 @@ class PredictionService:
             
         # Calculate new pool state
         result = AMMService.calculate_share_allocation(
-            market.yes_pool,
-            market.no_pool,
             stake,
-            outcome
+            outcome,
+            market.id
         )
         
         # Update pool liquidity
@@ -84,7 +83,8 @@ class PredictionService:
             shares=result['shares'],
             shares_purchased=result['shares'],
             price=result['price'],
-            used_liquidity_buffer=use_liquidity_buffer
+            used_liquidity_buffer=use_liquidity_buffer,
+            awarded_xp=0
         )
         
         # Add to session and commit
@@ -134,11 +134,13 @@ class PredictionService:
             user.points += points
             prediction.awarded_points = points
         
-        # Award XP
-        from app.services.xp_service import XPService
-        xp_awarded = XPService.award_prediction_xp(prediction.user, success=outcome)
-        prediction.awarded_xp = xp_awarded
-        
+        # Award XP only if prediction matches market outcome
+        if (outcome is True and prediction.outcome is True) or (outcome is False and prediction.outcome is False):
+            xp_awarded = XPService.award_prediction_xp(prediction.user, success=True)
+            prediction.awarded_xp = int(xp_awarded) if xp_awarded is not None else 0
+        else:
+            prediction.awarded_xp = 0
+    
         # Mark prediction as resolved
         prediction.resolved_at = datetime.utcnow()
         db.session.commit()

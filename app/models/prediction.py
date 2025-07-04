@@ -3,19 +3,24 @@ from app.extensions import db
 from app.models.market_event import MarketEvent
 
 class Prediction(db.Model):
-    """Prediction model."""
+    """Prediction model.
+    
+    Fields:
+        outcome: Boolean field where True means YES prediction, False means NO prediction
+    """
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     market_id = db.Column(db.Integer, db.ForeignKey('market.id'), nullable=False)
     shares = db.Column(db.Float, nullable=False)
+    shares_purchased = db.Column(db.Float, nullable=False)
     platform_fee = db.Column(db.Float, nullable=True)  # 5% fee deducted from shares
     outcome = db.Column(db.Boolean, nullable=False)
     used_liquidity_buffer = db.Column(db.Boolean, default=False)  # Track if prediction used LB
     stake = db.Column(db.Float, nullable=False)  # Amount staked on prediction
     price = db.Column(db.Float, nullable=False)  # Price per share at time of prediction
-    shares_purchased = db.Column(db.Float, nullable=False)  # Number of shares actually purchased
-    awarded_points = db.Column(db.Float, nullable=True)  # Points awarded if prediction is correct
-    awarded_xp = db.Column(db.Integer, nullable=True)  # XP awarded for prediction
+    awarded_points = db.Column(db.Integer, default=0, nullable=False)  # Points awarded if prediction is correct
+    awarded_xp = db.Column(db.Integer, default=0, nullable=False)  # XP awarded for prediction
+    xp_awarded = db.Column(db.Boolean, default=False)  # Track if XP has been awarded
     resolved_at = db.Column(db.DateTime, nullable=True)  # When prediction was resolved
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

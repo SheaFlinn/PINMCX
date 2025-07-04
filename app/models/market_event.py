@@ -4,7 +4,7 @@ from app.extensions import db
 class MarketEvent(db.Model):
     """Model to track important events in a market's lifecycle"""
     id = db.Column(db.Integer, primary_key=True)
-    market_id = db.Column(db.Integer, db.ForeignKey('market.id'), nullable=False)
+    market_id = db.Column(db.Integer, db.ForeignKey('market.id'), nullable=True)  # Allow NULL for non-market events
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     event_type = db.Column(db.String, nullable=False)  # e.g., 'market_created', 'prediction', 'resolved'
     description = db.Column(db.String(200), nullable=False)
@@ -77,6 +77,34 @@ class MarketEvent(db.Model):
                 'outcome': outcome,
                 'points_awarded': points_awarded,
                 'xp_awarded': xp_awarded
+            }
+        )
+
+    @staticmethod
+    def log_liquidity_deposit(user_id, amount):
+        """Log a liquidity buffer deposit event"""
+        return MarketEvent(
+            market_id=None,  # Not associated with a specific market
+            user_id=user_id,
+            event_type='liquidity_deposit',
+            description=f'User {user_id} deposited {amount} points to liquidity buffer',
+            event_data={
+                'amount': amount,
+                'timestamp': datetime.utcnow().isoformat()
+            }
+        )
+
+    @staticmethod
+    def log_liquidity_withdraw(user_id, amount):
+        """Log a liquidity buffer withdrawal event"""
+        return MarketEvent(
+            market_id=None,  # Not associated with a specific market
+            user_id=user_id,
+            event_type='liquidity_withdraw',
+            description=f'User {user_id} withdrew {amount} points from liquidity buffer',
+            event_data={
+                'amount': amount,
+                'timestamp': datetime.utcnow().isoformat()
             }
         )
 

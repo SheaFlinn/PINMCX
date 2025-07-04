@@ -11,7 +11,7 @@ def test_load_existing_config():
 
 def test_load_nonexistent_config():
     """Test loading a non-existent config file"""
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(ValueError):
         load_scraper_config("nonexistentcity")
 
 def test_invalid_json_config():
