@@ -21,3 +21,15 @@ class ContractDraft(db.Model):
             source_url=self.terms.get("resolution_source"),
             resolution_date=datetime.utcnow()  # Placeholder
         )
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "purpose": self.purpose,
+            "scope": self.scope,
+            "terms": self.terms,
+            "status": self.status,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
+        }
