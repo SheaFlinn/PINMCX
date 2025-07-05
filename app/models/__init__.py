@@ -9,7 +9,7 @@ from .league import League
 from .league_member import LeagueMember
 from .badge import Badge
 from .user_badge import UserBadge
-from .published_contract import PublishedContract
+from .published_contract import Contract
 from .market import Market
 from .market_event import MarketEvent
 from .platform_wallet import PlatformWallet
@@ -19,15 +19,18 @@ from .liquidity_pool import LiquidityPool
 from .liquidity_provider import LiquidityProvider
 from .user_ledger import UserLedger
 from .amm_market import AMMMarket
-from .draft_contract import DraftContract
+from .contract import ContractDraft
+from .published_contract import Contract
 
 __all__ = [
+    'ContractDraft',
+    'Contract',
     'User',
     'League',
     'LeagueMember',
     'Badge',
     'UserBadge',
-        'PublishedContract',
+        'Contract',
     'Market',
     'MarketEvent',
     'PlatformWallet',

@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
-from app.models.draft_contract import DraftContract
+from app.models.contract import ContractDraft
 from app.models import NewsSource
 from app import db
 

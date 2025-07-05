@@ -1,7 +1,7 @@
-from app.extensions import db
+from app import db
 from datetime import datetime
 
-class PublishedContract(db.Model):
+class Contract(db.Model):
     __tablename__ = 'published_contracts'
 
     id = db.Column(db.Integer, primary_key=True)

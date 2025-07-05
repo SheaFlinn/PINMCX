@@ -13,4 +13,4 @@ class AMMMarket(db.Model):
     total_shares_yes = db.Column(db.Float, default=0.0)
     total_shares_no = db.Column(db.Float, default=0.0)
 
-    contract = db.relationship('PublishedContract', back_populates='amm_market', lazy='joined')
+    contract = db.relationship('Contract', back_populates='amm_market', lazy='joined')

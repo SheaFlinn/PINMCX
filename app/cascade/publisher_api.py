@@ -1,5 +1,6 @@
 from app import db
-from app.models import ContractDraft, PublishedContract
+from app.models.contract import ContractDraft
+from app.models.published_contract import Contract
 
 def publish_contract(draft: dict) -> dict:
     """
@@ -12,7 +13,7 @@ def publish_contract(draft: dict) -> dict:
         draft["status"] = "rejected"
         return draft
 
-    published = PublishedContract(
+    published = Contract(
         draft_id=draft.get("id"),
         city=draft.get("city"),
         title=draft.get("refined_title"),
@@ -34,7 +35,7 @@ def publish_contract(draft: dict) -> dict:
     draft.setdefault("stage_log", []).append({
         "stage": "publisher",
         "input": f"ContractDraft id={draft.get('id')}",
-        "output": f"PublishedContract id={published.id}",
+        "output": f"Contract id={published.id}",
         "verdict": "published"
     })
 

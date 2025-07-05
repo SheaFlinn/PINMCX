@@ -154,7 +154,7 @@ def test_process_headlines_runs_full_pipeline():
             assert "city" in contract
 
 def test_publish_contract_persists_to_db(test_app):
-    from app.models.draft_contract import DraftContract
+    from app.models.contract import ContractDraft
     from contract_chain import publish_contract
     import uuid
     from datetime import datetime

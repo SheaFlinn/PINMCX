@@ -132,7 +132,7 @@ def publish_contract(contract: dict) -> dict:
     Insert a validated contract into the DraftContract table and return the contract dict.
     """
     import logging
-    from app.models.draft_contract import DraftContract
+    from app.models.contract import ContractDraft
     from app.extensions import db
 
     # Ensure contract_id and status are set
