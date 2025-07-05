@@ -5,7 +5,10 @@ from flask_cors import CORS
 from app.extensions import db, login_manager, migrate
 
 def create_app(config=None):
-    app = Flask(__name__)
+    import os
+    template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'templates'))
+    app = Flask(__name__, template_folder=template_dir)
+    print("Flask template search path:", app.jinja_loader.searchpath)
     
     # Load default config
     app.config.from_object('config.Config')
@@ -19,6 +22,12 @@ def create_app(config=None):
     login_manager.init_app(app)
     migrate.init_app(app, db)
     CORS(app)
+
+    # Register user_loader for Flask-Login
+    from app.models.user import User
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
 
     # Import models *after* init_app to bind correctly
     from app import models

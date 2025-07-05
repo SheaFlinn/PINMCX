@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin - Published Contracts</title>
+</head>
+<body>
+    <h1>Published Contracts</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>City</th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Actor</th>
+                <th>Resolution Method</th>
+                <th>Source URL</th>
+                <th>Resolution Date</th>
+                <th>Created At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for contract in contracts %}
+            <tr>
+                <td>{{ contract.id }}</td>
+                <td>{{ contract.city }}</td>
+                <td>{{ contract.title }}</td>
+                <td>{{ contract.description }}</td>
+                <td>{{ contract.actor }}</td>
+                <td>{{ contract.resolution_method }}</td>
+                <td>{{ contract.source_url }}</td>
+                <td>{{ contract.resolution_date }}</td>
+                <td>{{ contract.created_at }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <a href="{{ url_for('admin.contract_drafts') }}">View Contract Drafts</a>
+</body>
+</html>

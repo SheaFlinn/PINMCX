@@ -1,37 +1,39 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_required, current_user
 from app.models.contract import ContractDraft
-from app.models import NewsSource
+from app.models.published_contract import Contract
 from app import db
 
 admin = Blueprint('admin', __name__)
 
-@admin.route('/admin')
-@login_required
-def dashboard():
-    if not current_user.is_admin:
-        flash("Unauthorized", "danger")
-        return redirect(url_for('main.index'))
-
+# GET /admin/contracts: Show all ContractDrafts (pending approval)
+@admin.route('/contracts')
+def contract_drafts():
     drafts = ContractDraft.query.all()
-    sources = NewsSource.query.all()
-    return render_template('admin/dashboard.html', drafts=drafts, sources=sources)
+    return render_template('admin_contracts.html', drafts=drafts)
 
-@admin.route('/admin/publish/<int:draft_id>', methods=['POST'])
-@login_required
+# POST /admin/contracts/<draft_id>/publish: Publish draft
+@admin.route('/contracts/<int:draft_id>/publish', methods=['POST'])
 def publish_draft(draft_id):
-    if not current_user.is_admin:
-        flash("Unauthorized", "danger")
-        return redirect(url_for('main.index'))
-
-    # Assume ContractDraft has .to_contract() method or similar
     draft = ContractDraft.query.get_or_404(draft_id)
-    market = draft.to_contract()
-    db.session.add(market)
-    db.session.commit()
-
+    contract = draft.to_contract()
+    db.session.add(contract)
     db.session.delete(draft)
     db.session.commit()
+    flash('Draft published successfully.', 'success')
+    return redirect(url_for('admin.contract_drafts'))
 
-    flash("Draft published successfully", "success")
-    return redirect(url_for('admin.dashboard'))
+# POST /admin/contracts/<draft_id>/reject: Delete draft
+@admin.route('/contracts/<int:draft_id>/reject', methods=['POST'])
+def reject_draft(draft_id):
+    draft = ContractDraft.query.get_or_404(draft_id)
+    db.session.delete(draft)
+    db.session.commit()
+    flash('Draft rejected and deleted.', 'info')
+    return redirect(url_for('admin.contract_drafts'))
+
+# GET /admin/published: Show all published Contracts
+@admin.route('/published')
+def published_contracts():
+    contracts = Contract.query.all()
+    return render_template('admin_published.html', contracts=contracts)
+

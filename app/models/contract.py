@@ -13,12 +13,20 @@ class ContractDraft(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def to_contract(self):
+        import json
         from app.models.published_contract import Contract
+        terms = self.terms
+        if isinstance(terms, str):
+            try:
+                terms = json.loads(terms)
+            except Exception:
+                terms = {}
         return Contract(
+            city=getattr(self, 'city', '') or '',
             title=self.title,
             description=self.purpose,
             resolution_method=self.scope,
-            source_url=self.terms.get("resolution_source"),
+            source_url=terms.get("resolution_source"),
             resolution_date=datetime.utcnow()  # Placeholder
         )
 
