@@ -1,0 +1,3 @@
+2025-07-27 19:42:24,595 - compliance_audit - INFO - Compliance metric: pipeline_reliability=0.95 for pipeline_enforcer
+2025-07-27 19:42:24,596 - compliance_audit - INFO - Compliance metric: enforcement_rate=0.8 for critic_enforcer
+2025-07-27 19:42:24,596 - compliance_audit - INFO - Compliance metric: backup_success_rate=1.0 for backup_system

@@ -1,0 +1,816 @@
+{
+  "batch_id": "test_batch_20250727_192110",
+  "total_contracts": 10,
+  "published_contracts": 0,
+  "blocked_contracts": 0,
+  "admin_rescue_contracts": 10,
+  "failed_contracts": 0,
+  "pipeline_reliability": 1.0,
+  "enforcement_rate": 0.0,
+  "processing_time": 0.002757,
+  "timestamp": "2025-07-28 00:21:10.347990",
+  "contract_results": [
+    {
+      "contract_id": "test_1",
+      "original_title": "Will Memphis City Council approve the $50M infrastructure bond by March 31st?",
+      "pipeline_status": "ADMIN_RESCUE",
+      "stages_completed": [
+        {
+          "stage_name": "variant_generation",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 2,
+          "blocked_count": 2,
+          "execution_time": 0.000222,
+          "error_message": null,
+          "stage_details": {
+            "variants_generated": 2,
+            "variants_passed": 0,
+            "variants_blocked": 2,
+            "recommendation": "reject_all"
+          }
+        },
+        {
+          "stage_name": "critic_analysis",
+          "status": "BLOCKED",
+          "input_count": 2,
+          "output_count": 0,
+          "blocked_count": 1,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "overall_score": 0.0,
+            "market_balance_score": 1.0,
+            "blocked": true,
+            "blocking_issues": [
+              "analysis_error"
+            ],
+            "admin_override_required": true
+          }
+        },
+        {
+          "stage_name": "admin_rescue",
+          "status": "ADMIN_RESCUE",
+          "input_count": 1,
+          "output_count": 0,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "requires_rescue": true,
+            "rescue_reason": null
+          }
+        },
+        {
+          "stage_name": "publication",
+          "status": "ADMIN_RESCUE",
+          "input_count": 1,
+          "output_count": 0,
+          "blocked_count": 0,
+          "execution_time": 2e-06,
+          "error_message": null,
+          "stage_details": {
+            "final_status": "ADMIN_RESCUE",
+            "published": false
+          }
+        }
+      ],
+      "final_contract": null,
+      "variants_generated": 2,
+      "variants_passed": 0,
+      "variants_blocked": 2,
+      "blocking_issues": [
+        "analysis_error"
+      ],
+      "admin_rescue_reason": "Close to market balance threshold (1.00) but blocked; Blocking issues: analysis_error",
+      "processing_time": 0.000234,
+      "timestamp": "2025-07-28 00:21:10.345483"
+    },
+    {
+      "contract_id": "test_2",
+      "original_title": "Will the new downtown development project receive unanimous approval?",
+      "pipeline_status": "ADMIN_RESCUE",
+      "stages_completed": [
+        {
+          "stage_name": "variant_generation",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 2,
+          "blocked_count": 2,
+          "execution_time": 0.000219,
+          "error_message": null,
+          "stage_details": {
+            "variants_generated": 2,
+            "variants_passed": 0,
+            "variants_blocked": 2,
+            "recommendation": "reject_all"
+          }
+        },
+        {
+          "stage_name": "critic_analysis",
+          "status": "BLOCKED",
+          "input_count": 2,
+          "output_count": 0,
+          "blocked_count": 1,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "overall_score": 0.0,
+            "market_balance_score": 1.0,
+            "blocked": true,
+            "blocking_issues": [
+              "analysis_error"
+            ],
+            "admin_override_required": true
+          }
+        },
+        {
+          "stage_name": "admin_rescue",
+          "status": "ADMIN_RESCUE",
+          "input_count": 1,
+          "output_count": 0,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "requires_rescue": true,
+            "rescue_reason": null
+          }
+        },
+        {
+          "stage_name": "publication",
+          "status": "ADMIN_RESCUE",
+          "input_count": 1,
+          "output_count": 0,
+          "blocked_count": 0,
+          "execution_time": 2e-06,
+          "error_message": null,
+          "stage_details": {
+            "final_status": "ADMIN_RESCUE",
+            "published": false
+          }
+        }
+      ],
+      "final_contract": null,
+      "variants_generated": 2,
+      "variants_passed": 0,
+      "variants_blocked": 2,
+      "blocking_issues": [
+        "analysis_error"
+      ],
+      "admin_rescue_reason": "Close to market balance threshold (1.00) but blocked; Blocking issues: analysis_error",
+      "processing_time": 0.000226,
+      "timestamp": "2025-07-28 00:21:10.345749"
+    },
+    {
+      "contract_id": "test_3",
+      "original_title": "Will Mayor Strickland's budget proposal pass without major amendments?",
+      "pipeline_status": "ADMIN_RESCUE",
+      "stages_completed": [
+        {
+          "stage_name": "variant_generation",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 2,
+          "blocked_count": 2,
+          "execution_time": 0.000219,
+          "error_message": null,
+          "stage_details": {
+            "variants_generated": 2,
+            "variants_passed": 0,
+            "variants_blocked": 2,
+            "recommendation": "reject_all"
+          }
+        },
+        {
+          "stage_name": "critic_analysis",
+          "status": "BLOCKED",
+          "input_count": 2,
+          "output_count": 0,
+          "blocked_count": 1,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "overall_score": 0.0,
+            "market_balance_score": 1.0,
+            "blocked": true,
+            "blocking_issues": [
+              "analysis_error"
+            ],
+            "admin_override_required": true
+          }
+        },
+        {
+          "stage_name": "admin_rescue",
+          "status": "ADMIN_RESCUE",
+          "input_count": 1,
+          "output_count": 0,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "requires_rescue": true,
+            "rescue_reason": null
+          }
+        },
+        {
+          "stage_name": "publication",
+          "status": "ADMIN_RESCUE",
+          "input_count": 1,
+          "output_count": 0,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "final_status": "ADMIN_RESCUE",
+            "published": false
+          }
+        }
+      ],
+      "final_contract": null,
+      "variants_generated": 2,
+      "variants_passed": 0,
+      "variants_blocked": 2,
+      "blocking_issues": [
+        "analysis_error"
+      ],
+      "admin_rescue_reason": "Close to market balance threshold (1.00) but blocked; Blocking issues: analysis_error",
+      "processing_time": 0.000227,
+      "timestamp": "2025-07-28 00:21:10.346006"
+    },
+    {
+      "contract_id": "test_4",
+      "original_title": "Will the Shelby County Commission approve the tax increase by year-end?",
+      "pipeline_status": "ADMIN_RESCUE",
+      "stages_completed": [
+        {
+          "stage_name": "variant_generation",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 2,
+          "blocked_count": 2,
+          "execution_time": 0.00026,
+          "error_message": null,
+          "stage_details": {
+            "variants_generated": 2,
+            "variants_passed": 0,
+            "variants_blocked": 2,
+            "recommendation": "reject_all"
+          }
+        },
+        {
+          "stage_name": "critic_analysis",
+          "status": "BLOCKED",
+          "input_count": 2,
+          "output_count": 0,
+          "blocked_count": 1,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "overall_score": 0.0,
+            "market_balance_score": 1.0,
+            "blocked": true,
+            "blocking_issues": [
+              "analysis_error"
+            ],
+            "admin_override_required": true
+          }
+        },
+        {
+          "stage_name": "admin_rescue",
+          "status": "ADMIN_RESCUE",
+          "input_count": 1,
+          "output_count": 0,
+          "blocked_count": 0,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "requires_rescue": true,
+            "rescue_reason": null
+          }
+        },
+        {
+          "stage_name": "publication",
+          "status": "ADMIN_RESCUE",
+          "input_count": 1,
+          "output_count": 0,
+          "blocked_count": 0,
+          "execution_time": 2e-06,
+          "error_message": null,
+          "stage_details": {
+            "final_status": "ADMIN_RESCUE",
+            "published": false
+          }
+        }
+      ],
+      "final_contract": null,
+      "variants_generated": 2,
+      "variants_passed": 0,
+      "variants_blocked": 2,
+      "blocking_issues": [
+        "analysis_error"
+      ],
+      "admin_rescue_reason": "Close to market balance threshold (1.00) but blocked; Blocking issues: analysis_error",
+      "processing_time": 0.000267,
+      "timestamp": "2025-07-28 00:21:10.346301"
+    },
+    {
+      "contract_id": "test_5",
+      "original_title": "Will the Memphis Light Gas & Water rate hike be delayed beyond 2025?",
+      "pipeline_status": "ADMIN_RESCUE",
+      "stages_completed": [
+        {
+          "stage_name": "variant_generation",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 2,
+          "blocked_count": 2,
+          "execution_time": 0.000216,
+          "error_message": null,
+          "stage_details": {
+            "variants_generated": 2,
+            "variants_passed": 0,
+            "variants_blocked": 2,
+            "recommendation": "reject_all"
+          }
+        },
+        {
+          "stage_name": "critic_analysis",
+          "status": "BLOCKED",
+          "input_count": 2,
+          "output_count": 0,
+          "blocked_count": 1,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "overall_score": 0.0,
+            "market_balance_score": 1.0,
+            "blocked": true,
+            "blocking_issues": [
+              "analysis_error"
+            ],
+            "admin_override_required": true
+          }
+        },
+        {
+          "stage_name": "admin_rescue",
+          "status": "ADMIN_RESCUE",
+          "input_count": 1,
+          "output_count": 0,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "requires_rescue": true,
+            "rescue_reason": null
+          }
+        },
+        {
+          "stage_name": "publication",
+          "status": "ADMIN_RESCUE",
+          "input_count": 1,
+          "output_count": 0,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "final_status": "ADMIN_RESCUE",
+            "published": false
+          }
+        }
+      ],
+      "final_contract": null,
+      "variants_generated": 2,
+      "variants_passed": 0,
+      "variants_blocked": 2,
+      "blocking_issues": [
+        "analysis_error"
+      ],
+      "admin_rescue_reason": "Close to market balance threshold (1.00) but blocked; Blocking issues: analysis_error",
+      "processing_time": 0.000222,
+      "timestamp": "2025-07-28 00:21:10.346552"
+    },
+    {
+      "contract_id": "test_6",
+      "original_title": "Will the FedExForum renovation project stay within budget?",
+      "pipeline_status": "ADMIN_RESCUE",
+      "stages_completed": [
+        {
+          "stage_name": "variant_generation",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 2,
+          "blocked_count": 2,
+          "execution_time": 0.000375,
+          "error_message": null,
+          "stage_details": {
+            "variants_generated": 2,
+            "variants_passed": 0,
+            "variants_blocked": 2,
+            "recommendation": "reject_all"
+          }
+        },
+        {
+          "stage_name": "critic_analysis",
+          "status": "BLOCKED",
+          "input_count": 2,
+          "output_count": 0,
+          "blocked_count": 1,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "overall_score": 0.0,
+            "market_balance_score": 1.0,
+            "blocked": true,
+            "blocking_issues": [
+              "analysis_error"
+            ],
+            "admin_override_required": true
+          }
+        },
+        {
+          "stage_name": "admin_rescue",
+          "status": "ADMIN_RESCUE",
+          "input_count": 1,
+          "output_count": 0,
+          "blocked_count": 0,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "requires_rescue": true,
+            "rescue_reason": null
+          }
+        },
+        {
+          "stage_name": "publication",
+          "status": "ADMIN_RESCUE",
+          "input_count": 1,
+          "output_count": 0,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "final_status": "ADMIN_RESCUE",
+            "published": false
+          }
+        }
+      ],
+      "final_contract": null,
+      "variants_generated": 2,
+      "variants_passed": 0,
+      "variants_blocked": 2,
+      "blocking_issues": [
+        "analysis_error"
+      ],
+      "admin_rescue_reason": "Close to market balance threshold (1.00) but blocked; Blocking issues: analysis_error",
+      "processing_time": 0.000381,
+      "timestamp": "2025-07-28 00:21:10.346962"
+    },
+    {
+      "contract_id": "test_7",
+      "original_title": "Will the Memphis Police Department budget increase be approved?",
+      "pipeline_status": "ADMIN_RESCUE",
+      "stages_completed": [
+        {
+          "stage_name": "variant_generation",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 2,
+          "blocked_count": 2,
+          "execution_time": 0.000216,
+          "error_message": null,
+          "stage_details": {
+            "variants_generated": 2,
+            "variants_passed": 0,
+            "variants_blocked": 2,
+            "recommendation": "reject_all"
+          }
+        },
+        {
+          "stage_name": "critic_analysis",
+          "status": "BLOCKED",
+          "input_count": 2,
+          "output_count": 0,
+          "blocked_count": 1,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "overall_score": 0.0,
+            "market_balance_score": 1.0,
+            "blocked": true,
+            "blocking_issues": [
+              "analysis_error"
+            ],
+            "admin_override_required": true
+          }
+        },
+        {
+          "stage_name": "admin_rescue",
+          "status": "ADMIN_RESCUE",
+          "input_count": 1,
+          "output_count": 0,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "requires_rescue": true,
+            "rescue_reason": null
+          }
+        },
+        {
+          "stage_name": "publication",
+          "status": "ADMIN_RESCUE",
+          "input_count": 1,
+          "output_count": 0,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "final_status": "ADMIN_RESCUE",
+            "published": false
+          }
+        }
+      ],
+      "final_contract": null,
+      "variants_generated": 2,
+      "variants_passed": 0,
+      "variants_blocked": 2,
+      "blocking_issues": [
+        "analysis_error"
+      ],
+      "admin_rescue_reason": "Close to market balance threshold (1.00) but blocked; Blocking issues: analysis_error",
+      "processing_time": 0.000223,
+      "timestamp": "2025-07-28 00:21:10.347214"
+    },
+    {
+      "contract_id": "test_8",
+      "original_title": "Will the new affordable housing initiative receive full funding?",
+      "pipeline_status": "ADMIN_RESCUE",
+      "stages_completed": [
+        {
+          "stage_name": "variant_generation",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 2,
+          "blocked_count": 2,
+          "execution_time": 0.000218,
+          "error_message": null,
+          "stage_details": {
+            "variants_generated": 2,
+            "variants_passed": 0,
+            "variants_blocked": 2,
+            "recommendation": "reject_all"
+          }
+        },
+        {
+          "stage_name": "critic_analysis",
+          "status": "BLOCKED",
+          "input_count": 2,
+          "output_count": 0,
+          "blocked_count": 1,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "overall_score": 0.0,
+            "market_balance_score": 1.0,
+            "blocked": true,
+            "blocking_issues": [
+              "analysis_error"
+            ],
+            "admin_override_required": true
+          }
+        },
+        {
+          "stage_name": "admin_rescue",
+          "status": "ADMIN_RESCUE",
+          "input_count": 1,
+          "output_count": 0,
+          "blocked_count": 0,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "requires_rescue": true,
+            "rescue_reason": null
+          }
+        },
+        {
+          "stage_name": "publication",
+          "status": "ADMIN_RESCUE",
+          "input_count": 1,
+          "output_count": 0,
+          "blocked_count": 0,
+          "execution_time": 2e-06,
+          "error_message": null,
+          "stage_details": {
+            "final_status": "ADMIN_RESCUE",
+            "published": false
+          }
+        }
+      ],
+      "final_contract": null,
+      "variants_generated": 2,
+      "variants_passed": 0,
+      "variants_blocked": 2,
+      "blocking_issues": [
+        "analysis_error"
+      ],
+      "admin_rescue_reason": "Close to market balance threshold (1.00) but blocked; Blocking issues: analysis_error",
+      "processing_time": 0.000225,
+      "timestamp": "2025-07-28 00:21:10.347467"
+    },
+    {
+      "contract_id": "test_9",
+      "original_title": "Will the Beale Street renovation be completed on schedule?",
+      "pipeline_status": "ADMIN_RESCUE",
+      "stages_completed": [
+        {
+          "stage_name": "variant_generation",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 2,
+          "blocked_count": 2,
+          "execution_time": 0.000216,
+          "error_message": null,
+          "stage_details": {
+            "variants_generated": 2,
+            "variants_passed": 0,
+            "variants_blocked": 2,
+            "recommendation": "reject_all"
+          }
+        },
+        {
+          "stage_name": "critic_analysis",
+          "status": "BLOCKED",
+          "input_count": 2,
+          "output_count": 0,
+          "blocked_count": 1,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "overall_score": 0.0,
+            "market_balance_score": 1.0,
+            "blocked": true,
+            "blocking_issues": [
+              "analysis_error"
+            ],
+            "admin_override_required": true
+          }
+        },
+        {
+          "stage_name": "admin_rescue",
+          "status": "ADMIN_RESCUE",
+          "input_count": 1,
+          "output_count": 0,
+          "blocked_count": 0,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "requires_rescue": true,
+            "rescue_reason": null
+          }
+        },
+        {
+          "stage_name": "publication",
+          "status": "ADMIN_RESCUE",
+          "input_count": 1,
+          "output_count": 0,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "final_status": "ADMIN_RESCUE",
+            "published": false
+          }
+        }
+      ],
+      "final_contract": null,
+      "variants_generated": 2,
+      "variants_passed": 0,
+      "variants_blocked": 2,
+      "blocking_issues": [
+        "analysis_error"
+      ],
+      "admin_rescue_reason": "Close to market balance threshold (1.00) but blocked; Blocking issues: analysis_error",
+      "processing_time": 0.000223,
+      "timestamp": "2025-07-28 00:21:10.347719"
+    },
+    {
+      "contract_id": "test_10",
+      "original_title": "Will the Memphis Airport expansion project face organized opposition?",
+      "pipeline_status": "ADMIN_RESCUE",
+      "stages_completed": [
+        {
+          "stage_name": "variant_generation",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 2,
+          "blocked_count": 2,
+          "execution_time": 0.000221,
+          "error_message": null,
+          "stage_details": {
+            "variants_generated": 2,
+            "variants_passed": 0,
+            "variants_blocked": 2,
+            "recommendation": "reject_all"
+          }
+        },
+        {
+          "stage_name": "critic_analysis",
+          "status": "BLOCKED",
+          "input_count": 2,
+          "output_count": 0,
+          "blocked_count": 1,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "overall_score": 0.0,
+            "market_balance_score": 1.0,
+            "blocked": true,
+            "blocking_issues": [
+              "analysis_error"
+            ],
+            "admin_override_required": true
+          }
+        },
+        {
+          "stage_name": "admin_rescue",
+          "status": "ADMIN_RESCUE",
+          "input_count": 1,
+          "output_count": 0,
+          "blocked_count": 0,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "requires_rescue": true,
+            "rescue_reason": null
+          }
+        },
+        {
+          "stage_name": "publication",
+          "status": "ADMIN_RESCUE",
+          "input_count": 1,
+          "output_count": 0,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "final_status": "ADMIN_RESCUE",
+            "published": false
+          }
+        }
+      ],
+      "final_contract": null,
+      "variants_generated": 2,
+      "variants_passed": 0,
+      "variants_blocked": 2,
+      "blocking_issues": [
+        "analysis_error"
+      ],
+      "admin_rescue_reason": "Close to market balance threshold (1.00) but blocked; Blocking issues: analysis_error",
+      "processing_time": 0.000228,
+      "timestamp": "2025-07-28 00:21:10.347975"
+    }
+  ],
+  "stage_summary": {
+    "variant_generation": {
+      "stage_name": "variant_generation",
+      "status": "SUCCESS",
+      "input_count": 10,
+      "output_count": 20,
+      "blocked_count": 20,
+      "execution_time": 0.002382,
+      "error_message": null,
+      "stage_details": null
+    },
+    "critic_analysis": {
+      "stage_name": "critic_analysis",
+      "status": "SUCCESS",
+      "input_count": 20,
+      "output_count": 0,
+      "blocked_count": 10,
+      "execution_time": 4e-06,
+      "error_message": null,
+      "stage_details": null
+    },
+    "admin_rescue": {
+      "stage_name": "admin_rescue",
+      "status": "SUCCESS",
+      "input_count": 10,
+      "output_count": 0,
+      "blocked_count": 0,
+      "execution_time": 4.9999999999999996e-06,
+      "error_message": null,
+      "stage_details": null
+    },
+    "publication": {
+      "stage_name": "publication",
+      "status": "SUCCESS",
+      "input_count": 10,
+      "output_count": 0,
+      "blocked_count": 0,
+      "execution_time": 1.4000000000000001e-05,
+      "error_message": null,
+      "stage_details": null
+    }
+  }
+}

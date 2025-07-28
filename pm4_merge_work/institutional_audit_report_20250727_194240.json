@@ -1,0 +1,125 @@
+{
+  "audit_id": "institutional_audit_20250727_194224",
+  "timestamp": "2025-07-28T00:42:24.589886",
+  "overall_status": "RED",
+  "overall_score": 0.5008,
+  "category_results": {
+    "integration": [
+      {
+        "test_name": "100_plus_events_processing",
+        "category": "integration",
+        "status": "RED",
+        "score": 0.5,
+        "details": {
+          "total_events": 100,
+          "pipeline_reliability": 1.0,
+          "enforcement_rate": 0.0,
+          "published_contracts": 0,
+          "blocked_contracts": 0,
+          "admin_rescue_contracts": 100,
+          "failed_contracts": 0,
+          "processing_time": 0.07288
+        },
+        "issues": [],
+        "recommendations": [],
+        "timestamp": "2025-07-28T00:42:24.589886"
+      }
+    ],
+    "reframing_qa": [
+      {
+        "test_name": "market_balance_enforcement",
+        "category": "reframing_qa",
+        "status": "GREEN",
+        "score": 1.0,
+        "details": {
+          "blocking_tests": 2,
+          "correctly_blocked": 2,
+          "blocking_issues_detected": [
+            "analysis_error"
+          ],
+          "enforcement_rate": 1.0
+        },
+        "issues": [],
+        "recommendations": [],
+        "timestamp": "2025-07-28T00:42:24.589886"
+      }
+    ],
+    "audit_logging": [
+      {
+        "test_name": "comprehensive_audit_logging",
+        "category": "audit_logging",
+        "status": "RED",
+        "score": 0.3373333333333333,
+        "details": {
+          "log_files_found": 1,
+          "total_log_paths": 3,
+          "log_entries_found": 4
+        },
+        "issues": [
+          "Incomplete audit logging"
+        ],
+        "recommendations": [
+          "Enhance audit logging coverage"
+        ],
+        "timestamp": "2025-07-28T00:42:24.589886"
+      }
+    ],
+    "narrative_gamification": [
+      {
+        "test_name": "gamification_components",
+        "category": "narrative_gamification",
+        "status": "RED",
+        "score": 0.3333333333333333,
+        "details": {
+          "gamification_components_found": 1,
+          "total_gamification_components": 3
+        },
+        "issues": [
+          "Missing gamification components"
+        ],
+        "recommendations": [
+          "Implement missing gamification features"
+        ],
+        "timestamp": "2025-07-28T00:42:24.589886"
+      }
+    ],
+    "source_backup": [
+      {
+        "test_name": "backup_and_recovery",
+        "category": "source_backup",
+        "status": "RED",
+        "score": 0.3333333333333333,
+        "details": {
+          "backup_files_found": 1,
+          "total_backup_paths": 3
+        },
+        "issues": [
+          "Missing backup files"
+        ],
+        "recommendations": [
+          "Implement comprehensive backup system"
+        ],
+        "timestamp": "2025-07-28T00:42:24.589886"
+      }
+    ]
+  },
+  "summary": {
+    "total_tests": 5,
+    "green_tests": 1,
+    "yellow_tests": 0,
+    "red_tests": 4,
+    "pass_rate": 0.2
+  },
+  "action_plan": [
+    "Implement missing gamification features",
+    "Enhance audit logging coverage",
+    "Implement comprehensive backup system"
+  ],
+  "compliance_status": {
+    "pipeline_reliability": "RED",
+    "market_enforcement": "GREEN",
+    "audit_logging": "GREEN",
+    "admin_oversight": "GREEN",
+    "backup_recovery": "GREEN"
+  }
+}

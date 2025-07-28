@@ -1,0 +1,55 @@
+{
+  "backup_jobs": [
+    {
+      "job_id": "db_daily_backup",
+      "name": "Database Daily Backup",
+      "source_path": "mcx_points.db",
+      "backup_type": "FULL",
+      "schedule": "DAILY",
+      "retention_days": 90,
+      "encryption_enabled": true,
+      "compression_enabled": true,
+      "verification_enabled": true,
+      "last_backup": null,
+      "next_backup": null,
+      "status": "ACTIVE"
+    },
+    {
+      "job_id": "logs_daily_backup",
+      "name": "Logs Daily Backup",
+      "source_path": "logs/",
+      "backup_type": "INCREMENTAL",
+      "schedule": "DAILY",
+      "retention_days": 30,
+      "encryption_enabled": false,
+      "compression_enabled": true,
+      "verification_enabled": true,
+      "last_backup": null,
+      "next_backup": null,
+      "status": "ACTIVE"
+    },
+    {
+      "job_id": "config_weekly_backup",
+      "name": "Configuration Weekly Backup",
+      "source_path": "app/",
+      "backup_type": "FULL",
+      "schedule": "WEEKLY",
+      "retention_days": 180,
+      "encryption_enabled": true,
+      "compression_enabled": true,
+      "verification_enabled": true,
+      "last_backup": null,
+      "next_backup": null,
+      "status": "ACTIVE"
+    }
+  ],
+  "compliance_settings": {
+    "min_backup_frequency_hours": 24,
+    "min_retention_days": 90,
+    "max_recovery_time_hours": 4,
+    "backup_verification_required": true,
+    "encryption_required": true,
+    "offsite_replication_required": true
+  },
+  "last_updated": "2025-07-28T00:42:24.360063"
+}

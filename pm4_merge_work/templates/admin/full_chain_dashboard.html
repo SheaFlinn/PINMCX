@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full-Chain Pipeline Dashboard - Memphis Civic Prediction Market</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .status-published { background-color: #28a745; color: white; }
+        .status-blocked { background-color: #dc3545; color: white; }
+        .status-rescue { background-color: #ffc107; color: black; }
+        .status-failed { background-color: #6c757d; color: white; }
+        .reliability-indicator {
+            width: 100%;
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .reliability-bar {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        .reliability-good { background-color: #28a745; }
+        .reliability-warning { background-color: #ffc107; }
+        .reliability-poor { background-color: #dc3545; }
+        .blocking-issue {
+            background-color: #f8f9fa;
+            border-left: 4px solid #dc3545;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .rescue-item {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .priority-high { border-left: 4px solid #dc3545; }
+        .priority-medium { border-left: 4px solid #ffc107; }
+        .priority-low { border-left: 4px solid #28a745; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-chart-line"></i> Full-Chain Pipeline Dashboard
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text">
+                    Memphis Civic Prediction Market - World-Class 50/50 Enforcement
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Pipeline Performance Overview -->
+        <div class="row">
+            <div class="col-12">
+                <h2><i class="fas fa-tachometer-alt"></i> Pipeline Performance Overview</h2>
+                <p class="text-muted">Last {{ metrics.period_days }} days - Target: >80% Pipeline Reliability</p>
+            </div>
+        </div>
+
+        <!-- Key Metrics Cards -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value">{{ metrics.total_contracts }}</div>
+                    <div class="metric-label">Total Contracts Processed</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value">{{ "%.1f"|format(metrics.pipeline_reliability * 100) }}%</div>
+                    <div class="metric-label">
+                        Pipeline Reliability
+                        {% if metrics.reliability_target_met %}
+                            <i class="fas fa-check-circle text-success"></i>
+                        {% else %}
+                            <i class="fas fa-exclamation-triangle text-warning"></i>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value">{{ "%.1f"|format(metrics.enforcement_rate * 100) }}%</div>
+                    <div class="metric-label">Enforcement Rate (Blocked)</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value">{{ metrics.admin_rescue_contracts }}</div>
+                    <div class="metric-label">Admin Rescue Queue</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pipeline Status Breakdown -->
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-chart-pie"></i> Contract Status Distribution</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="statusChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-exclamation-triangle"></i> Blocking Issues Analysis</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if metrics.blocking_issue_analysis.issue_frequency %}
+                            {% for issue, count in metrics.blocking_issue_analysis.issue_frequency %}
+                                <div class="blocking-issue">
+                                    <strong>{{ issue.replace('_', ' ').title() }}</strong>
+                                    <span class="badge bg-danger float-end">{{ count }}</span>
+                                    <div class="mt-1">
+                                        <div class="progress" style="height: 5px;">
+                                            <div class="progress-bar bg-danger" 
+                                                 style="width: {{ (count / metrics.blocking_issue_analysis.total_blocked_contracts * 100) }}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">No blocking issues in recent contracts</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Rescue Queue -->
+        {% if metrics.admin_rescue_queue %}
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="fas fa-life-ring"></i> Admin Rescue Queue</h5>
+                        <span class="badge bg-warning">{{ metrics.admin_rescue_queue|length }} contracts need attention</span>
+                    </div>
+                    <div class="card-body">
+                        {% for item in metrics.admin_rescue_queue[:10] %}
+                            <div class="rescue-item priority-{{ 'high' if item.priority > 0.7 else 'medium' if item.priority > 0.4 else 'low' }}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">
+                                            <a href="{{ url_for('full_chain_admin.contract_details', contract_id=item.contract_id) }}">
+                                                {{ item.original_title }}
+                                            </a>
+                                        </h6>
+                                        <p class="mb-1 text-muted">{{ item.rescue_reason }}</p>
+                                        <small class="text-muted">
+                                            Variants: {{ item.variants_passed }}/{{ item.variants_generated }} passed
+                                            {% if item.blocking_issues %}
+                                                | Issues: {{ item.blocking_issues|join(', ') }}
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-success btn-sm" 
+                                                    onclick="showOverrideModal('{{ item.contract_id }}', 'approve_publish')">
+                                                <i class="fas fa-check"></i> Approve
+                                            </button>
+                                            <button class="btn btn-warning btn-sm" 
+                                                    onclick="showOverrideModal('{{ item.contract_id }}', 'request_rewrite')">
+                                                <i class="fas fa-edit"></i> Rewrite
+                                            </button>
+                                            <button class="btn btn-danger btn-sm" 
+                                                    onclick="showOverrideModal('{{ item.contract_id }}', 'reject_permanently')">
+                                                <i class="fas fa-times"></i> Reject
+                                            </button>
+                                        </div>
+                                        <div class="mt-1">
+                                            <small class="text-muted">Priority: {{ "%.1f"|format(item.priority * 100) }}%</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        
+                        {% if metrics.admin_rescue_queue|length > 10 %}
+                            <div class="text-center mt-3">
+                                <a href="{{ url_for('full_chain_admin.rescue_queue') }}" class="btn btn-outline-primary">
+                                    View All {{ metrics.admin_rescue_queue|length }} Rescue Items
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Daily Performance Trends -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-chart-line"></i> Daily Performance Trends</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="trendsChart" width="400" height="150"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Batches -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-history"></i> Recent Processing Batches</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Batch ID</th>
+                                        <th>Timestamp</th>
+                                        <th>Contracts</th>
+                                        <th>Published</th>
+                                        <th>Blocked</th>
+                                        <th>Rescue</th>
+                                        <th>Reliability</th>
+                                        <th>Enforcement</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for batch in metrics.recent_batches %}
+                                        <tr>
+                                            <td><code>{{ batch.batch_id }}</code></td>
+                                            <td>{{ batch.timestamp[:19] }}</td>
+                                            <td>{{ batch.total_contracts }}</td>
+                                            <td><span class="status-badge status-published">{{ batch.published_contracts }}</span></td>
+                                            <td><span class="status-badge status-blocked">{{ batch.blocked_contracts }}</span></td>
+                                            <td><span class="status-badge status-rescue">{{ batch.admin_rescue_contracts }}</span></td>
+                                            <td>
+                                                <div class="reliability-indicator">
+                                                    <div class="reliability-bar {{ 'reliability-good' if batch.pipeline_reliability >= 0.8 else 'reliability-warning' if batch.pipeline_reliability >= 0.6 else 'reliability-poor' }}" 
+                                                         style="width: {{ batch.pipeline_reliability * 100 }}%"></div>
+                                                </div>
+                                                {{ "%.1f"|format(batch.pipeline_reliability * 100) }}%
+                                            </td>
+                                            <td>{{ "%.1f"|format(batch.enforcement_rate * 100) }}%</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pipeline Testing -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-flask"></i> Pipeline Testing</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Test the full-chain pipeline with sample Memphis contracts to validate enforcement.</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="testCount" class="form-label">Number of test contracts:</label>
+                                <input type="number" class="form-control" id="testCount" value="20" min="5" max="100">
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <button class="btn btn-primary" onclick="runPipelineTest()">
+                                    <i class="fas fa-play"></i> Run Pipeline Test
+                                </button>
+                            </div>
+                        </div>
+                        <div id="testResults" class="mt-3" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Override Modal -->
+    <div class="modal fade" id="overrideModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Admin Override</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="overrideForm">
+                        <input type="hidden" id="overrideContractId">
+                        <input type="hidden" id="overrideAction">
+                        
+                        <div class="mb-3">
+                            <label for="overrideReason" class="form-label">Override Reason (required):</label>
+                            <textarea class="form-control" id="overrideReason" rows="4" 
+                                      placeholder="Explain why this override is necessary..."></textarea>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Warning:</strong> This action will override the automated market balance enforcement. 
+                            Ensure the contract meets 50/50 viability standards before approving.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="processOverride()">Confirm Override</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Status Distribution Chart
+        const statusCtx = document.getElementById('statusChart').getContext('2d');
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Published', 'Blocked', 'Admin Rescue', 'Failed'],
+                datasets: [{
+                    data: [
+                        {{ metrics.published_contracts }},
+                        {{ metrics.blocked_contracts }},
+                        {{ metrics.admin_rescue_contracts }},
+                        {{ metrics.failed_contracts }}
+                    ],
+                    backgroundColor: ['#28a745', '#dc3545', '#ffc107', '#6c757d']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Daily Trends Chart
+        const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+        new Chart(trendsCtx, {
+            type: 'line',
+            data: {
+                labels: [{% for day in metrics.daily_metrics %}'{{ day.date }}'{% if not loop.last %},{% endif %}{% endfor %}],
+                datasets: [{
+                    label: 'Pipeline Reliability',
+                    data: [{% for day in metrics.daily_metrics %}{{ day.pipeline_reliability }}{% if not loop.last %},{% endif %}{% endfor %}],
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'Enforcement Rate',
+                    data: [{% for day in metrics.daily_metrics %}{{ day.enforcement_rate }}{% if not loop.last %},{% endif %}{% endfor %}],
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 1,
+                        ticks: {
+                            callback: function(value) {
+                                return (value * 100) + '%';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                }
+            }
+        });
+
+        // Admin Override Functions
+        function showOverrideModal(contractId, action) {
+            document.getElementById('overrideContractId').value = contractId;
+            document.getElementById('overrideAction').value = action;
+            document.getElementById('overrideReason').value = '';
+            
+            const modal = new bootstrap.Modal(document.getElementById('overrideModal'));
+            modal.show();
+        }
+
+        function processOverride() {
+            const contractId = document.getElementById('overrideContractId').value;
+            const action = document.getElementById('overrideAction').value;
+            const reason = document.getElementById('overrideReason').value;
+
+            if (!reason || reason.trim().length < 10) {
+                alert('Override reason must be at least 10 characters long.');
+                return;
+            }
+
+            fetch('{{ url_for("full_chain_admin.process_override") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contract_id: contractId,
+                    action: action,
+                    override_reason: reason
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Override processed successfully: ' + data.message);
+                    location.reload();
+                } else {
+                    alert('Error processing override: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error processing override: ' + error);
+            });
+
+            bootstrap.Modal.getInstance(document.getElementById('overrideModal')).hide();
+        }
+
+        // Pipeline Testing
+        function runPipelineTest() {
+            const count = document.getElementById('testCount').value;
+            const resultsDiv = document.getElementById('testResults');
+            
+            resultsDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Running pipeline test with ' + count + ' contracts...</div>';
+            resultsDiv.style.display = 'block';
+
+            fetch('{{ url_for("full_chain_admin.test_pipeline") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    count: parseInt(count)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const targetMet = data.target_met ? 'success' : 'warning';
+                    resultsDiv.innerHTML = `
+                        <div class="alert alert-${targetMet}">
+                            <h6><i class="fas fa-check-circle"></i> Pipeline Test Complete</h6>
+                            <p><strong>Batch ID:</strong> ${data.batch_id}</p>
+                            <div class="row">
+                                <div class="col-md-3"><strong>Total:</strong> ${data.total_contracts}</div>
+                                <div class="col-md-3"><strong>Published:</strong> ${data.published_contracts}</div>
+                                <div class="col-md-3"><strong>Blocked:</strong> ${data.blocked_contracts}</div>
+                                <div class="col-md-3"><strong>Rescue:</strong> ${data.admin_rescue_contracts}</div>
+                            </div>
+                            <div class="mt-2">
+                                <strong>Pipeline Reliability:</strong> ${(data.pipeline_reliability * 100).toFixed(1)}%
+                                ${data.target_met ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-exclamation-triangle text-warning"></i>'}
+                            </div>
+                            <div><strong>Enforcement Rate:</strong> ${(data.enforcement_rate * 100).toFixed(1)}%</div>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> Test failed: ' + data.error + '</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                resultsDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> Test error: ' + error + '</div>';
+            });
+        }
+
+        // Auto-refresh every 5 minutes
+        setTimeout(function() {
+            location.reload();
+        }, 300000);
+    </script>
+</body>
+</html>

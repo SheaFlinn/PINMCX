@@ -1,0 +1,72 @@
+{
+  "timestamp": "2025-07-27T20:23:07.268467",
+  "total_contracts": 4,
+  "passed_contracts": 0,
+  "blocked_contracts": 4,
+  "contract_results": [
+    {
+      "title": "Memphis City Council Infrastructure Vote",
+      "overall_score": 0.44842105263157894,
+      "market_balance_score": 1.0,
+      "passed": false,
+      "blocked": true,
+      "blocking_issues": [
+        "ambiguity",
+        "unbettable"
+      ],
+      "market_viability_metrics": {
+        "market_balance_score": 1.0,
+        "market_balance_threshold": 0.7,
+        "market_balance_passed": true
+      }
+    },
+    {
+      "title": "Mayor Budget Proposal",
+      "overall_score": 0.4747368421052631,
+      "market_balance_score": 0.85,
+      "passed": false,
+      "blocked": true,
+      "blocking_issues": [
+        "ambiguity",
+        "market_viability"
+      ],
+      "market_viability_metrics": {
+        "market_balance_score": 0.85,
+        "market_balance_threshold": 0.7,
+        "market_balance_passed": true
+      }
+    },
+    {
+      "title": "County Tax Increase",
+      "overall_score": 0.44842105263157894,
+      "market_balance_score": 1.0,
+      "passed": false,
+      "blocked": true,
+      "blocking_issues": [
+        "ambiguity",
+        "unbettable"
+      ],
+      "market_viability_metrics": {
+        "market_balance_score": 1.0,
+        "market_balance_threshold": 0.7,
+        "market_balance_passed": true
+      }
+    },
+    {
+      "title": "Downtown Development Project",
+      "overall_score": 0.44842105263157894,
+      "market_balance_score": 1.0,
+      "passed": false,
+      "blocked": true,
+      "blocking_issues": [
+        "ambiguity",
+        "unbettable"
+      ],
+      "market_viability_metrics": {
+        "market_balance_score": 1.0,
+        "market_balance_threshold": 0.7,
+        "market_balance_passed": true
+      }
+    }
+  ]
+}
