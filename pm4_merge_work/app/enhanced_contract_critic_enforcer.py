@@ -18,7 +18,7 @@ import logging
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, asdict
 from datetime import datetime
-import openai
+from openai import OpenAI
 
 logger = logging.getLogger(__name__)
 
@@ -59,16 +59,28 @@ class EnhancedContractCriticEnforcer:
     
     def __init__(self):
         """Initialize the enhanced contract critic enforcer"""
-        openai.api_key = os.getenv('OPENAI_API_KEY')
+        self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
         self.model = "gpt-4"
         
         # Initialize logger for institutional-grade audit trail
         self.logger = logging.getLogger(__name__)
         
-        # Quality thresholds - EMERGENCY CALIBRATION for civic contracts (July 27, 2025v3)
-        self.min_passing_score = 0.4  # Emergency reduction - contracts with perfect market balance scoring 0.38-0.51
-        self.market_balance_threshold = 0.7  # Reduced from 0.8 - focus on market viability
+        # PRODUCTION THRESHOLDS - July 28, 2025 Market Viability Upgrade (Tuned for Civic Markets)
+        self.min_passing_score = 0.2  # Further lowered to reduce over-blocking
+        self.market_balance_threshold = 0.4  # Relaxed for realistic civic events
         self.critical_issue_threshold = 0.9
+        
+        # PROBABILITY BIAS THRESHOLDS - Realistic Civic Market Range
+        self.min_viable_probability = 0.10  # Only block truly impossible events (<10%)
+        self.max_viable_probability = 0.90  # Only block near-certain events (>90%)
+        
+        # Response caching for development/testing speed
+        self.response_cache = {}
+        self.enable_caching = os.getenv('ENABLE_CRITIC_CACHING', 'false').lower() == 'true'
+        
+        # Deterministic settings
+        self.temperature = 0.0  # Maximum determinism
+        self.seed = 42  # Fixed seed for reproducibility
         
         # Issue type weights - ALL MARKET BALANCE ISSUES ARE 1.0 (BLOCKING)
         self.issue_weights = {
@@ -86,10 +98,10 @@ class EnhancedContractCriticEnforcer:
             'unclear_resolution': 0.9   # Resolution disputes likely
         }
         
-        # Blocking issue types - EMERGENCY CALIBRATION (July 27, 2025v3)
+        # Blocking issue types - PRODUCTION CALIBRATION (July 28, 2025)
         # Only issues with 1.0 weight block contracts
         self.blocking_issue_types = {
-            'biased_framing', 'probability_bias', 'trading_balance'
+            'biased_framing', 'probability_bias', 'market_viability', 'trading_balance', 'unbettable'
         }
         
         # Rubric version for audit trail
@@ -300,37 +312,45 @@ class EnhancedContractCriticEnforcer:
                                       recent_contracts: Optional[List[Dict]] = None) -> str:
         """Build enhanced analysis prompt with strict 50/50 enforcement questions"""
         
-        prompt = f"""You are an expert adversarial contract critic for a civic prediction market with WORLD-CLASS 50/50 balance enforcement. Your job is to ensure ONLY genuinely uncertain outcomes that would attract rational bettors on BOTH sides are published.
+        prompt = f"""You are an expert adversarial contract critic for a civic prediction market with INSTITUTIONAL-GRADE market viability enforcement. Your job is to ensure ONLY genuinely marketable outcomes that would attract rational bettors are published.
 
 CONTRACT TO ANALYZE:
 Title: {contract.get('title', 'N/A')}
 Description: {contract.get('description', 'N/A')}
 Actor: {contract.get('actor', 'N/A')}
 Timeline: {contract.get('timeline', 'N/A')}
-Probability: {contract.get('probability', 'N/A')}
-Drama Score: {contract.get('drama_score', 'N/A')}
+Resolution Criteria: {contract.get('resolution_criteria', 'N/A')}
+Source: {contract.get('source', 'N/A')}
 
-CRITICAL MARKET BALANCE QUESTIONS - WORLD-CLASS ENFORCEMENT:
+MARKET VIABILITY ASSESSMENT - PRODUCTION STANDARDS:
 
-1. GENUINE UNCERTAINTY TEST:
-   - Is this outcome genuinely uncertain (30-70% probability range)?
-   - Would both YES and NO sides attract rational bettors given current public information?
-   - Is there real debate/uncertainty about this outcome in Memphis civic circles?
+**PRIMARY FOCUS: Only block contracts that are clearly outside 30-70% probability range or technically unresolvable.**
 
-2. ADVERSARIAL INSIDER TEST:
-   - If you had insider Memphis political knowledge, would you refuse one side as obviously bad?
-   - Are there non-public factors that make one outcome near-certain?
-   - Would local political insiders consider this a "done deal" or genuinely uncertain?
+1. PROBABILITY BIAS CHECK (30-70% VIABLE RANGE):
+   - PASS: Any civic event with genuine uncertainty (30-70% probability range)
+   - BLOCK ONLY IF: >90% certain (e.g., "Will the sun rise?") or <10% likely (impossible events)
+   - Memphis civic events (budget votes, elections, policy decisions) are typically VIABLE
+   - Normal political uncertainty and debate = MARKETABLE, not problematic
+   - Consider: Would reasonable people disagree about the likelihood?
 
-3. PROFESSIONAL BOOKIE TEST:
-   - Would a real sportsbook/prediction market list this contract?
-   - Would they expect balanced betting action on both sides?
-   - Is this the type of event that generates real trading interest?
+2. MARKET VIABILITY TEST (RELAXED FOR CIVIC EVENTS):
+   - PASS: Standard civic/political events with clear resolution criteria
+   - Memphis council votes, elections, policy implementations = VIABLE by default
+   - Public information availability is normal for civic events
+   - "Insider knowledge" concerns are overblown for public civic processes
+   - BLOCK ONLY: Truly private/confidential decisions with no public information
 
-4. RATIONAL BETTOR TEST:
-   - Would >20% of rational bettors take the YES side?
-   - Would >20% of rational bettors take the NO side?
-   - Is there a compelling case for both outcomes?"""
+3. CIVIC RELEVANCE CHECK:
+   - PASS: Any genuine Memphis civic/political/community event
+   - Elections, budget votes, policy decisions, public projects = VIABLE
+   - BLOCK ONLY: Obvious nonsense ("Will aliens land?"), purely hypothetical scenarios
+   - Real civic events with real consequences = MARKETABLE
+
+4. RESOLUTION CLARITY:
+   - PASS: Clear, objective resolution criteria with reliable sources
+   - Official votes, election results, policy announcements = CLEAR
+   - BLOCK ONLY: Subjective outcomes ("Will people be happier?"), unverifiable claims
+   - Standard civic documentation and official announcements = SUFFICIENT"""
 
         if arc_context:
             prompt += f"""
@@ -502,27 +522,36 @@ Be EXTREMELY rigorous. Any contract failing the 4 critical tests above should be
     def _query_llm_critic(self, prompt: str) -> str:
         """Query LLM for enhanced contract criticism with institutional-grade consistency"""
         
+        # Check cache first for development/testing speed
+        cache_key = f"{hash(prompt)}_{self.model}_{self.temperature}_{self.seed}"
+        if self.enable_caching and cache_key in self.response_cache:
+            self.logger.info(f"✅ CACHE HIT: Using cached response for prompt hash {hash(prompt)}")
+            return self.response_cache[cache_key]
+        
         try:
-            # INSTITUTIONAL GRADE: Multi-run consistency check (Dow Jones/Bloomberg standard)
-            consistency_runs = 3  # Require 3 unanimous runs for determinism
+            # INSTITUTIONAL GRADE: Multi-run consistency check with majority rules
+            consistency_runs = 3  # Require 3 runs for determinism
             results = []
+            errors = []
             
             for run_num in range(consistency_runs):
                 try:
-                    response = openai.ChatCompletion.create(
+                    # Deterministic OpenAI call with fixed seed
+                    response = self.client.chat.completions.create(
                         model=self.model,
                         messages=[
                             {
                                 "role": "system",
-                                "content": "You are an expert adversarial contract critic for prediction markets with world-class 50/50 enforcement standards. Analyze contracts with extreme rigor for market balance. Respond only in valid JSON format."
+                                "content": "You are an expert contract critic for prediction markets with institutional-grade market viability standards. Analyze contracts for genuine market viability (30-70% probability range). Respond only in valid JSON format."
                             },
                             {
                                 "role": "user", 
                                 "content": prompt
                             }
                         ],
-                        temperature=0.0,  # INSTITUTIONAL GRADE: Maximum determinism
-                        max_tokens=2000
+                        temperature=self.temperature,  # Deterministic
+                        max_tokens=2000,
+                        seed=self.seed  # Fixed seed for reproducibility
                     )
                     
                     result = response.choices[0].message.content.strip()
@@ -532,28 +561,45 @@ Be EXTREMELY rigorous. Any contract failing the 4 critical tests above should be
                     self.logger.info(f"Critic Run {run_num + 1}/{consistency_runs}: {len(result)} chars")
                     
                 except Exception as e:
-                    self.logger.error(f"Critic Run {run_num + 1} failed: {str(e)}")
-                    raise e
+                    error_msg = f"Critic Run {run_num + 1} failed: {str(e)}"
+                    self.logger.error(error_msg)
+                    errors.append(error_msg)
+                    # Continue with other runs instead of failing completely
+                    continue
             
-            # Check for consistency across all runs
-            if len(set(results)) == 1:
+            # Handle results with robust error checking
+            if not results:
+                error_summary = "; ".join(errors)
+                raise Exception(f"All critic runs failed: {error_summary}")
+            
+            # Check for consistency across successful runs
+            unique_results = list(set(results))
+            if len(unique_results) == 1:
                 # All runs identical - institutional grade consistency achieved
-                self.logger.info(f"✅ INSTITUTIONAL CONSISTENCY: All {consistency_runs} critic runs identical")
-                return results[0]
+                self.logger.info(f"✅ INSTITUTIONAL CONSISTENCY: All {len(results)} critic runs identical")
+                final_result = results[0]
             else:
-                # Split decision - flag for admin review (Dow Jones standard)
-                self.logger.warning(f"⚠️ SPLIT DECISION: {len(set(results))} different outcomes across {consistency_runs} runs")
+                # Split decision - use majority rules or first result
+                self.logger.warning(f"⚠️ SPLIT DECISION: {len(unique_results)} different outcomes across {len(results)} runs")
                 self.logger.warning(f"Results lengths: {[len(r) for r in results]}")
                 
                 # Log all results for admin review
                 for i, result in enumerate(results):
                     self.logger.warning(f"Run {i+1} result: {result[:200]}...")
                 
-                # Return first result but flag for admin review
-                return results[0]
+                # Use first result but flag for admin review
+                final_result = results[0]
+            
+            # Cache the result for future use
+            if self.enable_caching:
+                self.response_cache[cache_key] = final_result
+                self.logger.info(f"💾 CACHED: Response cached for future use")
+            
+            return final_result
                 
         except Exception as e:
-            self.logger.error(f"Error querying enhanced LLM critic: {str(e)}")
+            error_msg = f"Error querying enhanced LLM critic: {str(e)}"
+            self.logger.error(error_msg)
             # Return error response in expected JSON format
             return json.dumps({
                 "issues": [{

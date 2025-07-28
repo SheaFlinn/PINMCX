@@ -1,0 +1,856 @@
+{
+  "batch_id": "test_batch_20250727_235646",
+  "total_contracts": 10,
+  "published_contracts": 10,
+  "blocked_contracts": 0,
+  "admin_rescue_contracts": 0,
+  "failed_contracts": 0,
+  "pipeline_reliability": 1.0,
+  "enforcement_rate": 0.0,
+  "processing_time": 0.002434,
+  "timestamp": "2025-07-28 04:56:46.179116",
+  "contract_results": [
+    {
+      "contract_id": "test_1",
+      "original_title": "Will Memphis City Council approve the $50M infrastructure bond by March 31st?",
+      "pipeline_status": "PUBLISHED",
+      "stages_completed": [
+        {
+          "stage_name": "variant_generation",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 2,
+          "blocked_count": 0,
+          "execution_time": 0.000182,
+          "error_message": null,
+          "stage_details": {
+            "variants_generated": 2,
+            "variants_passed": 2,
+            "variants_blocked": 0,
+            "recommendation": "publish_best"
+          }
+        },
+        {
+          "stage_name": "critic_analysis",
+          "status": "SUCCESS",
+          "input_count": 2,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "overall_score": 0.0,
+            "market_balance_score": 1.0,
+            "blocked": false,
+            "blocking_issues": [],
+            "admin_override_required": true
+          }
+        },
+        {
+          "stage_name": "admin_rescue",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 2e-06,
+          "error_message": null,
+          "stage_details": {
+            "requires_rescue": false,
+            "rescue_reason": null
+          }
+        },
+        {
+          "stage_name": "publication",
+          "status": "PUBLISHED",
+          "input_count": 1,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "final_status": "PUBLISHED",
+            "published": true
+          }
+        }
+      ],
+      "final_contract": {
+        "id": "test_1",
+        "title": "Will Memphis City Council approve the $50M infrastructure bond by March 31st?",
+        "description": "Test contract for Memphis civic prediction market: Will Memphis City Council approve the $50M infrastructure bond by March 31st?",
+        "actor": "Memphis City Council",
+        "timeline": "2025-03-31",
+        "drama_score": 0.6,
+        "source_url": "https://example.com/story_1"
+      },
+      "variants_generated": 2,
+      "variants_passed": 2,
+      "variants_blocked": 0,
+      "blocking_issues": [],
+      "admin_rescue_reason": null,
+      "processing_time": 0.000194,
+      "timestamp": "2025-07-28 04:56:46.176892"
+    },
+    {
+      "contract_id": "test_2",
+      "original_title": "Will the new downtown development project receive unanimous approval?",
+      "pipeline_status": "PUBLISHED",
+      "stages_completed": [
+        {
+          "stage_name": "variant_generation",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 2,
+          "blocked_count": 0,
+          "execution_time": 0.000184,
+          "error_message": null,
+          "stage_details": {
+            "variants_generated": 2,
+            "variants_passed": 2,
+            "variants_blocked": 0,
+            "recommendation": "publish_best"
+          }
+        },
+        {
+          "stage_name": "critic_analysis",
+          "status": "SUCCESS",
+          "input_count": 2,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "overall_score": 0.0,
+            "market_balance_score": 1.0,
+            "blocked": false,
+            "blocking_issues": [],
+            "admin_override_required": true
+          }
+        },
+        {
+          "stage_name": "admin_rescue",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "requires_rescue": false,
+            "rescue_reason": null
+          }
+        },
+        {
+          "stage_name": "publication",
+          "status": "PUBLISHED",
+          "input_count": 1,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "final_status": "PUBLISHED",
+            "published": true
+          }
+        }
+      ],
+      "final_contract": {
+        "id": "test_2",
+        "title": "Will the new downtown development project receive unanimous approval?",
+        "description": "Test contract for Memphis civic prediction market: Will the new downtown development project receive unanimous approval?",
+        "actor": "Memphis City Council",
+        "timeline": "2025-03-31",
+        "drama_score": 0.65,
+        "source_url": "https://example.com/story_2"
+      },
+      "variants_generated": 2,
+      "variants_passed": 2,
+      "variants_blocked": 0,
+      "blocking_issues": [],
+      "admin_rescue_reason": null,
+      "processing_time": 0.000191,
+      "timestamp": "2025-07-28 04:56:46.177120"
+    },
+    {
+      "contract_id": "test_3",
+      "original_title": "Will Mayor Strickland's budget proposal pass without major amendments?",
+      "pipeline_status": "PUBLISHED",
+      "stages_completed": [
+        {
+          "stage_name": "variant_generation",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 2,
+          "blocked_count": 0,
+          "execution_time": 0.000181,
+          "error_message": null,
+          "stage_details": {
+            "variants_generated": 2,
+            "variants_passed": 2,
+            "variants_blocked": 0,
+            "recommendation": "publish_best"
+          }
+        },
+        {
+          "stage_name": "critic_analysis",
+          "status": "SUCCESS",
+          "input_count": 2,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "overall_score": 0.0,
+            "market_balance_score": 1.0,
+            "blocked": false,
+            "blocking_issues": [],
+            "admin_override_required": true
+          }
+        },
+        {
+          "stage_name": "admin_rescue",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 2e-06,
+          "error_message": null,
+          "stage_details": {
+            "requires_rescue": false,
+            "rescue_reason": null
+          }
+        },
+        {
+          "stage_name": "publication",
+          "status": "PUBLISHED",
+          "input_count": 1,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "final_status": "PUBLISHED",
+            "published": true
+          }
+        }
+      ],
+      "final_contract": {
+        "id": "test_3",
+        "title": "Will Mayor Strickland's budget proposal pass without major amendments?",
+        "description": "Test contract for Memphis civic prediction market: Will Mayor Strickland's budget proposal pass without major amendments?",
+        "actor": "Memphis City Council",
+        "timeline": "2025-03-31",
+        "drama_score": 0.7,
+        "source_url": "https://example.com/story_3"
+      },
+      "variants_generated": 2,
+      "variants_passed": 2,
+      "variants_blocked": 0,
+      "blocking_issues": [],
+      "admin_rescue_reason": null,
+      "processing_time": 0.000188,
+      "timestamp": "2025-07-28 04:56:46.177338"
+    },
+    {
+      "contract_id": "test_4",
+      "original_title": "Will the Shelby County Commission approve the tax increase by year-end?",
+      "pipeline_status": "PUBLISHED",
+      "stages_completed": [
+        {
+          "stage_name": "variant_generation",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 2,
+          "blocked_count": 0,
+          "execution_time": 0.000179,
+          "error_message": null,
+          "stage_details": {
+            "variants_generated": 2,
+            "variants_passed": 2,
+            "variants_blocked": 0,
+            "recommendation": "publish_best"
+          }
+        },
+        {
+          "stage_name": "critic_analysis",
+          "status": "SUCCESS",
+          "input_count": 2,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "overall_score": 0.0,
+            "market_balance_score": 1.0,
+            "blocked": false,
+            "blocking_issues": [],
+            "admin_override_required": true
+          }
+        },
+        {
+          "stage_name": "admin_rescue",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "requires_rescue": false,
+            "rescue_reason": null
+          }
+        },
+        {
+          "stage_name": "publication",
+          "status": "PUBLISHED",
+          "input_count": 1,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "final_status": "PUBLISHED",
+            "published": true
+          }
+        }
+      ],
+      "final_contract": {
+        "id": "test_4",
+        "title": "Will the Shelby County Commission approve the tax increase by year-end?",
+        "description": "Test contract for Memphis civic prediction market: Will the Shelby County Commission approve the tax increase by year-end?",
+        "actor": "Memphis City Council",
+        "timeline": "2025-03-31",
+        "drama_score": 0.75,
+        "source_url": "https://example.com/story_4"
+      },
+      "variants_generated": 2,
+      "variants_passed": 2,
+      "variants_blocked": 0,
+      "blocking_issues": [],
+      "admin_rescue_reason": null,
+      "processing_time": 0.000185,
+      "timestamp": "2025-07-28 04:56:46.177551"
+    },
+    {
+      "contract_id": "test_5",
+      "original_title": "Will the Memphis Light Gas & Water rate hike be delayed beyond 2025?",
+      "pipeline_status": "PUBLISHED",
+      "stages_completed": [
+        {
+          "stage_name": "variant_generation",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 2,
+          "blocked_count": 0,
+          "execution_time": 0.000179,
+          "error_message": null,
+          "stage_details": {
+            "variants_generated": 2,
+            "variants_passed": 2,
+            "variants_blocked": 0,
+            "recommendation": "publish_best"
+          }
+        },
+        {
+          "stage_name": "critic_analysis",
+          "status": "SUCCESS",
+          "input_count": 2,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "overall_score": 0.0,
+            "market_balance_score": 1.0,
+            "blocked": false,
+            "blocking_issues": [],
+            "admin_override_required": true
+          }
+        },
+        {
+          "stage_name": "admin_rescue",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "requires_rescue": false,
+            "rescue_reason": null
+          }
+        },
+        {
+          "stage_name": "publication",
+          "status": "PUBLISHED",
+          "input_count": 1,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "final_status": "PUBLISHED",
+            "published": true
+          }
+        }
+      ],
+      "final_contract": {
+        "id": "test_5",
+        "title": "Will the Memphis Light Gas & Water rate hike be delayed beyond 2025?",
+        "description": "Test contract for Memphis civic prediction market: Will the Memphis Light Gas & Water rate hike be delayed beyond 2025?",
+        "actor": "Memphis City Council",
+        "timeline": "2025-03-31",
+        "drama_score": 0.8,
+        "source_url": "https://example.com/story_5"
+      },
+      "variants_generated": 2,
+      "variants_passed": 2,
+      "variants_blocked": 0,
+      "blocking_issues": [],
+      "admin_rescue_reason": null,
+      "processing_time": 0.000186,
+      "timestamp": "2025-07-28 04:56:46.177764"
+    },
+    {
+      "contract_id": "test_6",
+      "original_title": "Will the FedExForum renovation project stay within budget?",
+      "pipeline_status": "PUBLISHED",
+      "stages_completed": [
+        {
+          "stage_name": "variant_generation",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 2,
+          "blocked_count": 0,
+          "execution_time": 0.00018,
+          "error_message": null,
+          "stage_details": {
+            "variants_generated": 2,
+            "variants_passed": 2,
+            "variants_blocked": 0,
+            "recommendation": "publish_best"
+          }
+        },
+        {
+          "stage_name": "critic_analysis",
+          "status": "SUCCESS",
+          "input_count": 2,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "overall_score": 0.0,
+            "market_balance_score": 1.0,
+            "blocked": false,
+            "blocking_issues": [],
+            "admin_override_required": true
+          }
+        },
+        {
+          "stage_name": "admin_rescue",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "requires_rescue": false,
+            "rescue_reason": null
+          }
+        },
+        {
+          "stage_name": "publication",
+          "status": "PUBLISHED",
+          "input_count": 1,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "final_status": "PUBLISHED",
+            "published": true
+          }
+        }
+      ],
+      "final_contract": {
+        "id": "test_6",
+        "title": "Will the FedExForum renovation project stay within budget?",
+        "description": "Test contract for Memphis civic prediction market: Will the FedExForum renovation project stay within budget?",
+        "actor": "Memphis City Council",
+        "timeline": "2025-03-31",
+        "drama_score": 0.85,
+        "source_url": "https://example.com/story_6"
+      },
+      "variants_generated": 2,
+      "variants_passed": 2,
+      "variants_blocked": 0,
+      "blocking_issues": [],
+      "admin_rescue_reason": null,
+      "processing_time": 0.000187,
+      "timestamp": "2025-07-28 04:56:46.177979"
+    },
+    {
+      "contract_id": "test_7",
+      "original_title": "Will the Memphis Police Department budget increase be approved?",
+      "pipeline_status": "PUBLISHED",
+      "stages_completed": [
+        {
+          "stage_name": "variant_generation",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 2,
+          "blocked_count": 0,
+          "execution_time": 0.000312,
+          "error_message": null,
+          "stage_details": {
+            "variants_generated": 2,
+            "variants_passed": 2,
+            "variants_blocked": 0,
+            "recommendation": "publish_best"
+          }
+        },
+        {
+          "stage_name": "critic_analysis",
+          "status": "SUCCESS",
+          "input_count": 2,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "overall_score": 0.0,
+            "market_balance_score": 1.0,
+            "blocked": false,
+            "blocking_issues": [],
+            "admin_override_required": true
+          }
+        },
+        {
+          "stage_name": "admin_rescue",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "requires_rescue": false,
+            "rescue_reason": null
+          }
+        },
+        {
+          "stage_name": "publication",
+          "status": "PUBLISHED",
+          "input_count": 1,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "final_status": "PUBLISHED",
+            "published": true
+          }
+        }
+      ],
+      "final_contract": {
+        "id": "test_7",
+        "title": "Will the Memphis Police Department budget increase be approved?",
+        "description": "Test contract for Memphis civic prediction market: Will the Memphis Police Department budget increase be approved?",
+        "actor": "Memphis City Council",
+        "timeline": "2025-03-31",
+        "drama_score": 0.9,
+        "source_url": "https://example.com/story_7"
+      },
+      "variants_generated": 2,
+      "variants_passed": 2,
+      "variants_blocked": 0,
+      "blocking_issues": [],
+      "admin_rescue_reason": null,
+      "processing_time": 0.000319,
+      "timestamp": "2025-07-28 04:56:46.178368"
+    },
+    {
+      "contract_id": "test_8",
+      "original_title": "Will the new affordable housing initiative receive full funding?",
+      "pipeline_status": "PUBLISHED",
+      "stages_completed": [
+        {
+          "stage_name": "variant_generation",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 2,
+          "blocked_count": 0,
+          "execution_time": 0.000178,
+          "error_message": null,
+          "stage_details": {
+            "variants_generated": 2,
+            "variants_passed": 2,
+            "variants_blocked": 0,
+            "recommendation": "publish_best"
+          }
+        },
+        {
+          "stage_name": "critic_analysis",
+          "status": "SUCCESS",
+          "input_count": 2,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "overall_score": 0.0,
+            "market_balance_score": 1.0,
+            "blocked": false,
+            "blocking_issues": [],
+            "admin_override_required": true
+          }
+        },
+        {
+          "stage_name": "admin_rescue",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "requires_rescue": false,
+            "rescue_reason": null
+          }
+        },
+        {
+          "stage_name": "publication",
+          "status": "PUBLISHED",
+          "input_count": 1,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "final_status": "PUBLISHED",
+            "published": true
+          }
+        }
+      ],
+      "final_contract": {
+        "id": "test_8",
+        "title": "Will the new affordable housing initiative receive full funding?",
+        "description": "Test contract for Memphis civic prediction market: Will the new affordable housing initiative receive full funding?",
+        "actor": "Memphis City Council",
+        "timeline": "2025-03-31",
+        "drama_score": 0.95,
+        "source_url": "https://example.com/story_8"
+      },
+      "variants_generated": 2,
+      "variants_passed": 2,
+      "variants_blocked": 0,
+      "blocking_issues": [],
+      "admin_rescue_reason": null,
+      "processing_time": 0.000185,
+      "timestamp": "2025-07-28 04:56:46.178581"
+    },
+    {
+      "contract_id": "test_9",
+      "original_title": "Will the Beale Street renovation be completed on schedule?",
+      "pipeline_status": "PUBLISHED",
+      "stages_completed": [
+        {
+          "stage_name": "variant_generation",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 2,
+          "blocked_count": 0,
+          "execution_time": 0.000217,
+          "error_message": null,
+          "stage_details": {
+            "variants_generated": 2,
+            "variants_passed": 2,
+            "variants_blocked": 0,
+            "recommendation": "publish_best"
+          }
+        },
+        {
+          "stage_name": "critic_analysis",
+          "status": "SUCCESS",
+          "input_count": 2,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "overall_score": 0.0,
+            "market_balance_score": 1.0,
+            "blocked": false,
+            "blocking_issues": [],
+            "admin_override_required": true
+          }
+        },
+        {
+          "stage_name": "admin_rescue",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 2e-06,
+          "error_message": null,
+          "stage_details": {
+            "requires_rescue": false,
+            "rescue_reason": null
+          }
+        },
+        {
+          "stage_name": "publication",
+          "status": "PUBLISHED",
+          "input_count": 1,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "final_status": "PUBLISHED",
+            "published": true
+          }
+        }
+      ],
+      "final_contract": {
+        "id": "test_9",
+        "title": "Will the Beale Street renovation be completed on schedule?",
+        "description": "Test contract for Memphis civic prediction market: Will the Beale Street renovation be completed on schedule?",
+        "actor": "Memphis City Council",
+        "timeline": "2025-03-31",
+        "drama_score": 1.0,
+        "source_url": "https://example.com/story_9"
+      },
+      "variants_generated": 2,
+      "variants_passed": 2,
+      "variants_blocked": 0,
+      "blocking_issues": [],
+      "admin_rescue_reason": null,
+      "processing_time": 0.000226,
+      "timestamp": "2025-07-28 04:56:46.178834"
+    },
+    {
+      "contract_id": "test_10",
+      "original_title": "Will the Memphis Airport expansion project face organized opposition?",
+      "pipeline_status": "PUBLISHED",
+      "stages_completed": [
+        {
+          "stage_name": "variant_generation",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 2,
+          "blocked_count": 0,
+          "execution_time": 0.000214,
+          "error_message": null,
+          "stage_details": {
+            "variants_generated": 2,
+            "variants_passed": 2,
+            "variants_blocked": 0,
+            "recommendation": "publish_best"
+          }
+        },
+        {
+          "stage_name": "critic_analysis",
+          "status": "SUCCESS",
+          "input_count": 2,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "overall_score": 0.0,
+            "market_balance_score": 1.0,
+            "blocked": false,
+            "blocking_issues": [],
+            "admin_override_required": true
+          }
+        },
+        {
+          "stage_name": "admin_rescue",
+          "status": "SUCCESS",
+          "input_count": 1,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 1e-06,
+          "error_message": null,
+          "stage_details": {
+            "requires_rescue": false,
+            "rescue_reason": null
+          }
+        },
+        {
+          "stage_name": "publication",
+          "status": "PUBLISHED",
+          "input_count": 1,
+          "output_count": 1,
+          "blocked_count": 0,
+          "execution_time": 0.0,
+          "error_message": null,
+          "stage_details": {
+            "final_status": "PUBLISHED",
+            "published": true
+          }
+        }
+      ],
+      "final_contract": {
+        "id": "test_10",
+        "title": "Will the Memphis Airport expansion project face organized opposition?",
+        "description": "Test contract for Memphis civic prediction market: Will the Memphis Airport expansion project face organized opposition?",
+        "actor": "Memphis City Council",
+        "timeline": "2025-03-31",
+        "drama_score": 1.05,
+        "source_url": "https://example.com/story_10"
+      },
+      "variants_generated": 2,
+      "variants_passed": 2,
+      "variants_blocked": 0,
+      "blocking_issues": [],
+      "admin_rescue_reason": null,
+      "processing_time": 0.000223,
+      "timestamp": "2025-07-28 04:56:46.179099"
+    }
+  ],
+  "stage_summary": {
+    "variant_generation": {
+      "stage_name": "variant_generation",
+      "status": "SUCCESS",
+      "input_count": 10,
+      "output_count": 20,
+      "blocked_count": 0,
+      "execution_time": 0.002006,
+      "error_message": null,
+      "stage_details": null
+    },
+    "critic_analysis": {
+      "stage_name": "critic_analysis",
+      "status": "SUCCESS",
+      "input_count": 20,
+      "output_count": 10,
+      "blocked_count": 0,
+      "execution_time": 4e-06,
+      "error_message": null,
+      "stage_details": null
+    },
+    "admin_rescue": {
+      "stage_name": "admin_rescue",
+      "status": "SUCCESS",
+      "input_count": 10,
+      "output_count": 10,
+      "blocked_count": 0,
+      "execution_time": 1.3000000000000001e-05,
+      "error_message": null,
+      "stage_details": null
+    },
+    "publication": {
+      "stage_name": "publication",
+      "status": "SUCCESS",
+      "input_count": 10,
+      "output_count": 10,
+      "blocked_count": 0,
+      "execution_time": 3e-06,
+      "error_message": null,
+      "stage_details": null
+    }
+  }
+}

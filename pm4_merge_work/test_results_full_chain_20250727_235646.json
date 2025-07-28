@@ -1,0 +1,70 @@
+{
+  "timestamp": "2025-07-28T04:56:46.175241",
+  "test_type": "full_chain_integration",
+  "target_reliability": 0.8,
+  "tests_run": [
+    {
+      "test_name": "enhanced_critic_enforcement",
+      "passed": true,
+      "details": {},
+      "contracts_tested": 3,
+      "contracts_blocked": 0,
+      "blocking_issues_detected": [],
+      "market_balance_scores": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "average_market_balance_score": 1.0
+    },
+    {
+      "test_name": "multi_variant_generation",
+      "passed": false,
+      "details": {},
+      "contracts_tested": 5,
+      "total_variants_generated": 10,
+      "variants_passed": 10,
+      "variants_blocked": 0,
+      "min_variants_met": 0,
+      "average_variants_per_contract": 2.0,
+      "variant_pass_rate": 1.0
+    },
+    {
+      "test_name": "full_pipeline_integration",
+      "passed": true,
+      "details": {},
+      "pipeline_reliability": 1.0,
+      "enforcement_rate": 0.0,
+      "target_met": true,
+      "batch_id": "test_batch_20250727_235646",
+      "total_contracts": 10,
+      "published_contracts": 10,
+      "blocked_contracts": 0,
+      "admin_rescue_contracts": 0,
+      "failed_contracts": 0,
+      "processing_time": 0.002434
+    },
+    {
+      "test_name": "admin_rescue_workflow",
+      "passed": false,
+      "details": {},
+      "rescue_triggers_tested": 1,
+      "rescue_triggers_working": 0
+    },
+    {
+      "test_name": "blocking_enforcement",
+      "passed": false,
+      "details": {},
+      "blocking_tests": 2,
+      "correctly_blocked": 0
+    }
+  ],
+  "overall_success": false,
+  "summary": {
+    "total_tests": 5,
+    "passed_tests": 2,
+    "failed_tests": 3,
+    "success_rate": 0.4,
+    "all_tests_passed": false
+  }
+}

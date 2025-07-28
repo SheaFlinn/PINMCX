@@ -1,0 +1,128 @@
+{
+  "test_summary": {
+    "total_tests": 10,
+    "passed_count": 0,
+    "blocked_count": 10,
+    "error_count": 0,
+    "contract_pass_rate": 0.0,
+    "test_accuracy_rate": 40.0,
+    "timestamp": "2025-07-28T01:31:20.431088"
+  },
+  "probability_bands": {
+    "probability_unclear": 5,
+    "not_marketable": 4,
+    "invalid_fields": 1
+  },
+  "detailed_results": [
+    {
+      "contract_title": "Memphis City Council Budget Approval",
+      "expected_result": "PASS",
+      "actual_result": "BLOCK",
+      "test_passed": false,
+      "probability_band": "probability_unclear",
+      "market_viability_score": 0.6,
+      "processing_time": 60.544567823410034,
+      "blocking_reason": "Probability assessment unclear. The probability of the Memphis City Council approving the proposed 2025 municipal budget by December 31st is not clearly within the 30-70% range. More information is needed to accurately assess this.",
+      "admin_review_required": true
+    },
+    {
+      "contract_title": "Shelby County Commission Election",
+      "expected_result": "PASS",
+      "actual_result": "BLOCK",
+      "test_passed": false,
+      "probability_band": "probability_unclear",
+      "market_viability_score": 0.55,
+      "processing_time": 76.55498814582825,
+      "blocking_reason": "Probability assessment unclear. The probability bias cannot be accurately determined without current polling data or other relevant information.",
+      "admin_review_required": true
+    },
+    {
+      "contract_title": "Memphis Police Reform Initiative",
+      "expected_result": "PASS",
+      "actual_result": "BLOCK",
+      "test_passed": false,
+      "probability_band": "not_marketable",
+      "market_viability_score": 0.75,
+      "processing_time": 50.62660884857178,
+      "blocking_reason": "Not suitable for prediction market. The contract is based on a specific policy decision by the Memphis Police Department, which may not be publicly available or predictable.",
+      "admin_review_required": true
+    },
+    {
+      "contract_title": "Memphis Weather Certainty",
+      "expected_result": "BLOCK",
+      "actual_result": "BLOCK",
+      "test_passed": true,
+      "probability_band": "probability_unclear",
+      "market_viability_score": 0.25,
+      "processing_time": 67.13169193267822,
+      "blocking_reason": "Probability assessment unclear. The probability of the sun rising in Memphis tomorrow morning is near certain, making the implied probability far greater than 70%.",
+      "admin_review_required": true
+    },
+    {
+      "contract_title": "Obvious Legal Outcome",
+      "expected_result": "BLOCK",
+      "actual_result": "BLOCK",
+      "test_passed": true,
+      "probability_band": "probability_unclear",
+      "market_viability_score": 0.25,
+      "processing_time": 64.95388913154602,
+      "blocking_reason": "Probability assessment unclear. The probability of Memphis not being located in Tennessee next year is extremely low, making the contract heavily biased.",
+      "admin_review_required": true
+    },
+    {
+      "contract_title": "Incomplete Contract",
+      "expected_result": "BLOCK",
+      "actual_result": "BLOCK",
+      "test_passed": true,
+      "probability_band": "invalid_fields",
+      "market_viability_score": 0.0,
+      "processing_time": 8.916854858398438e-05,
+      "blocking_reason": "Missing required fields: actor, timeline, resolution_criteria. All contracts must include title, description, actor, timeline, and resolution_criteria.",
+      "admin_review_required": true
+    },
+    {
+      "contract_title": "Unresolvable Event",
+      "expected_result": "BLOCK",
+      "actual_result": "BLOCK",
+      "test_passed": true,
+      "probability_band": "not_marketable",
+      "market_viability_score": 0.85,
+      "processing_time": 53.01195001602173,
+      "blocking_reason": "Not suitable for prediction market. The contract's outcome is highly uncertain due to the subjective nature of 'happiness'. This may deter rational bettors.",
+      "admin_review_required": true
+    },
+    {
+      "contract_title": "Memphis Mayoral Debate Schedule",
+      "expected_result": "PASS",
+      "actual_result": "BLOCK",
+      "test_passed": false,
+      "probability_band": "not_marketable",
+      "market_viability_score": 0.85,
+      "processing_time": 47.84968185424805,
+      "blocking_reason": "Not suitable for prediction market. The contract relies on the decisions of a small group of individuals (the mayoral candidates), which could potentially be influenced or predicted by insiders.",
+      "admin_review_required": true
+    },
+    {
+      "contract_title": "FedEx Forum Event Decision",
+      "expected_result": "PASS",
+      "actual_result": "BLOCK",
+      "test_passed": false,
+      "probability_band": "probability_unclear",
+      "market_viability_score": 0.775,
+      "processing_time": 61.306845903396606,
+      "blocking_reason": "Probability assessment unclear. Without specific information on planned events, it's difficult to estimate the probability of a major concert event.",
+      "admin_review_required": true
+    },
+    {
+      "contract_title": "Memphis Transportation Initiative",
+      "expected_result": "PASS",
+      "actual_result": "BLOCK",
+      "test_passed": false,
+      "probability_band": "not_marketable",
+      "market_viability_score": 0.85,
+      "processing_time": 50.74775505065918,
+      "blocking_reason": "Not suitable for prediction market. The contract relies on the decisions of MATA, which may not be publicly available or predictable. This could deter rational bettors from participating.",
+      "admin_review_required": true
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "total_headlines": 10,
+  "contracts_generated": 26,
+  "total_cost": 0.9031035,
+  "cost_per_contract": 0.034734749999999995,
+  "contract_yield_percent": 260.0,
+  "narrative_preservation_percent": 60.0,
+  "daily_stats": {
+    "headlines_processed": 6,
+    "contracts_generated": 26,
+    "total_cost_usd": 0.9031035,
+    "cost_per_contract": 0.034734749999999995,
+    "layer_stats": {
+      "layer_0_pass": 6,
+      "layer_0_fail": 4,
+      "layer_1_pass": 6,
+      "layer_1_fail": 0,
+      "layer_2_primary": 6,
+      "layer_2_duplicate": 0,
+      "layer_3_pass": 6,
+      "layer_3_fail": 0
+    },
+    "pass_rates": {
+      "layer_0": 0.6,
+      "layer_1": 1.0,
+      "layer_2": 1.0,
+      "layer_3": 1.0
+    }
+  }
+}

@@ -21,12 +21,41 @@ import logging
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
-import openai
+from openai import OpenAI
 import re
 
 from .enhanced_contract_critic_enforcer import EnhancedContractCriticEnforcer, CriticAnalysis
 
 logger = logging.getLogger(__name__)
+
+# Safe calculation utilities for robust error handling
+def safe_division(numerator, denominator, default=0.0):
+    """Safely divide two numbers, returning default if denominator is 0"""
+    try:
+        if denominator == 0:
+            return default
+        return numerator / denominator
+    except (TypeError, ZeroDivisionError):
+        return default
+
+def safe_success_rate_calculation(passed_items, total_items):
+    """Calculate success rate with robust error handling"""
+    try:
+        # Handle different input types
+        if isinstance(passed_items, list):
+            passed_count = len(passed_items)
+        else:
+            passed_count = int(passed_items) if passed_items is not None else 0
+            
+        if isinstance(total_items, list):
+            total_count = len(total_items)
+        else:
+            total_count = int(total_items) if total_items is not None else 0
+            
+        return safe_division(passed_count, total_count, 0.0) * 100
+    except (ValueError, TypeError) as e:
+        logger.warning(f"Error calculating success rate: {e}")
+        return 0.0
 
 @dataclass
 class VariantGenerationResult:
@@ -51,7 +80,7 @@ class MultiVariantReframingEngine:
     
     def __init__(self):
         """Initialize the multi-variant reframing engine"""
-        openai.api_key = os.getenv('OPENAI_API_KEY')
+        self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
         self.model = "gpt-4"
         
         # Initialize the enhanced critic for QA
@@ -231,27 +260,35 @@ class MultiVariantReframingEngine:
     
     def _apply_reframing_strategy(self, contract: Dict[str, Any], 
                                 strategy_name: str, strategy_config: Dict) -> Optional[Dict[str, Any]]:
-        """Apply specific reframing strategy to generate variant"""
+        """Apply specific reframing strategy to generate variant with robust error handling"""
         
-        # Build strategy-specific prompt
-        prompt = self._build_strategy_prompt(contract, strategy_name, strategy_config)
-        
-        # Get LLM to generate variant
         try:
-            response = openai.ChatCompletion.create(
+            # Validate required contract fields
+            required_fields = ['title', 'description', 'actor', 'timeline', 'resolution_criteria']
+            missing_fields = [field for field in required_fields if not contract.get(field)]
+            if missing_fields:
+                logger.error(f"Contract missing required fields: {missing_fields}")
+                return None
+            
+            # Build strategy-specific prompt
+            prompt = self._build_strategy_prompt(contract, strategy_name, strategy_config)
+            
+            # Get LLM to generate variant with deterministic settings
+            response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are an expert contract reframing specialist. Generate structural variants that create genuine 50/50 uncertainty for prediction markets. Respond only in valid JSON format."
+                        "content": "You are an expert contract reframing specialist. Generate structural variants that create genuine market viability (30-70% probability range) for prediction markets. Respond only in valid JSON format."
                     },
                     {
                         "role": "user",
                         "content": prompt
                     }
                 ],
-                temperature=0.4,  # Some creativity but consistent
-                max_tokens=1000
+                temperature=0.2,  # Low temperature for consistency
+                max_tokens=1000,
+                seed=42  # Fixed seed for reproducibility
             )
             
             response_text = response.choices[0].message.content.strip()
